@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEADCATS // File Vault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#05060a;--bg2:#090b12;--bg3:#0d1018;--surface:#111520;--border:#1a2030;--border2:#242e45;--red2:#ff2040;--red-dim:#3a000a;--red-glow:rgba(232,0,30,0.12);--cyan:#00d4ff;--cyan-dim:#003a4d;--gold:#f0a500;--green:#00ff88;--text:#b8c8e0;--text-dim:#445060;--text-mid:#6a7a95;--text-bright:#ddeeff;--mono:'Share Tech Mono',monospace;--display:'Syncopate',sans-serif;--body:'Rajdhani',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}html,body{min-height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;cursor:crosshair;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.05) 3px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999;}
+.bg-layer{position:fixed;inset:0;z-index:0;}
+.bg-layer::after{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;opacity:0.15;}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(5,6,10,0.97);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:0.3em;color:var(--text-bright);text-decoration:none;}.nav-logo span{color:var(--red2);}
+.nav-left,.nav-right{display:flex;align-items:center;gap:20px;}
+.nav-sep{width:1px;height:20px;background:var(--border2);}
+.nav-page{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;}.nav-page span{color:var(--gold);}
+.nav-link{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-decoration:none;letter-spacing:0.15em;text-transform:uppercase;transition:color 0.2s;}.nav-link:hover{color:var(--text);}
+.layout{position:relative;z-index:1;max-width:1300px;margin:0 auto;padding:92px 32px 60px;}
+.page-header{margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;}
+.page-title{font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:0.15em;color:var(--text-bright);}.page-title span{color:var(--gold);}
+.upload-zone{border:2px dashed var(--border2);padding:40px;text-align:center;margin-bottom:20px;transition:all 0.2s;cursor:crosshair;position:relative;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--gold);background:rgba(240,165,0,0.03);}
+.uz-icon{font-size:36px;margin-bottom:12px;}
+.uz-text{font-family:var(--mono);font-size:11px;letter-spacing:0.15em;color:var(--text-dim);margin-bottom:8px;}
+.uz-sub{font-family:var(--body);font-size:12px;color:var(--text-dim);}.uz-sub span{color:var(--gold);}
+#fileInput{position:absolute;inset:0;opacity:0;cursor:crosshair;width:100%;height:100%;}
+.upload-form{background:var(--bg2);border:1px solid var(--border);padding:20px;margin-bottom:20px;display:none;}
+.upload-form.visible{display:block;}
+.uf-filename{font-family:var(--mono);font-size:11px;color:var(--cyan);margin-bottom:16px;}
+.uf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.uf-row{display:flex;flex-direction:column;gap:6px;}
+.uf-label{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;}
+.uf-input{padding:9px 12px;background:var(--bg);border:1px solid var(--border2);color:var(--text-bright);font-family:var(--mono);font-size:11px;outline:none;cursor:text;transition:border-color 0.2s;width:100%;}
+.uf-input:focus{border-color:var(--gold);}
+.uf-actions{display:flex;gap:10px;}
+.btn{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:9px 18px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;}
+.btn.gold{color:var(--gold);border-color:rgba(240,165,0,0.3);}.btn.gold:hover{background:rgba(240,165,0,0.06);}
+.search-row{display:flex;gap:10px;margin-bottom:16px;}
+.search-input{flex:1;padding:9px 14px;background:var(--bg);border:1px solid var(--border2);color:var(--text-bright);font-family:var(--mono);font-size:12px;outline:none;transition:border-color 0.2s;}
+.search-input:focus{border-color:var(--gold);}
+.upload-progress{background:var(--bg3);border:1px solid var(--border2);padding:16px;margin-bottom:16px;display:none;}
+.upload-progress.visible{display:block;}
+.up-text{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:8px;}
+.up-bar{height:3px;background:var(--border2);}.up-fill{height:100%;background:var(--gold);width:0%;transition:width 0.3s;}
+.files-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+.file-card{background:var(--bg2);border:1px solid var(--border);padding:16px;transition:border-color 0.2s;}
+.file-card:hover{border-color:var(--border2);}
+.fc-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
+.fc-icon{font-size:28px;flex-shrink:0;width:40px;text-align:center;}
+.fc-info{flex:1;min-width:0;}
+.fc-name{font-family:var(--mono);font-size:11px;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
+.fc-size{font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:0.1em;}
+.fc-hash{font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fc-desc{font-family:var(--body);font-size:12px;color:var(--text-mid);margin-bottom:10px;line-height:1.5;}
+.fc-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;}
+.fc-tag{font-family:var(--mono);font-size:8px;padding:1px 5px;border:1px solid var(--border2);color:var(--text-mid);}
+.fc-meta{font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:0.08em;display:flex;justify-content:space-between;align-items:center;}
+.fc-actions{display:flex;gap:8px;}
+.fc-dl{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;padding:5px 12px;border:1px solid rgba(240,165,0,0.3);color:var(--gold);background:transparent;cursor:crosshair;transition:all 0.2s;text-decoration:none;display:inline-block;}
+.fc-dl:hover{background:rgba(240,165,0,0.08);}
+.fc-del{font-family:var(--mono);font-size:9px;padding:5px 10px;border:1px solid var(--red-dim);color:var(--red2);background:transparent;cursor:crosshair;transition:all 0.2s;}
+.fc-del:hover{background:var(--red-glow);}
+.files-empty{padding:60px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;background:var(--bg2);border:1px solid var(--border);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);}
+</style>
+</head>
+<body>
+<div class="bg-layer"></div>
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">DEAD<span>CATS</span></a>
+    <div class="nav-sep"></div>
+    <span class="nav-page">// <span>file vault</span></span>
+  </div>
+  <div class="nav-right"><a href="dashboard.html" class="nav-link">← Dashboard</a></div>
+</nav>
+<div class="layout">
+  <div class="page-header">
+    <div class="page-title">File <span>Vault</span></div>
+    <div id="vaultStats" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.1em;"></div>
+  </div>
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="fileInput" onchange="handleFileSelect(this.files[0])">
+    <div class="uz-icon">📁</div>
+    <div class="uz-text">DROP FILE HERE OR CLICK TO BROWSE</div>
+    <div class="uz-sub">Any file type · <span>SHA256 hashed on upload</span></div>
+  </div>
+  <div class="upload-form" id="uploadForm">
+    <div class="uf-filename">📎 <span id="selectedFileName">No file selected</span></div>
+    <div class="uf-grid">
+      <div class="uf-row"><label class="uf-label">Tags (comma separated)</label><input class="uf-input" type="text" id="uploadTags" placeholder="malware, sample, agenttesla"></div>
+      <div class="uf-row"><label class="uf-label">Description</label><input class="uf-input" type="text" id="uploadDesc" placeholder="Brief description..."></div>
+    </div>
+    <div class="uf-actions">
+      <button class="btn gold" onclick="uploadFile()">↑ Upload to Vault</button>
+      <button class="btn" onclick="cancelUpload()">Cancel</button>
+    </div>
+  </div>
+  <div class="upload-progress" id="uploadProgress">
+    <div class="up-text" id="progressText">Uploading...</div>
+    <div class="up-bar"><div class="up-fill" id="progressFill"></div></div>
+  </div>
+  <div class="search-row">
+    <input class="search-input" type="text" id="searchInput" placeholder="Search files by name, tag, description..." oninput="filterFiles()">
+  </div>
+  <div id="filesContainer"><div class="files-empty">Loading vault...</div></div>
+</div>
+<script>
+const API=''
+const token=localStorage.getItem('dc_token')
+const me=JSON.parse(localStorage.getItem('dc_user')||'null')
+if(!token||!me)window.location.href='login.html'
+let allFiles=[],selectedFile=null
+function authFetch(url,opts={}){return fetch(API+url,{...opts,headers:{'Authorization':'Bearer '+token,...(opts.headers||{})}})}
+function formatSize(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(1)+' KB';if(b<1073741824)return (b/1048576).toFixed(1)+' MB';return (b/1073741824).toFixed(2)+' GB';}
+function timeAgo(d){if(!d)return '';const s=(Date.now()-new Date(d))/1000;if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
+function getIcon(name){const ext=name.split('.').pop().toLowerCase();if(['zip','7z','rar','tar','gz'].includes(ext))return '🗜️';if(['exe','dll','sys','bin'].includes(ext))return '⚙️';if(ext==='pdf')return '📄';if(['py','js','c','cpp','rs','go','sh'].includes(ext))return '📝';if(['png','jpg','jpeg','gif','svg'].includes(ext))return '🖼️';if(['pcap','pcapng'].includes(ext))return '📡';if(['csv','xlsx','json'].includes(ext))return '📊';return '📦';}
+async function loadFiles(){const res=await authFetch('/api/vault/');allFiles=res.ok?await res.json():[];const total=allFiles.reduce((s,f)=>s+f.size,0);document.getElementById('vaultStats').textContent=allFiles.length+' files · '+formatSize(total);renderFiles(allFiles);}
+function renderFiles(files){
+  const c=document.getElementById('filesContainer');
+  if(!files.length){c.innerHTML='<div class="files-empty">Vault is empty — upload your first file.</div>';return;}
+  c.innerHTML='<div class="files-grid">'+files.map(function(f){
+    const icon=getIcon(f.original_name);
+    const tags=f.tags.filter(Boolean).map(function(t){return '<span class="fc-tag">'+t.trim()+'</span>';}).join('');
+    const canDel=me.is_admin||me.id===f.author_id;
+    const dlBtn='<a class="fc-dl" href="#" data-id="'+f.id+'" data-name="'+encodeURIComponent(f.original_name)+'" onclick="handleDownload(this);return false;">↓ Download</a>';
+    const delBtn=canDel?'<button class="fc-del" onclick="deleteFile('+f.id+')">✕</button>':'';
+    return '<div class="file-card">'
+      +'<div class="fc-top"><div class="fc-icon">'+icon+'</div>'
+      +'<div class="fc-info"><div class="fc-name" title="'+f.original_name+'">'+f.original_name+'</div>'
+      +'<div class="fc-size">'+formatSize(f.size)+' · '+f.mimetype+'</div>'
+      +'<div class="fc-hash">SHA256: '+f.sha256.substring(0,16)+'...</div></div></div>'
+      +(f.description?'<div class="fc-desc">'+f.description+'</div>':'')
+      +(tags?'<div class="fc-tags">'+tags+'</div>':'')
+      +'<div class="fc-meta"><span>'+f.author+' · '+timeAgo(f.created_at)+'</span>'
+      +'<div class="fc-actions">'+dlBtn+delBtn+'</div></div></div>';
+  }).join('')+'</div>';
+}
+function handleDownload(el){
+  const id=el.getAttribute('data-id');
+  const name=decodeURIComponent(el.getAttribute('data-name'));
+  downloadFile(id,name);
+}
+function filterFiles(){const q=document.getElementById('searchInput').value.toLowerCase();if(!q){renderFiles(allFiles);return;}renderFiles(allFiles.filter(function(f){return f.original_name.toLowerCase().includes(q)||f.tags.join(' ').toLowerCase().includes(q)||(f.description||'').toLowerCase().includes(q);}));}
+function handleFileSelect(file){if(!file)return;selectedFile=file;document.getElementById('selectedFileName').textContent=file.name+' ('+formatSize(file.size)+')';document.getElementById('uploadForm').classList.add('visible');}
+function cancelUpload(){selectedFile=null;document.getElementById('uploadForm').classList.remove('visible');document.getElementById('fileInput').value='';document.getElementById('uploadTags').value='';document.getElementById('uploadDesc').value='';}
+async function uploadFile(){if(!selectedFile)return;const tags=document.getElementById('uploadTags').value;const desc=document.getElementById('uploadDesc').value;const fd=new FormData();fd.append('file',selectedFile);fd.append('tags',tags);fd.append('description',desc);const prog=document.getElementById('uploadProgress');const fill=document.getElementById('progressFill');const txt=document.getElementById('progressText');prog.classList.add('visible');txt.textContent='Uploading '+selectedFile.name+'...';let p=0;const iv=setInterval(function(){p=Math.min(p+Math.random()*15,85);fill.style.width=p+'%';},200);try{const res=await fetch('/api/vault/upload',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});clearInterval(iv);if(res.ok){fill.style.width='100%';txt.textContent='Upload complete!';setTimeout(function(){prog.classList.remove('visible');fill.style.width='0%';cancelUpload();loadFiles();},800);}else{const e=await res.json();txt.textContent=e.detail||'Upload failed.';setTimeout(function(){prog.classList.remove('visible');},2000);}}catch(e){clearInterval(iv);txt.textContent='Upload failed.';setTimeout(function(){prog.classList.remove('visible');},2000);}}
+async function downloadFile(id,name){const res=await authFetch('/api/vault/download/'+id);const blob=await res.blob();const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href);}
+async function deleteFile(id){if(!confirm('Delete this file? This cannot be undone.'))return;await authFetch('/api/vault/'+id,{method:'DELETE'});loadFiles();}
+const zone=document.getElementById('uploadZone');
+zone.addEventListener('dragover',function(e){e.preventDefault();zone.classList.add('drag');});
+zone.addEventListener('dragleave',function(){zone.classList.remove('drag');});
+zone.addEventListener('drop',function(e){e.preventDefault();zone.classList.remove('drag');if(e.dataTransfer.files[0])handleFileSelect(e.dataTransfer.files[0]);});
+loadFiles()
+</script>
+</body>
+</html>

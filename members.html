@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEADCATS // Members</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05060a;--bg2:#090b12;--bg3:#0d1018;--surface:#111520;--border:#1a2030;--border2:#242e45;
+  --red:#e8001e;--red2:#ff2040;--red-dim:#3a000a;--red-glow:rgba(232,0,30,0.15);
+  --cyan:#00d4ff;--cyan-dim:#003a4d;--gold:#f0a500;--gold-dim:rgba(240,165,0,0.15);
+  --green:#00ff88;--purple:#9b5de5;--pink:#ff4fa3;
+  --text:#c8d8f0;--text-dim:#556070;--text-mid:#8a9ab5;--text-bright:#ddeeff;
+  --mono:'IBM Plex Mono',monospace;--body:'IBM Plex Sans',sans-serif;
+
+  /* rank colors */
+  --rank-fc:#f0a500;       /* Founding Circle - gold */
+  --rank-lr:#00d4ff;       /* Lead Researcher - cyan */
+  --rank-scholar:#9b5de5;  /* Scholar - purple */
+  --rank-dc:#445060;       /* DEADCAT - dim */
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;cursor:crosshair;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04) 3px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:9999;}
+
+/* GRID BG */
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:0.12;}
+
+/* CORNER DECORATIONS */
+.corner{position:fixed;width:120px;height:120px;z-index:1;pointer-events:none;}
+.corner-tl{top:0;left:0;border-top:1px solid var(--red2);border-left:1px solid var(--red2);opacity:0.4;}
+.corner-tr{top:0;right:0;border-top:1px solid var(--red2);border-right:1px solid var(--red2);opacity:0.4;}
+.corner-bl{bottom:0;left:0;border-bottom:1px solid var(--red2);border-left:1px solid var(--red2);opacity:0.4;}
+.corner-br{bottom:0;right:0;border-bottom:1px solid var(--red2);border-right:1px solid var(--red2);opacity:0.4;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(5,6,10,0.97);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.3em;color:var(--text-bright);text-decoration:none;}
+.nav-logo span{color:var(--red2);}
+.nav-left,.nav-right{display:flex;align-items:center;gap:20px;}
+.nav-sep{width:1px;height:20px;background:var(--border2);}
+.nav-page{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;}
+.nav-page span{color:var(--cyan);}
+.nav-link{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-decoration:none;letter-spacing:0.15em;text-transform:uppercase;transition:color 0.2s;}
+.nav-link:hover{color:var(--text);}
+
+/* LAYOUT */
+.layout{position:relative;z-index:2;max-width:1400px;margin:0 auto;padding:80px 40px 80px;}
+
+/* HERO HEADER */
+.hero{text-align:center;padding:60px 0 50px;position:relative;}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:0.5em;color:var(--red2);text-transform:uppercase;margin-bottom:16px;opacity:0.8;}
+.hero-title{font-family:var(--mono);font-size:clamp(36px,5vw,64px);font-weight:700;letter-spacing:0.08em;color:var(--text-bright);line-height:1;margin-bottom:12px;position:relative;display:inline-block;}
+.hero-title::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red2),transparent);}
+.hero-sub{font-family:var(--mono);font-size:11px;letter-spacing:0.3em;color:var(--text-dim);margin-top:16px;}
+.hero-sub span{color:var(--gold);}
+.hero-line{width:1px;height:40px;background:linear-gradient(var(--red2),transparent);margin:20px auto 0;}
+
+/* RANK LEGEND */
+.rank-legend{display:flex;justify-content:center;gap:32px;margin-bottom:50px;flex-wrap:wrap;}
+.rl-item{display:flex;align-items:center;gap:8px;cursor:default;}
+.rl-dot{width:8px;height:8px;border-radius:50%;}
+.rl-label{font-family:var(--mono);font-size:10px;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;}
+
+/* TIER SECTION */
+.tier-section{margin-bottom:60px;}
+.tier-header{display:flex;align-items:center;gap:20px;margin-bottom:24px;position:relative;}
+.tier-name{font-family:var(--mono);font-weight:700;letter-spacing:0.3em;text-transform:uppercase;white-space:nowrap;}
+.tier-line{flex:1;height:1px;opacity:0.3;}
+.tier-count{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;color:var(--text-dim);white-space:nowrap;}
+
+/* FOUNDING CIRCLE */
+.tier-fc .tier-name{font-size:11px;color:var(--rank-fc);text-shadow:0 0 20px rgba(240,165,0,0.4);}
+.tier-fc .tier-line{background:var(--rank-fc);}
+.tier-fc .members-grid{grid-template-columns:repeat(auto-fill,minmax(340px,1fr));}
+
+/* LEAD RESEARCHER */
+.tier-lr .tier-name{font-size:11px;color:var(--rank-lr);text-shadow:0 0 20px rgba(0,212,255,0.3);}
+.tier-lr .tier-line{background:var(--rank-lr);}
+
+/* SCHOLAR */
+.tier-scholar .tier-name{font-size:11px;color:var(--rank-scholar);text-shadow:0 0 20px rgba(155,93,229,0.3);}
+.tier-scholar .tier-line{background:var(--rank-scholar);}
+
+/* DEADCAT */
+.tier-dc .tier-name{font-size:11px;color:var(--text-dim);}
+.tier-dc .tier-line{background:var(--border2);}
+
+/* MEMBERS GRID */
+.members-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+
+/* MEMBER CARD */
+.member-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  padding:0;
+  position:relative;
+  overflow:hidden;
+  transition:all 0.3s;
+  cursor:pointer;
+  text-decoration:none;
+  display:block;
+}
+.member-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.02) 0%,transparent 60%);
+  pointer-events:none;z-index:0;
+}
+.member-card:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,0.5);}
+
+/* FC card special treatment */
+.card-fc{border-color:rgba(240,165,0,0.25);}
+.card-fc:hover{border-color:rgba(240,165,0,0.5);box-shadow:0 16px 40px rgba(0,0,0,0.5),0 0 30px rgba(240,165,0,0.08);}
+.card-fc .card-rank-bar{background:linear-gradient(90deg,rgba(240,165,0,0.4),transparent);}
+
+/* LR card */
+.card-lr{border-color:rgba(0,212,255,0.15);}
+.card-lr:hover{border-color:rgba(0,212,255,0.35);box-shadow:0 16px 40px rgba(0,0,0,0.5),0 0 30px rgba(0,212,255,0.06);}
+.card-lr .card-rank-bar{background:linear-gradient(90deg,rgba(0,212,255,0.3),transparent);}
+
+/* Scholar card */
+.card-scholar{border-color:rgba(155,93,229,0.15);}
+.card-scholar:hover{border-color:rgba(155,93,229,0.35);box-shadow:0 16px 40px rgba(0,0,0,0.5),0 0 30px rgba(155,93,229,0.06);}
+.card-scholar .card-rank-bar{background:linear-gradient(90deg,rgba(155,93,229,0.3),transparent);}
+
+/* DEADCAT card */
+.card-dc{border-color:var(--border);}
+.card-dc:hover{border-color:var(--border2);}
+.card-dc .card-rank-bar{background:linear-gradient(90deg,rgba(68,80,96,0.3),transparent);}
+
+.card-rank-bar{height:2px;width:100%;position:relative;z-index:1;}
+
+.card-body{padding:20px;position:relative;z-index:1;}
+.card-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;}
+.card-emoji{
+  font-size:32px;width:52px;height:52px;
+  background:var(--bg3);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;position:relative;
+}
+.card-emoji.fc-ava{border-color:rgba(240,165,0,0.3);box-shadow:0 0 16px rgba(240,165,0,0.12);}
+.card-emoji.lr-ava{border-color:rgba(0,212,255,0.2);}
+.card-emoji.scholar-ava{border-color:rgba(155,93,229,0.2);}
+
+.online-dot{position:absolute;bottom:2px;right:2px;width:8px;height:8px;border-radius:50%;border:1px solid var(--bg2);}
+.online-dot.online{background:var(--green);box-shadow:0 0 6px var(--green);}
+.online-dot.offline{background:var(--text-dim);}
+
+.card-info{flex:1;min-width:0;}
+.card-handle{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--text-bright);letter-spacing:0.05em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-rank-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:2px 8px;border:1px solid;margin-bottom:6px;}
+.badge-fc{color:var(--rank-fc);border-color:rgba(240,165,0,0.3);background:rgba(240,165,0,0.06);}
+.badge-lr{color:var(--rank-lr);border-color:rgba(0,212,255,0.25);background:rgba(0,212,255,0.05);}
+.badge-scholar{color:var(--rank-scholar);border-color:rgba(155,93,229,0.25);background:rgba(155,93,229,0.05);}
+.badge-dc{color:var(--text-dim);border-color:var(--border2);background:transparent;}
+
+/* TITLE — the prestigious bestowed thing */
+.card-title{
+  font-family:var(--mono);font-size:9px;letter-spacing:0.15em;
+  color:var(--gold);padding:2px 8px;
+  border-left:2px solid var(--gold);
+  background:rgba(240,165,0,0.05);
+  margin-bottom:6px;display:inline-block;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+}
+
+.card-bio{font-family:var(--body);font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);}
+.card-specializations{display:flex;gap:4px;flex-wrap:wrap;flex:1;}
+.card-spec{font-family:var(--mono);font-size:8px;padding:1px 5px;border:1px solid var(--border2);color:var(--text-dim);letter-spacing:0.08em;}
+.card-lastseen{font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:0.08em;white-space:nowrap;margin-left:8px;}
+
+/* ADMIN CROWN */
+.admin-crown{position:absolute;top:8px;right:8px;font-size:12px;z-index:2;opacity:0.7;}
+
+/* EMPTY */
+.tier-empty{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;padding:20px;text-align:center;border:1px dashed var(--border);opacity:0.5;}
+
+/* SEARCH */
+.search-bar{display:flex;gap:12px;margin-bottom:40px;max-width:500px;margin-left:auto;margin-right:auto;}
+.search-input{flex:1;padding:10px 16px;background:var(--bg2);border:1px solid var(--border2);color:var(--text-bright);font-family:var(--mono);font-size:12px;outline:none;letter-spacing:0.05em;transition:border-color 0.2s;}
+.search-input:focus{border-color:var(--cyan-dim);}
+.search-input::placeholder{color:var(--text-dim);}
+
+/* ANIMATIONS */
+@keyframes fadeup{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes glowpulse{0%,100%{opacity:0.6;}50%{opacity:1;}}
+.tier-section{opacity:0;animation:fadeup 0.5s forwards;}
+.tier-section:nth-child(1){animation-delay:0.1s;}
+.tier-section:nth-child(2){animation-delay:0.2s;}
+.tier-section:nth-child(3){animation-delay:0.3s;}
+.tier-section:nth-child(4){animation-delay:0.4s;}
+.member-card{opacity:0;animation:fadeup 0.4s forwards;}
+
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">DEAD<span>CATS</span></a>
+    <div class="nav-sep"></div>
+    <span class="nav-page">// <span>members</span></span>
+  </div>
+  <div class="nav-right">
+    <a href="dashboard.html" class="nav-link">← Dashboard</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <div class="hero">
+    <div class="hero-eyebrow">Researcher Portal</div>
+    <div class="hero-title">THE ROSTER</div>
+    <div class="hero-sub">ranked by contribution · <span id="memberCount">—</span> active operators</div>
+    <div class="hero-line"></div>
+  </div>
+
+  <div class="rank-legend">
+    <div class="rl-item"><div class="rl-dot" style="background:var(--rank-fc);box-shadow:0 0 8px var(--rank-fc);"></div><span class="rl-label" style="color:var(--rank-fc);">Founding Circle</span></div>
+    <div class="rl-item"><div class="rl-dot" style="background:var(--rank-lr);box-shadow:0 0 8px var(--rank-lr);"></div><span class="rl-label" style="color:var(--rank-lr);">Lead Researcher</span></div>
+    <div class="rl-item"><div class="rl-dot" style="background:var(--rank-scholar);box-shadow:0 0 8px var(--rank-scholar);"></div><span class="rl-label" style="color:var(--rank-scholar);">Scholar</span></div>
+    <div class="rl-item"><div class="rl-dot" style="background:var(--rank-dc);"></div><span class="rl-label">DEADCAT</span></div>
+  </div>
+
+  <div class="search-bar">
+    <input class="search-input" type="text" id="searchInput" placeholder="Search operators..." oninput="filterMembers()">
+  </div>
+
+  <div id="membersRoot"></div>
+</div>
+
+<script>
+const API   = '';
+const token = localStorage.getItem('dc_token');
+const me    = JSON.parse(localStorage.getItem('dc_user') || 'null');
+if (!token || !me) window.location.href = 'login.html';
+
+function authFetch(url) {
+  return fetch(API + url, { headers: { Authorization: 'Bearer ' + token } });
+}
+
+function timeAgo(d) {
+  if (!d) return 'never';
+  const s = (Date.now() - new Date(d)) / 1000;
+  if (s < 60)    return 'just now';
+  if (s < 3600)  return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  if (s < 604800)return Math.floor(s / 86400) + 'd ago';
+  return Math.floor(s / 604800) + 'w ago';
+}
+
+function isOnline(last_seen) {
+  if (!last_seen) return false;
+  return (Date.now() - new Date(last_seen)) / 1000 < 300;
+}
+
+const RANK_ORDER = ['Founding Circle', 'Lead Researcher', 'Scholar', 'DEADCAT'];
+const RANK_CLASS = {
+  'Founding Circle': 'fc',
+  'Lead Researcher': 'lr',
+  'Scholar':         'scholar',
+  'DEADCAT':         'dc',
+};
+const RANK_LABELS = {
+  'Founding Circle': '◈ Founding Circle',
+  'Lead Researcher': '◆ Lead Researcher',
+  'Scholar':         '◇ Scholar',
+  'DEADCAT':         '· DEADCAT',
+};
+const TIER_DESC = {
+  'Founding Circle': 'The architects. The originals. The ones who built this from nothing.',
+  'Lead Researcher': 'Elite operators who represent the team independently.',
+  'Scholar':         'Dedicated researchers pushing the frontier.',
+  'DEADCAT':         'New blood. Proving their worth.',
+};
+
+let allMembers = [];
+
+function getRankClass(rank) { return RANK_CLASS[rank] || 'dc'; }
+
+function renderCard(m, delay) {
+  const rc    = getRankClass(m.rank);
+  const online= isOnline(m.last_seen);
+  const specs = (m.specializations || []).slice(0, 3);
+  const title = m.title || null;
+
+  return `<a href="members/profile.html?user=${m.handle}" class="member-card card-${rc}" style="animation-delay:${delay}s;">
+    ${m.is_admin ? '<div class="admin-crown">👑</div>' : ''}
+    <div class="card-rank-bar"></div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="card-emoji ${rc}-ava">
+          ${m.emoji || '🐱'}
+          <div class="online-dot ${online ? 'online' : 'offline'}"></div>
+        </div>
+        <div class="card-info">
+          <div class="card-handle">${m.handle}</div>
+          <div class="card-rank-badge badge-${rc}">${RANK_LABELS[m.rank] || m.rank}</div>
+          ${title ? `<div class="card-title">⚡ ${title}</div>` : ''}
+        </div>
+      </div>
+      ${m.bio ? `<div class="card-bio">${m.bio}</div>` : ''}
+      <div class="card-footer">
+        <div class="card-specializations">
+          ${specs.map(s => `<span class="card-spec">${s}</span>`).join('')}
+        </div>
+        <div class="card-lastseen">${timeAgo(m.last_seen)}</div>
+      </div>
+    </div>
+  </a>`;
+}
+
+function renderTier(rank, members) {
+  const rc    = getRankClass(rank);
+  const count = members.length;
+  if (count === 0 && rank === 'DEADCAT') return '';
+
+  let delay   = 0;
+  const cards = members.length
+    ? members.map((m, i) => renderCard(m, i * 0.06)).join('')
+    : `<div class="tier-empty">No members at this rank yet.</div>`;
+
+  return `
+    <div class="tier-section tier-${rc}">
+      <div class="tier-header">
+        <div class="tier-name">${rank}</div>
+        <div class="tier-line"></div>
+        <div class="tier-count">${count} operator${count !== 1 ? 's' : ''}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;margin-bottom:16px;opacity:0.6;">${TIER_DESC[rank] || ''}</div>
+      <div class="members-grid ${rank === 'Founding Circle' ? 'fc-grid' : ''}">${cards}</div>
+    </div>`;
+}
+
+function renderAll(members) {
+  const grouped = {};
+  RANK_ORDER.forEach(r => grouped[r] = []);
+  members.forEach(m => {
+    const r = m.rank || 'DEADCAT';
+    if (grouped[r]) grouped[r].push(m);
+    else grouped['DEADCAT'].push(m);
+  });
+
+  document.getElementById('memberCount').textContent = members.length;
+  document.getElementById('membersRoot').innerHTML =
+    RANK_ORDER.map(r => renderTier(r, grouped[r])).join('');
+}
+
+function filterMembers() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  if (!q) { renderAll(allMembers); return; }
+  renderAll(allMembers.filter(m =>
+    m.handle.toLowerCase().includes(q) ||
+    (m.bio || '').toLowerCase().includes(q) ||
+    (m.rank || '').toLowerCase().includes(q) ||
+    (m.specializations || []).join(' ').toLowerCase().includes(q)
+  ));
+}
+
+async function load() {
+  const res  = await authFetch('/api/users/');
+  allMembers = res.ok ? await res.json() : [];
+
+  // Sort within each rank by last_seen desc
+  allMembers.sort((a, b) => {
+    const ri = r => RANK_ORDER.indexOf(r.rank || 'DEADCAT');
+    if (ri(a) !== ri(b)) return ri(a) - ri(b);
+    return new Date(b.last_seen || 0) - new Date(a.last_seen || 0);
+  });
+
+  renderAll(allMembers);
+}
+
+load();
+</script>
+</body>
+</html>
+

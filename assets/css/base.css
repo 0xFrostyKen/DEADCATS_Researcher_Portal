@@ -1,0 +1,40 @@
+:root{
+  --scanline-size:3px;
+  --scanline-alpha:0.06;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.6;
+  overflow-x:hidden;
+  cursor:crosshair;
+}
+
+/* Scanline overlay (configurable via CSS vars) */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent var(--scanline-size),
+    rgba(0,0,0,var(--scanline-alpha)) var(--scanline-size),
+    rgba(0,0,0,var(--scanline-alpha)) calc(var(--scanline-size) + 1px)
+  );
+  pointer-events:none;
+  z-index:9999;
+}
+
+a{color:inherit}
+
+/* Hide scrollbars globally */
+*{scrollbar-width:none;}
+*::-webkit-scrollbar{display:none;}
+

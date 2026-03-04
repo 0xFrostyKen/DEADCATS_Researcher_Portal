@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEADCATS // Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #05060a;
+  --bg2:       #090b12;
+  --bg3:       #0d1018;
+  --surface:   #111520;
+  --surface2:  #161b28;
+  --border:    #1a2030;
+  --border2:   #242e45;
+  --red:       #e8001e;
+  --red2:      #ff2040;
+  --red-dim:   #3a000a;
+  --red-glow:  rgba(232,0,30,0.12);
+  --cyan:      #00d4ff;
+  --cyan-dim:  #003a4d;
+  --gold:      #f0a500;
+  --gold-dim:  #4a3200;
+  --green:     #00ff88;
+  --purple:    #9b5de5;
+  --text:      #b8c8e0;
+  --text-dim:  #445060;
+  --text-mid:  #6a7a95;
+  --text-bright:#ddeeff;
+  --nav-h:     52px;
+  --mono:    'Share Tech Mono', monospace;
+  --display: 'Syncopate', sans-serif;
+  --body:    'Rajdhani', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100vh; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  cursor: crosshair;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.05) 3px, rgba(0,0,0,0.05) 4px);
+  pointer-events: none; z-index: 9999;
+}
+
+.bg-layer { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+.bg-layer::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 50%, rgba(232,0,30,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 85% 30%, rgba(0,212,255,0.03) 0%, transparent 70%);
+}
+.bg-layer::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.15;
+}
+
+/* NAV */
+nav {
+  position: fixed; top:0; left:0; right:0; z-index:100;
+  height: var(--nav-h);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px;
+  background: rgba(5,6,10,0.97);
+  border-bottom: 1px solid var(--border);
+}
+.nav-left  { display: flex; align-items: center; gap: 20px; }
+.nav-right { display: flex; align-items: center; gap: 16px; }
+.nav-logo  { font-family: var(--display); font-size: 10px; font-weight: 700; letter-spacing: 0.3em; color: var(--text-bright); text-decoration: none; }
+.nav-logo span { color: var(--red2); }
+.nav-sep   { width:1px; height:20px; background: var(--border2); }
+.nav-page  { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.15em; }
+.nav-page span { color: var(--red2); }
+.nav-link  { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-decoration: none; letter-spacing: 0.15em; text-transform: uppercase; transition: color 0.2s; }
+.nav-link:hover { color: var(--text); }
+
+/* LAYOUT */
+.layout {
+  position: relative; z-index: 1;
+  max-width: 1200px; margin: 0 auto;
+  padding: calc(var(--nav-h) + 40px) 32px 60px;
+}
+
+/* PAGE HEADER */
+.page-header {
+  margin-bottom: 40px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 24px;
+}
+.page-title {
+  font-family: var(--display); font-size: 18px; font-weight: 700;
+  letter-spacing: 0.15em; color: var(--text-bright); margin-bottom: 6px;
+}
+.page-title span { color: var(--red2); }
+.page-sub {
+  font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.15em;
+}
+
+/* TABS */
+.tabs {
+  display: flex; gap: 2px; margin-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em;
+  text-transform: uppercase; padding: 10px 20px;
+  background: transparent; border: none; border-bottom: 2px solid transparent;
+  color: var(--text-dim); cursor: crosshair; transition: all 0.2s;
+  margin-bottom: -1px;
+}
+.tab:hover  { color: var(--text); }
+.tab.active { color: var(--text-bright); border-bottom-color: var(--red2); }
+
+/* PANELS */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* SECTION */
+.section {
+  background: var(--bg2); border: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+.section-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.section-ico  { font-size: 14px; }
+.section-title {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em;
+  color: var(--text-bright); text-transform: uppercase;
+}
+.section-body { padding: 24px; }
+
+/* FORM */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid.single { grid-template-columns: 1fr; }
+.form-row { display: flex; flex-direction: column; gap: 6px; }
+.form-row.full { grid-column: 1 / -1; }
+.form-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+  color: var(--text-dim); text-transform: uppercase;
+}
+.form-input, .form-select, .form-textarea {
+  padding: 10px 14px;
+  background: var(--bg); border: 1px solid var(--border2);
+  color: var(--text-bright); font-family: var(--mono); font-size: 12px;
+  outline: none; cursor: text; transition: border-color 0.2s;
+  width: 100%;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--cyan-dim); }
+.form-select { cursor: crosshair; }
+.form-textarea { resize: vertical; min-height: 80px; font-family: var(--body); font-size: 13px; }
+
+.form-actions { margin-top: 20px; display: flex; gap: 12px; align-items: center; }
+.btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; padding: 10px 20px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text-dim); cursor: crosshair; transition: all 0.2s;
+}
+.btn:hover    { color: var(--text); border-color: var(--text-mid); }
+.btn.green    { color: var(--green); border-color: rgba(0,255,136,0.3); }
+.btn.green:hover { background: rgba(0,255,136,0.08); }
+.btn.red      { color: var(--red2); border-color: var(--red-dim); }
+.btn.red:hover { background: var(--red-glow); }
+.btn.cyan     { color: var(--cyan); border-color: var(--cyan-dim); }
+.btn.cyan:hover { background: rgba(0,212,255,0.06); }
+.btn.gold     { color: var(--gold); border-color: rgba(240,165,0,0.3); }
+.btn.gold:hover { background: rgba(240,165,0,0.06); }
+
+.form-msg {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  padding: 6px 12px; border: 1px solid;
+}
+.form-msg.success { color: var(--green); border-color: rgba(0,255,136,0.3); background: rgba(0,255,136,0.05); }
+.form-msg.error   { color: var(--red2);  border-color: var(--red-dim); background: var(--red-glow); }
+.form-msg.hidden  { display: none; }
+
+/* USER SEARCH */
+.search-wrap {
+  display: flex; gap: 10px; align-items: stretch; margin-bottom: 24px;
+}
+.search-input {
+  flex: 1; padding: 10px 14px;
+  background: var(--bg); border: 1px solid var(--border2);
+  color: var(--text-bright); font-family: var(--mono); font-size: 12px;
+  outline: none; cursor: text; transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(--cyan-dim); }
+
+/* USER CARD */
+.user-card {
+  background: var(--bg3); border: 1px solid var(--border2);
+  padding: 20px; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 16px;
+}
+.user-card.hidden { display: none; }
+.uc-avatar {
+  width: 52px; height: 52px;
+  border: 1px solid var(--border2); background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.uc-info { flex: 1; }
+.uc-handle {
+  font-family: var(--display); font-size: 14px; font-weight: 700;
+  letter-spacing: 0.1em; color: var(--text-bright); margin-bottom: 4px;
+}
+.uc-meta {
+  font-family: var(--mono); font-size: 9px; color: var(--text-dim);
+  letter-spacing: 0.1em; display: flex; gap: 12px;
+}
+.uc-rank { padding: 1px 6px; border: 1px solid; font-size: 8px; letter-spacing: 0.15em; }
+
+/* ACHIEVEMENT GRID */
+.ach-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;
+}
+.ach-card {
+  background: var(--bg); border: 1px solid var(--border);
+  padding: 12px; position: relative; transition: all 0.2s; cursor: crosshair;
+}
+.ach-card:hover { border-color: var(--border2); }
+.ach-card.unlocked { border-color: var(--border2); background: var(--surface); }
+.ach-card.unlocked:hover { border-color: var(--gold); }
+.ach-ico  { font-size: 18px; margin-bottom: 6px; display: block; }
+.ach-name { font-family: var(--display); font-size: 9px; font-weight: 700; letter-spacing: 0.15em; color: var(--text-mid); margin-bottom: 4px; text-transform: uppercase; }
+.ach-card.unlocked .ach-name { color: var(--text-bright); }
+.ach-rarity { font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em; }
+.ach-status {
+  position: absolute; top: 8px; right: 8px;
+  font-family: var(--mono); font-size: 7px; letter-spacing: 0.15em;
+  padding: 2px 5px;
+}
+.ach-status.on  { color: var(--green); background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.2); }
+.ach-status.off { color: var(--text-dim); }
+
+/* SPEC LIST */
+.spec-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.spec-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: var(--bg3); border: 1px solid var(--border);
+}
+.spec-row .sr-icon { font-size: 14px; width: 20px; text-align: center; }
+.spec-row .sr-name { flex:1; font-family: var(--body); font-size: 13px; font-weight: 600; color: var(--text); }
+.spec-row .sr-level { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border: 1px solid; letter-spacing: 0.1em; }
+.spec-row .sr-del {
+  background: transparent; border: none; color: var(--text-dim);
+  cursor: crosshair; font-size: 13px; padding: 0 4px; transition: color 0.2s;
+}
+.spec-row .sr-del:hover { color: var(--red2); }
+
+/* MEMBERS LIST */
+.members-table { width: 100%; border-collapse: collapse; }
+.members-table th {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
+  color: var(--text-dim); text-transform: uppercase; text-align: left;
+  padding: 10px 14px; border-bottom: 1px solid var(--border2);
+  background: var(--bg3);
+}
+.members-table td {
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+  font-family: var(--body); font-size: 13px; color: var(--text);
+  vertical-align: middle;
+}
+.members-table tr:hover td { background: var(--surface); }
+.mt-handle { font-family: var(--mono); font-size: 11px; color: var(--text-bright); }
+.mt-emoji  { font-size: 18px; }
+.mt-rank   { font-family: var(--mono); font-size: 9px; padding: 2px 7px; border: 1px solid; letter-spacing: 0.1em; }
+.mt-admin  { font-family: var(--mono); font-size: 8px; color: var(--red2); padding: 2px 5px; border: 1px solid var(--red-dim); background: var(--red-glow); }
+.mt-btn    { font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em; padding: 5px 10px; border: 1px solid var(--border2); background: transparent; color: var(--cyan); cursor: crosshair; transition: all 0.2s; }
+.mt-btn:hover { background: var(--cyan-dim); }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); }
+</style>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">DEAD<span>CATS</span></a>
+    <div class="nav-sep"></div>
+    <span class="nav-page">// <span>admin panel</span></span>
+  </div>
+  <div class="nav-right">
+    <a href="dashboard.html" class="nav-link">← Dashboard</a>
+  </div>
+</nav>
+
+<div class="layout">
+
+  <div class="page-header">
+    <div class="page-title">Admin <span>Panel</span></div>
+    <div class="page-sub">Manage members · Assign achievements · Register accounts</div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('register')">Register User</button>
+    <button class="tab" onclick="switchTab('manage')">Manage User</button>
+    <button class="tab" onclick="switchTab('members')">All Members</button>
+    <button class="tab" onclick="switchTab('achievements')">Achievement Pool</button>
+  </div>
+
+  <!-- ── REGISTER USER ── -->
+  <div class="panel active" id="tab-register">
+    <div class="section">
+      <div class="section-head">
+        <span class="section-ico">➕</span>
+        <span class="section-title">Register New Member</span>
+      </div>
+      <div class="section-body">
+        <div class="form-grid">
+          <div class="form-row">
+            <label class="form-label">Handle *</label>
+            <input class="form-input" type="text" id="regHandle" placeholder="researcher_handle" autocomplete="off">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Password *</label>
+            <input class="form-input" type="password" id="regPassword" placeholder="••••••••••••••">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Emoji</label>
+            <input class="form-input" type="text" id="regEmoji" placeholder="🐱">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Rank</label>
+            <select class="form-select" id="regRank">
+              <option value="DEADCAT">DEADCAT — Initial Member</option>
+              <option value="Scholar">Scholar — Contributing Researcher</option>
+              <option value="Lead Researcher">Lead Researcher — Team Lead</option>
+              
+              <option value="Founding Circle">Founding Circle — The Originals</option>
+            </select>
+          </div>
+          <div class="form-row full">
+            <label class="form-label">Bio</label>
+            <textarea class="form-textarea" id="regBio" placeholder="Short bio..."></textarea>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Admin Access</label>
+            <select class="form-select" id="regAdmin">
+              <option value="false">No — Standard Member</option>
+              <option value="true">Yes — Full Admin</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn green" onclick="registerUser()">Create Account</button>
+          <span class="form-msg hidden" id="regMsg"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MANAGE USER ── -->
+  <div class="panel" id="tab-manage">
+
+    <!-- Search -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-ico">🔍</span>
+        <span class="section-title">Find Member</span>
+      </div>
+      <div class="section-body">
+        <div class="search-wrap">
+          <input class="search-input" type="text" id="searchHandle" placeholder="Enter handle..." autocomplete="off">
+          <button class="btn cyan" onclick="searchUser()">Load</button>
+        </div>
+        <span class="form-msg hidden" id="searchMsg"></span>
+      </div>
+    </div>
+
+    <!-- User card — hidden until loaded -->
+    <div id="manageArea" style="display:none;">
+
+      <!-- Profile card -->
+      <div class="user-card" id="userCard">
+        <div class="uc-avatar" id="ucAvatar">?</div>
+        <div class="uc-info">
+          <div class="uc-handle" id="ucHandle">—</div>
+          <div class="uc-meta">
+            <span id="ucRank" class="uc-rank">—</span>
+            <span id="ucAdmin"></span>
+            <span id="ucJoined"></span>
+          </div>
+        </div>
+        <a id="ucProfileLink" href="#" target="_blank" class="btn cyan">View Profile →</a>
+      </div>
+
+      <!-- Edit basic info -->
+      <div class="section">
+        <div class="section-head">
+          <span class="section-ico">✏️</span>
+          <span class="section-title">Edit Profile</span>
+        </div>
+        <div class="section-body">
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Emoji</label>
+              <input class="form-input" type="text" id="mgrEmoji" placeholder="🐱">
+            </div>
+            <div class="form-row">
+              <label class="form-label">Rank</label>
+              <select class="form-select" id="mgrRank">
+                <option value="DEADCAT">DEADCAT</option>
+                <option value="Scholar">Scholar</option>
+                <option value="Lead Researcher">Lead Researcher</option>
+                
+                <option value="Founding Circle">Founding Circle</option>
+              </select>
+            </div>
+            <div class="form-row full">
+              <label class="form-label">Bio</label>
+              <textarea class="form-textarea" id="mgrBio"></textarea>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Admin Access</label>
+              <select class="form-select" id="mgrAdmin">
+                <option value="false">No — Standard Member</option>
+                <option value="true">Yes — Full Admin</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn green" onclick="saveUserEdit()">Save Changes</button>
+            <span class="form-msg hidden" id="mgrMsg"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reset password -->
+      <div class="section">
+        <div class="section-head">
+          <span class="section-ico">🔐</span>
+          <span class="section-title">Reset Password</span>
+        </div>
+        <div class="section-body">
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">New Password</label>
+              <input class="form-input" type="password" id="mgrNewPass" placeholder="New password...">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn red" onclick="resetPassword()">Reset Password</button>
+            <span class="form-msg hidden" id="passMsg"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Achievements -->
+      <div class="section">
+        <div class="section-head">
+          <span class="section-ico">🏆</span>
+          <span class="section-title">Achievements — click to toggle</span>
+        </div>
+        <div class="section-body">
+          <div class="ach-grid" id="achGrid"></div>
+          <div class="form-actions" style="margin-top:16px;">
+            <span class="form-msg hidden" id="achMsg"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Specializations -->
+      <div class="section">
+        <div class="section-head">
+          <span class="section-ico">⚡</span>
+          <span class="section-title">Specializations</span>
+        </div>
+        <div class="section-body">
+          <div class="spec-list" id="specList"></div>
+          <div class="divider"></div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Icon</label>
+              <input class="form-input" type="text" id="specIcon" placeholder="🔬" maxlength="4">
+            </div>
+            <div class="form-row">
+              <label class="form-label">Name</label>
+              <input class="form-input" type="text" id="specName" placeholder="Reverse Engineering">
+            </div>
+            <div class="form-row">
+              <label class="form-label">Level</label>
+              <select class="form-select" id="specLevel">
+                <option value="NOVICE">NOVICE</option>
+                <option value="MID">MID</option>
+                <option value="ADV">ADV</option>
+                <option value="ELITE">ELITE</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn gold" onclick="addSpec()">Add Specialization</button>
+            <span class="form-msg hidden" id="specMsg"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="section">
+        <div class="section-head">
+          <span class="section-ico">⚠️</span>
+          <span class="section-title">Danger Zone</span>
+        </div>
+        <div class="section-body">
+          <div class="form-actions">
+            <button class="btn red" onclick="deactivateUser()">Deactivate Account</button>
+            <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);">Disables login. Does not delete data.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── ACHIEVEMENT POOL ── -->
+  <div class="panel" id="tab-achievements">
+
+    <!-- Create achievement -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-ico">➕</span>
+        <span class="section-title">Create Achievement</span>
+      </div>
+      <div class="section-body">
+        <div class="form-grid">
+          <div class="form-row">
+            <label class="form-label">Icon (emoji)</label>
+            <input class="form-input" type="text" id="achIcon" placeholder="🏆" maxlength="4">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Name *</label>
+            <input class="form-input" type="text" id="achName" placeholder="Achievement name">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Rarity</label>
+            <select class="form-select" id="achRarity">
+              <option value="common">Common</option>
+              <option value="uncommon">Uncommon</option>
+              <option value="rare">Rare</option>
+              <option value="legendary">Legendary</option>
+            </select>
+          </div>
+          <div class="form-row full">
+            <label class="form-label">Description</label>
+            <input class="form-input" type="text" id="achDesc" placeholder="Short description...">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn green" onclick="createAchievement()">Create Achievement</button>
+          <span class="form-msg hidden" id="achPoolMsg"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pool list -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-ico">🏆</span>
+        <span class="section-title">Achievement Pool</span>
+      </div>
+      <div class="section-body">
+        <div class="ach-grid" id="achPoolGrid">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── ALL MEMBERS ── -->
+  <div class="panel" id="tab-members">
+    <div class="section">
+      <div class="section-head">
+        <span class="section-ico">👥</span>
+        <span class="section-title">All Members</span>
+      </div>
+      <div class="section-body" style="padding:0;">
+        <table class="members-table">
+          <thead>
+            <tr>
+              <th>Avatar</th>
+              <th>Handle</th>
+              <th>Rank</th>
+              <th>Last Seen</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="membersTableBody">
+            <tr><td colspan="5" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:center;padding:24px;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API   = '';
+const token = localStorage.getItem('dc_token');
+const me    = JSON.parse(localStorage.getItem('dc_user') || 'null');
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+if (!token || !me) window.location.href = 'login.html';
+if (!me.is_admin)  window.location.href = 'dashboard.html';
+
+const RANK_COLORS = {
+  'DEADCAT':   '#5a6a85',
+  'Scholar':   '#00d4ff',
+  'Lead Researcher': '#00d4ff',
+  
+  'Founding Circle': '#f0a500',
+};
+const RARITY_COLORS = {
+  legendary: '#f0a500',
+  rare:      '#9b5de5',
+  uncommon:  '#00d4ff',
+  common:    '#5a6a85',
+};
+const LEVEL_COLORS = {
+  ELITE:  '#ff2040',
+  ADV:    '#00d4ff',
+  MID:    '#f0a500',
+  NOVICE: '#5a6a85',
+};
+
+let currentUser         = null;
+let allAchievements     = [];
+let userAchievements    = [];
+
+function authFetch(url, opts = {}) {
+  return fetch(API + url, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...(opts.headers||{}) }
+  });
+}
+
+function timeAgo(d) {
+  if (!d) return 'never';
+  const s = (Date.now() - new Date(d)) / 1000;
+  if (s < 60)    return 'just now';
+  if (s < 3600)  return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
+}
+
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className   = `form-msg ${type}`;
+  setTimeout(() => el.classList.add('hidden'), 3000);
+}
+
+// ── TABS ──────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const tabs = ['register','manage','members','achievements'];
+    t.classList.toggle('active', tabs[i] === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if (name === 'members')      loadAllMembers();
+  if (name === 'manage')       loadAllAchievements();
+  if (name === 'achievements') loadAchievementPool();
+}
+
+// ── REGISTER USER ─────────────────────────────────────────────────
+async function registerUser() {
+  const handle   = document.getElementById('regHandle').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const emoji    = document.getElementById('regEmoji').value.trim() || '🐱';
+  const rank     = document.getElementById('regRank').value;
+  const bio      = document.getElementById('regBio').value.trim();
+  const is_admin = document.getElementById('regAdmin').value === 'true';
+
+  if (!handle || !password) return showMsg('regMsg', 'Handle and password required.', 'error');
+
+  const res = await authFetch('/api/users/', {
+    method: 'POST',
+    body: JSON.stringify({ handle, password, emoji, rank, bio, is_admin }),
+  });
+
+  if (res.ok) {
+    showMsg('regMsg', `✓ Account "${handle}" created.`, 'success');
+    document.getElementById('regHandle').value   = '';
+    document.getElementById('regPassword').value = '';
+    document.getElementById('regEmoji').value    = '';
+    document.getElementById('regBio').value      = '';
+  } else {
+    const err = await res.json();
+    showMsg('regMsg', err.detail || 'Failed to create account.', 'error');
+  }
+}
+
+// ── SEARCH USER ───────────────────────────────────────────────────
+async function searchUser() {
+  const handle = document.getElementById('searchHandle').value.trim();
+  if (!handle) return;
+
+  const res = await authFetch(`/api/users/${handle}`);
+  if (!res.ok) return showMsg('searchMsg', 'User not found.', 'error');
+
+  currentUser = await res.json();
+  await loadAllAchievements();
+  await loadUserData();
+  document.getElementById('manageArea').style.display = 'block';
+}
+
+async function loadAllAchievements() {
+  const res    = await authFetch('/api/achievements/');
+  allAchievements = res.ok ? await res.json() : [];
+}
+
+async function loadUserData() {
+  if (!currentUser) return;
+
+  // Fill card
+  document.getElementById('ucAvatar').textContent  = currentUser.emoji || '?';
+  document.getElementById('ucHandle').textContent  = currentUser.handle;
+  document.getElementById('ucProfileLink').href    = `members/profile.html?user=${currentUser.handle}`;
+
+  const rankColor = RANK_COLORS[currentUser.rank] || '#5a6a85';
+  const rankEl    = document.getElementById('ucRank');
+  rankEl.textContent  = currentUser.rank;
+  rankEl.style.color  = rankColor;
+  rankEl.style.borderColor = rankColor;
+
+  document.getElementById('ucAdmin').textContent   = currentUser.is_admin ? '⚠ ADMIN' : '';
+  document.getElementById('ucAdmin').style.color   = 'var(--red2)';
+  document.getElementById('ucJoined').textContent  = `joined ${timeAgo(currentUser.created_at)}`;
+
+  // Fill edit form
+  document.getElementById('mgrEmoji').value = currentUser.emoji   || '';
+  document.getElementById('mgrBio').value   = currentUser.bio     || '';
+  document.getElementById('mgrRank').value  = currentUser.rank    || 'DEADCAT';
+  document.getElementById('mgrAdmin').value = currentUser.is_admin ? 'true' : 'false';
+
+  // Load achievements
+  const achRes = await authFetch(`/api/achievements/user/${currentUser.id}`);
+  userAchievements = achRes.ok ? await achRes.json() : [];
+  renderAchievements();
+
+  // Load specs
+  const specRes = await authFetch(`/api/achievements/user/${currentUser.id}/specs`);
+  const specs   = specRes.ok ? await specRes.json() : [];
+  renderSpecs(specs);
+}
+
+function renderAchievements() {
+  const unlockedIds = new Set(userAchievements.map(a => a.id));
+  document.getElementById('achGrid').innerHTML = allAchievements.map(a => {
+    const isUnlocked = unlockedIds.has(a.id);
+    const color      = RARITY_COLORS[a.rarity] || '#5a6a85';
+    return `
+      <div class="ach-card ${isUnlocked ? 'unlocked' : ''}"
+           onclick="toggleAchievement(${a.id})"
+           title="${isUnlocked ? 'Click to revoke' : 'Click to assign'}">
+        <span class="ach-status ${isUnlocked ? 'on' : 'off'}">${isUnlocked ? 'UNLOCKED' : 'LOCKED'}</span>
+        <span class="ach-ico">${esc(a.icon)}</span>
+        <div class="ach-name">${esc(a.name)}</div>
+        <div class="ach-rarity" style="color:${esc(color)};">${esc(a.rarity)}</div>
+      </div>`;
+  }).join('');
+}
+
+async function toggleAchievement(achId) {
+  const isUnlocked = userAchievements.some(a => a.id === achId);
+
+  if (isUnlocked) {
+    const res = await authFetch(`/api/achievements/user/${currentUser.id}/revoke/${achId}`, { method: 'DELETE' });
+    if (res.ok) {
+      userAchievements = userAchievements.filter(a => a.id !== achId);
+      renderAchievements();
+      showMsg('achMsg', '✓ Achievement revoked.', 'success');
+    }
+  } else {
+    const res = await authFetch(`/api/achievements/user/${currentUser.id}/assign`, {
+      method: 'POST',
+      body: JSON.stringify({ achievement_id: achId }),
+    });
+    if (res.ok) {
+      // Refetch user achievements
+      const r = await authFetch(`/api/achievements/user/${currentUser.id}`);
+      userAchievements = r.ok ? await r.json() : userAchievements;
+      renderAchievements();
+      showMsg('achMsg', '✓ Achievement assigned.', 'success');
+    }
+  }
+}
+
+function renderSpecs(specs) {
+  const LEVEL_BORDER = { ELITE: '#5a000c', ADV: '#003a4d', MID: '#4a3200', NOVICE: '#1a2030' };
+  const el = document.getElementById('specList');
+  if (!specs.length) {
+    el.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">No specializations yet.</div>';
+    return;
+  }
+  el.innerHTML = specs.map(s => {
+    const c = LEVEL_COLORS[s.level] || '#5a6a85';
+    const b = LEVEL_BORDER[s.level] || '#1a2030';
+    return `
+      <div class="spec-row">
+        <span class="sr-icon">${esc(s.icon)}</span>
+        <span class="sr-name">${esc(s.name)}</span>
+        <span class="sr-level" style="color:${esc(c)};border-color:${esc(b)};">${esc(s.level)}</span>
+        <button class="sr-del" onclick="deleteSpec(${s.id})">✕</button>
+      </div>`;
+  }).join('');
+}
+
+async function addSpec() {
+  const icon  = document.getElementById('specIcon').value.trim()  || '🔧';
+  const name  = document.getElementById('specName').value.trim();
+  const level = document.getElementById('specLevel').value;
+  if (!name) return showMsg('specMsg', 'Name required.', 'error');
+
+  const res = await authFetch(`/api/achievements/user/${currentUser.id}/specs`, {
+    method: 'POST',
+    body: JSON.stringify({ icon, name, level }),
+  });
+  if (res.ok) {
+    document.getElementById('specIcon').value = '';
+    document.getElementById('specName').value = '';
+    const specRes = await authFetch(`/api/achievements/user/${currentUser.id}/specs`);
+    renderSpecs(specRes.ok ? await specRes.json() : []);
+    showMsg('specMsg', '✓ Specialization added.', 'success');
+  }
+}
+
+async function deleteSpec(specId) {
+  const res = await authFetch(`/api/achievements/user/${currentUser.id}/specs/${specId}`, { method: 'DELETE' });
+  if (res.ok) {
+    const specRes = await authFetch(`/api/achievements/user/${currentUser.id}/specs`);
+    renderSpecs(specRes.ok ? await specRes.json() : []);
+  }
+}
+
+// ── SAVE USER EDIT ────────────────────────────────────────────────
+async function saveUserEdit() {
+  const payload = {
+    emoji:    document.getElementById('mgrEmoji').value.trim(),
+    bio:      document.getElementById('mgrBio').value.trim(),
+    rank:     document.getElementById('mgrRank').value,
+    is_admin: document.getElementById('mgrAdmin').value === 'true',
+  };
+
+  // Use users PATCH endpoint
+  const res = await authFetch(`/api/users/${currentUser.handle}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+  if (res.ok) {
+    currentUser = await res.json();
+    await loadUserData();
+    showMsg('mgrMsg', '✓ Profile updated.', 'success');
+  } else {
+    const err = await res.json();
+    showMsg('mgrMsg', err.detail || 'Failed.', 'error');
+  }
+}
+
+// ── RESET PASSWORD ────────────────────────────────────────────────
+async function resetPassword() {
+  const newPass = document.getElementById('mgrNewPass').value;
+  if (!newPass) return showMsg('passMsg', 'Enter a new password.', 'error');
+
+  const res = await authFetch(`/api/users/${currentUser.handle}/reset-password`, {
+    method: 'POST',
+    body: JSON.stringify({ new_password: newPass }),
+  });
+
+  if (res.ok) {
+    document.getElementById('mgrNewPass').value = '';
+    showMsg('passMsg', '✓ Password reset.', 'success');
+  } else {
+    showMsg('passMsg', 'Failed to reset password.', 'error');
+  }
+}
+
+// ── DEACTIVATE ────────────────────────────────────────────────────
+async function deactivateUser() {
+  if (!confirm(`Deactivate "${currentUser.handle}"? They won't be able to log in.`)) return;
+  const res = await authFetch(`/api/users/${currentUser.handle}`, { method: 'DELETE' });
+  if (res.ok) {
+    showMsg('mgrMsg', '✓ Account deactivated.', 'success');
+    document.getElementById('manageArea').style.display = 'none';
+  }
+}
+
+// ── ACHIEVEMENT POOL ──────────────────────────────────────────────
+async function loadAchievementPool() {
+  const res = await authFetch('/api/achievements/');
+  allAchievements = res.ok ? await res.json() : [];
+  const grid = document.getElementById('achPoolGrid');
+  if (!allAchievements.length) {
+    grid.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">No achievements created yet.</div>';
+    return;
+  }
+  grid.innerHTML = allAchievements.map(a => {
+    const color = RARITY_COLORS[a.rarity] || '#5a6a85';
+    return `
+      <div class="ach-card unlocked" style="position:relative;">
+        <button onclick="deleteGlobalAchievement(${a.id})" style="position:absolute;top:6px;right:6px;background:transparent;border:none;color:var(--text-dim);cursor:crosshair;font-size:11px;padding:2px 4px;transition:color 0.2s;" onmouseover="this.style.color='var(--red2)'" onmouseout="this.style.color='var(--text-dim)'">✕</button>
+        <span class="ach-ico">${esc(a.icon)}</span>
+        <div class="ach-name">${esc(a.name)}</div>
+        <div class="ach-rarity" style="color:${esc(color)};">${esc(a.rarity)}</div>
+        ${a.desc ? `<div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:4px;">${esc(a.desc)}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+async function createAchievement() {
+  const icon   = document.getElementById('achIcon').value.trim()  || '🏆';
+  const name   = document.getElementById('achName').value.trim();
+  const rarity = document.getElementById('achRarity').value;
+  const desc   = document.getElementById('achDesc').value.trim();
+  if (!name) return showMsg('achPoolMsg', 'Name is required.', 'error');
+
+  const res = await authFetch('/api/achievements/', {
+    method: 'POST',
+    body: JSON.stringify({ icon, name, rarity, desc }),
+  });
+  if (res.ok) {
+    document.getElementById('achIcon').value = '';
+    document.getElementById('achName').value = '';
+    document.getElementById('achDesc').value = '';
+    showMsg('achPoolMsg', `✓ "${name}" created.`, 'success');
+    loadAchievementPool();
+  } else {
+    const err = await res.json();
+    showMsg('achPoolMsg', err.detail || 'Failed.', 'error');
+  }
+}
+
+async function deleteGlobalAchievement(id) {
+  if (!confirm('Delete this achievement? It will be revoked from all users.')) return;
+  const res = await authFetch(`/api/achievements/${id}`, { method: 'DELETE' });
+  if (res.ok) loadAchievementPool();
+}
+
+// ── ALL MEMBERS ───────────────────────────────────────────────────
+async function loadAllMembers() {
+  const res     = await authFetch('/api/users/');
+  const members = res.ok ? await res.json() : [];
+  const tbody   = document.getElementById('membersTableBody');
+
+  if (!members.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:center;padding:24px;">No members found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = members.map(m => {
+    const c = RANK_COLORS[m.rank] || '#5a6a85';
+    return `
+      <tr>
+        <td class="mt-emoji">${esc(m.emoji || '?')}</td>
+        <td>
+          <span class="mt-handle">${esc(m.handle)}</span>
+          ${m.is_admin ? '<span class="mt-admin" style="margin-left:8px;">ADMIN</span>' : ''}
+        </td>
+        <td><span class="mt-rank" style="color:${esc(c)};border-color:${esc(c)};">${esc(m.rank)}</span></td>
+        <td style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">${timeAgo(m.last_seen)}</td>
+        <td>
+          <button class="mt-btn" onclick="loadManageUser('${esc(m.handle)}')">Manage</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+async function loadManageUser(handle) {
+  switchTab('manage');
+  document.getElementById('searchHandle').value = handle;
+  await searchUser();
+}
+
+// Enter key in search
+document.getElementById('searchHandle').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchUser();
+});
+
+// Enter key in register
+document.getElementById('regHandle').addEventListener('keydown', e => {
+  if (e.key === 'Enter') registerUser();
+});
+</script>
+
+</body>
+</html>

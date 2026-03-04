@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEADCATS // Researcher Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syncopate:wght@400;700&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/theme-landing.css">
+  <link rel="stylesheet" href="assets/css/index.css">
+  <script src="assets/js/include.js" defer></script>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <div data-include="partials/header.html"></div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="corner-accent"></div>
+    <div class="hero-left">
+      <div class="hero-eyebrow">Researcher Portal // v1.0.0</div>
+      <h1 class="hero-title">
+        <span class="dc">DEADCATS</span>
+        RESEARCH<br>COLLECTIVE
+      </h1>
+      <p class="hero-subtitle">Threat Intel · Malware Analysis · Exploitation Research</p>
+      <p class="hero-desc">
+        A <strong>closed-network collaboration platform</strong> for the team.
+        Share findings, track IOCs, annotate samples, and build a collective
+        intelligence base — all behind Tailscale. <strong>No cloud. No exposure. No noise.</strong>
+      </p>
+      <div class="hero-actions">
+        <a href="login.html" class="btn-primary">Access Portal</a>
+        <a href="#features" class="btn-secondary">View modules</a>
+      </div>
+
+    </div>
+
+    <div class="hero-right">
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="t-dot red"></div>
+          <div class="t-dot yellow"></div>
+          <div class="t-dot green"></div>
+          <span class="terminal-title">deadcats@research-node:~</span>
+        </div>
+        <div class="terminal-body">
+          <span class="t-line"><span class="t-prompt">❯ </span><span class="t-cmd">dc-platform --status</span></span>
+          <span class="t-line">&nbsp;</span>
+          <span class="t-line"><span class="t-comment">// DEADCATS Research Node</span></span>
+          <span class="t-line"><span class="t-bracket">{</span></span>
+          <span class="t-line">&nbsp;&nbsp;<span class="t-key"> "status"</span><span class="t-bracket">: </span><span
+              class="t-val">"operational"</span><span class="t-bracket">,</span></span>
+          <span class="t-line">&nbsp;&nbsp;<span class="t-key"> "network"</span><span class="t-bracket">: </span><span
+              class="t-val">"tailscale-mesh"</span><span class="t-bracket">,</span></span>
+          <span class="t-line">&nbsp;&nbsp;<span class="t-key"> "encryption"</span><span class="t-bracket">:
+            </span><span class="t-val">"wireguard/e2e"</span><span class="t-bracket">,</span></span>
+          <span class="t-line">&nbsp;&nbsp;<span class="t-key"> "modules"</span><span class="t-bracket">:
+              [</span></span>
+          <span class="t-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-string"> "ioc-tracker"</span><span
+              class="t-bracket">,</span></span>
+          <span class="t-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-string"> "mal-library"</span><span
+              class="t-bracket">,</span></span>
+          <span class="t-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-string"> "collab-notes"</span><span
+              class="t-bracket">,</span></span>
+          <span class="t-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-string"> "file-vault"</span></span>
+          <span class="t-line">&nbsp;&nbsp;<span class="t-bracket">],</span></span>
+          <span class="t-line">&nbsp;&nbsp;<span class="t-key"> "active_users"</span><span class="t-bracket">:
+            </span><span class="t-num">0</span><span class="t-bracket">,</span></span>
+          <span class="t-line">&nbsp;&nbsp;<span class="t-key"> "uptime"</span><span class="t-bracket">: </span><span
+              class="t-string">"100%"</span></span>
+          <span class="t-line"><span class="t-bracket">}</span></span>
+          <span class="t-line">&nbsp;</span>
+          <span class="t-line"><span class="t-prompt">❯ </span><span class="t-cursor"></span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span class="marquee-item">Malware Analysis</span>
+      <span class="marquee-item">IOC Tracking</span>
+      <span class="marquee-item">Exploit Research</span>
+      <span class="marquee-item">Threat Intelligence</span>
+      <span class="marquee-item">Rootkit Development</span>
+      <span class="marquee-item">Reverse Engineering</span>
+      <span class="marquee-item">Network Forensics</span>
+      <span class="marquee-item">YARA Rules</span>
+      <span class="marquee-item">Binary Exploitation</span>
+      <span class="marquee-item">Protocol Analysis</span>
+      <!-- duplicate for seamless loop -->
+      <span class="marquee-item">Malware Analysis</span>
+      <span class="marquee-item">IOC Tracking</span>
+      <span class="marquee-item">Exploit Research</span>
+      <span class="marquee-item">Threat Intelligence</span>
+      <span class="marquee-item">Rootkit Development</span>
+      <span class="marquee-item">Reverse Engineering</span>
+      <span class="marquee-item">Network Forensics</span>
+      <span class="marquee-item">YARA Rules</span>
+      <span class="marquee-item">Binary Exploitation</span>
+      <span class="marquee-item">Protocol Analysis</span>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-title">Platform Modules</span>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⬡</div>
+        <div class="feature-name">IOC Tracker</div>
+        <p class="feature-desc">Submit, tag, and search indicators of compromise across the team. IPs, domains, hashes,
+          URLs. Bulk import via CSV. Export to any toolchain.</p>
+        <span class="feature-tag">Active</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">◈</div>
+        <div class="feature-name">Research Library</div>
+        <p class="feature-desc">Shared Markdown knowledge base with full-text search. Write analysis reports, document
+          TTP findings, annotate techniques. Version history on every entry.</p>
+        <span class="feature-tag">Active</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⬕</div>
+        <div class="feature-name">File Vault</div>
+        <p class="feature-desc">Upload samples, screenshots, memory dumps, and reports. SHA256 hashed on upload. Tagged
+          and annotated. Access logged. Never touches cloud storage.</p>
+        <span class="feature-tag">Active</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">◉</div>
+        <div class="feature-name">Live Collab</div>
+        <p class="feature-desc">Real-time collaborative note editing over WebSockets. See what teammates are writing as
+          they write it. Activity feed shows all research contributions live.</p>
+        <span class="feature-tag">Active</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⬙</div>
+        <div class="feature-name">Member Profiles</div>
+        <p class="feature-desc">Individual dashboards per researcher. Track your notes, IOC submissions, and findings.
+          Role-based access — admin and researcher tiers. Private and shared workspaces.</p>
+        <span class="feature-tag">Active</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">◪</div>
+        <div class="feature-name">Tailscale Mesh</div>
+        <p class="feature-desc">Zero exposure to the public internet. Every team member connects over an encrypted
+          WireGuard mesh. No domain required. Network-layer ACLs before application auth.</p>
+        <span class="feature-tag">Secure</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESS PANEL -->
+  <section class="access-panel" id="access">
+    <div class="access-left">
+      <div class="section-num">02</div>
+      <h2 class="access-title">Authenticate<br>to <span>Portal</span></h2>
+      <p class="access-desc">Access is restricted to authorised DEADCATS team members connected via the Tailscale mesh
+        network. External connections are dropped at the network layer.</p>
+      <div class="network-info">
+        <div class="net-item">
+          <span class="net-label">NETWORK</span>
+          <span class="net-value">Tailscale Mesh</span>
+        </div>
+        <div class="net-item">
+          <span class="net-label">PROTOCOL</span>
+          <span class="net-value">WireGuard/E2E</span>
+        </div>
+        <div class="net-item">
+          <span class="net-label">NODE STATUS</span>
+          <span class="net-value">Online</span>
+        </div>
+        <div class="net-item">
+          <span class="net-label">EXTERNAL ACCESS</span>
+          <span class="net-value red">Blocked</span>
+        </div>
+        <div class="net-item">
+          <span class="net-label">AUTH</span>
+          <span class="net-value amber">JWT / Invite Only</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-form">
+      <a href="login.html" class="form-submit" style="display:block; text-align:center; text-decoration:none;">Login to Portal →</a>
+      <div class="form-footer">
+        No account? Contact an admin to get access.
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <div data-include="partials/footer.html"></div>
+
+</body>
+
+</html>

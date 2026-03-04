@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEADCATS // Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/theme-portal.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <style>
+    .boards-row { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px; }
+    .ann-board { background: var(--surface); border: 1px solid var(--border); overflow: hidden; }
+    .ann-board.creds { border-color: rgba(240,165,0,0.3); background: rgba(240,165,0,0.03); }
+    .ann-board-head { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .ann-board.creds .ann-board-head { border-bottom-color: rgba(240,165,0,0.2); background: rgba(240,165,0,0.05); }
+    .ann-board-title { font-family: var(--mono); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
+    .ann-board.creds .ann-board-title { color: var(--gold); }
+    .ann-post-btn { font-family: var(--mono); font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; padding: 4px 10px; border: 1px solid var(--border2); background: transparent; color: var(--text-dim); cursor: crosshair; transition: all 0.2s; display: none; }
+    .ann-post-btn:hover { color: var(--cyan); border-color: var(--cyan-dim); }
+    .ann-post-btn.creds-btn:hover { color: var(--gold); border-color: rgba(240,165,0,0.3); }
+    .ann-items { padding: 8px 0; max-height: 280px; overflow-y: auto; }
+    .ann-item { padding: 12px 16px; border-bottom: 1px solid var(--border); position: relative; transition: background 0.15s; }
+    .ann-item:last-child { border-bottom: none; }
+    .ann-item:hover { background: rgba(255,255,255,0.02); }
+    .ann-item-title { font-family: var(--body); font-size: 13px; font-weight: 600; color: var(--text-bright); margin-bottom: 4px; padding-right: 60px; }
+    .ann-item-content { font-family: var(--mono); font-size: 10px; color: var(--text-mid); margin-bottom: 6px; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+    .ann-item-meta { font-family: var(--mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.08em; display: flex; gap: 10px; align-items: center; }
+    .ann-expires { color: var(--red2); font-size: 8px; }
+    .ann-del-btn { position: absolute; top: 10px; right: 12px; background: transparent; border: none; color: var(--text-dim); cursor: crosshair; font-size: 11px; padding: 2px 5px; transition: color 0.2s; display: none; }
+    .ann-del-btn:hover { color: var(--red2); }
+    .ann-empty { padding: 24px 16px; font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-align: center; }
+    .creds-item .ann-item-content { color: var(--gold); background: rgba(240,165,0,0.05); border: 1px solid rgba(240,165,0,0.15); padding: 8px 10px; }
+    .modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .modal-overlay.hidden { display: none; }
+    .modal { background: var(--bg2); border: 1px solid var(--border2); padding: 28px; width: 480px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); }
+    .modal-title { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; color: var(--text-bright); margin-bottom: 20px; }
+    .modal-row { margin-bottom: 14px; }
+    .modal-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; display: block; }
+    .modal-input, .modal-textarea, .modal-select { width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border2); color: var(--text-bright); font-family: var(--mono); font-size: 12px; outline: none; cursor: text; transition: border-color 0.2s; }
+    .modal-input:focus, .modal-textarea:focus, .modal-select:focus { border-color: var(--cyan-dim); }
+    .modal-textarea { resize: vertical; min-height: 100px; font-family: var(--body); font-size: 13px; line-height: 1.6; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .modal-btn { font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; padding: 8px 16px; border: 1px solid var(--border2); background: transparent; color: var(--text-dim); cursor: crosshair; transition: all 0.2s; }
+    .modal-btn:hover { color: var(--text); border-color: var(--text-mid); }
+    .modal-btn.confirm { color: var(--green); border-color: rgba(0,255,136,0.3); }
+    .modal-btn.confirm:hover { background: rgba(0,255,136,0.08); }
+  </style>
+  <script src="assets/js/include.js" defer></script>
+  <script src="assets/js/dashboard.js" defer></script>
+</head>
+
+<body>
+
+  <!-- TOP NAV -->
+  <div data-include="partials/dashboard-topnav.html"></div>
+
+  <!-- SIDEBAR -->
+  <div data-include="partials/dashboard-sidebar.html"></div>
+
+  <!-- POST MODAL -->
+  <div class="modal-overlay hidden" id="postModal">
+    <div class="modal">
+      <div class="modal-title" id="modalTitle">Post Announcement</div>
+      <div class="modal-row">
+        <label class="modal-label">Title</label>
+        <input class="modal-input" type="text" id="postTitle" placeholder="Announcement title...">
+      </div>
+      <div class="modal-row">
+        <label class="modal-label" id="contentLabel">Content</label>
+        <textarea class="modal-textarea" id="postContent" placeholder="Details..."></textarea>
+      </div>
+      <div class="modal-row">
+        <label class="modal-label">Expires in</label>
+        <select class="modal-select" id="postExpires">
+          <option value="1">1 day (12-24hr CTF)</option>
+          <option value="2">2 days (48hr CTF)</option>
+          <option value="3">3 days (72hr CTF)</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn" onclick="closePostModal()">Cancel</button>
+        <button class="modal-btn confirm" id="postConfirmBtn" onclick="submitPost()">Post</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="main-inner">
+
+      <!-- Header -->
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+        </div>
+        <div class="page-meta">NODE <span>DC-RESEARCH-01</span> &nbsp;·&nbsp; <span id="dateStr">--</span></div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-card" style="--accent: var(--cyan);">
+          <div class="sc-label"><span class="sc-ico">📌</span> Total IOCs</div>
+          <div class="sc-value cyan" id="stat-iocs">—</div>
+          <div class="sc-sub">tracked indicators</div>
+        </div>
+        <div class="stat-card" style="--accent: var(--red2);">
+          <div class="sc-label"><span class="sc-ico">📖</span> Research Notes</div>
+          <div class="sc-value red" id="stat-notes">—</div>
+          <div class="sc-sub">in library</div>
+        </div>
+        <div class="stat-card" style="--accent: var(--gold);">
+          <div class="sc-label"><span class="sc-ico">👥</span> Total Members</div>
+          <div class="sc-value gold" id="stat-members">—</div>
+          <div class="sc-sub">registered</div>
+        </div>
+        <div class="stat-card" style="--accent: var(--green);">
+          <div class="sc-label"><span class="sc-ico">🟢</span> Members Online</div>
+          <div class="sc-value green" id="stat-online">—</div>
+          <div class="sc-sub" id="stat-total">active now</div>
+        </div>
+      </div>
+
+      <!-- Notice + Creds boards -->
+      <div class="boards-row">
+
+        <!-- Announcements -->
+        <div class="ann-board">
+          <div class="ann-board-head">
+            <span class="ann-board-title">📣 &nbsp; Announcements</span>
+            <button class="ann-post-btn" id="noticePostBtn" onclick="openPostModal('notice')">+ Post</button>
+          </div>
+          <div class="ann-items" id="noticeItems">
+            <div class="ann-empty">No announcements.</div>
+          </div>
+        </div>
+
+        
+
+      </div>
+
+      <!-- Notes + Members -->
+      <div class="three-col">
+
+        <div style="display:flex; flex-direction:column; gap:20px;">
+
+          <!-- Recent Notes -->
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-title"><span class="panel-title-ico">📖</span> Latest Research Notes</span>
+              <a href="library.html" class="panel-action">View all →</a>
+            </div>
+            <div class="notes-list" id="recent-notes">
+              <div style="padding:16px 18px;font-family:var(--mono);font-size:10px;color:var(--text-dim);">Loading notes...</div>
+            </div>
+          </div>
+
+          <!-- Recently active -->
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-title"><span class="panel-title-ico">⚡</span> Recently Active</span>
+            </div>
+            <div class="members-list" id="active-members">
+              <div style="padding:16px 18px;font-family:var(--mono);font-size:10px;color:var(--text-dim);">Loading...</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Members -->
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title"><span class="panel-title-ico">👥</span> Members</span>
+            <a href="members.html" class="panel-action">All →</a>
+          </div>
+          <div class="members-list" id="members-list">
+            <div style="padding:16px 18px;font-family:var(--mono);font-size:10px;color:var(--text-dim);">Loading members...</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+</body>
+</html>

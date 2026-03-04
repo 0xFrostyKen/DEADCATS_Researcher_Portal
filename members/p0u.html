@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEADCATS // Member Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<script>
+/* ================================================================
+   ✏️  EDIT THIS BLOCK ONLY — everything else updates automatically
+   ================================================================ */
+const MEMBER = {
+
+  // Basic info
+  handle:   "p0u",          // username displayed as // handle
+  emoji:    "💦",               // avatar emoji
+  bio:      "// for the streets",
+
+  // Rank — choose ONE:
+  // "DEADCAT" | "Scholar" | "Paladin" | "Gandalf" | "Arch Duke"
+  rank: "Arch Duke",
+
+  // Specializations — level: "ELITE" | "ADV" | "MID" | "NOVICE"
+  specializations: [
+  ],
+
+  // Achievements — set unlocked: false to show as locked
+  // rarity: "legendary" | "rare" | "uncommon" | "common"
+  // equipped: true = shown with EQUIPPED badge (only one at a time)
+  achievements: [
+    {
+      icon: "🐉", name: "Dragon Slayer",
+      rarity: "legendary", equipped: true, unlocked: true,
+      desc: "Was part of the first team victory against the dragons."
+    },
+    {
+      icon: "🔎", name: "CVE Digger",
+      rarity: "legendary", equipped: false, unlocked: true,
+      desc: "Got a CVE officially assigned to their research."
+    },
+    {
+      icon: "📖", name: "Researcher",
+      rarity: "uncommon", equipped: false, unlocked: true,
+      desc: "Helped with a team research project."
+    },
+    {
+      icon: "🏗️", name: "Architect",
+      rarity: "rare", equipped: false, unlocked: true,
+      desc: "Helped design and build team lab architectures."
+    },
+    {
+      icon: "🔨", name: "Builder",
+      rarity: "uncommon", equipped: false, unlocked: true,
+      desc: "Helped build a team project from the ground up."
+    },
+    {
+      icon: "📚", name: "Librarian",
+      rarity: "uncommon", equipped: false, unlocked: false,
+      desc: "Maintains and organises team documentation."
+    },
+    {
+      icon: "🦠", name: "Malanist",
+      rarity: "rare", equipped: false, unlocked: false,
+      desc: "Massive contribution to the team's malware analysis library."
+    },
+    {
+      icon: "🕵️", name: "Seeker",
+      rarity: "rare", equipped: false, unlocked: false,
+      desc: "Massive contribution to team forensics docs and challenges."
+    },
+    {
+      icon: "🕸️", name: "Webspider",
+      rarity: "rare", equipped: false, unlocked: false,
+      desc: "Massive contribution to team web research and web challenges."
+    },
+    {
+      icon: "💣", name: "Boomnary",
+      rarity: "rare", equipped: false, unlocked: false,
+      desc: "Massive contribution to binary and Pwn research and challenges."
+    },
+    {
+      icon: "🦅", name: "HawkEye",
+      rarity: "rare", equipped: false, unlocked: false,
+      desc: "Massive contribution to OSINT challenges and research."
+    },
+    {
+      icon: "⏪", name: "Rewinder",
+      rarity: "rare", equipped: false, unlocked: false,
+      desc: "Massive contribution to reverse engineering research and challenges."
+    },
+    {
+      icon: "🔐", name: "Cryptkeeper",
+      rarity: "rare", equipped: false, unlocked: false,
+      desc: "Massive contribution to cryptography research and challenges."
+    },
+    {
+      icon: "☁️", name: "Cloud Walker",
+      rarity: "uncommon", equipped: false, unlocked: false,
+      desc: "Massive contribution to cloud security and OSINT research."
+    },
+    {
+      icon: "📡", name: "Packet Sage",
+      rarity: "uncommon", equipped: false, unlocked: false,
+      desc: "Massive contribution to network security research and challenges."
+    },
+  ],
+
+  // Social links — set to "" to hide
+  github:  "",
+  twitter: "",
+  htb:     "",
+  ctftime: "",   // e.g. "ctftime.org/team/xxxxx"
+
+  // Stats
+  stats: {
+    notes:    0,
+    iocs:     0,
+    files:    0,
+    findings: 0,
+  },
+
+};
+/* ================================================================
+   END OF EDITABLE BLOCK — do not touch anything below this line
+   ================================================================ */
+
+
+// ── Rank config ──────────────────────────────────────────────────
+const RANKS = {
+  "DEADCAT":  { color: "#5a6a85", bg: "rgba(90,106,133,0.1)",  border: "rgba(90,106,133,0.3)",  label: "Initial Member"              },
+  "Scholar":  { color: "#00d4ff", bg: "rgba(0,212,255,0.07)",  border: "rgba(0,212,255,0.25)",  label: "Contributing Researcher"     },
+  "Paladin":  { color: "#00ff88", bg: "rgba(0,255,136,0.07)",  border: "rgba(0,255,136,0.25)",  label: "Team Captain · Powerhouse"   },
+  "Gandalf":  { color: "#9b5de5", bg: "rgba(155,93,229,0.07)", border: "rgba(155,93,229,0.25)", label: "Sage · Excellent Hacker"     },
+  "Arch Duke":{ color: "#f0a500", bg: "rgba(240,165,0,0.08)",  border: "rgba(240,165,0,0.3)",   label: "Founding Circle · Inner Ring"},
+};
+
+const RARITY = {
+  legendary: { color: "#f0a500", label: "★ Legendary" },
+  rare:      { color: "#9b5de5", label: "◆ Rare"      },
+  uncommon:  { color: "#00d4ff", label: "◇ Uncommon"  },
+  common:    { color: "#5a6a85", label: "· Common"    },
+};
+
+const LEVEL_STYLE = {
+  ELITE:  { color: "#ff2040", border: "#5a000c" },
+  ADV:    { color: "#00d4ff", border: "#003a4d" },
+  MID:    { color: "#f0a500", border: "#4a3200" },
+  NOVICE: { color: "#5a6a85", border: "#1a2030" },
+};
+
+// ── Render ────────────────────────────────────────────────────────
+const rank   = RANKS[MEMBER.rank] || RANKS["DEADCAT"];
+const equipped = MEMBER.achievements.find(a => a.equipped && a.unlocked);
+
+document.title = `DEADCATS // ${MEMBER.handle} — Profile`;
+
+function renderSpecializations() {
+  return MEMBER.specializations.map(s => {
+    const lvl = LEVEL_STYLE[s.level] || LEVEL_STYLE.NOVICE;
+    return `
+      <div class="spec-item">
+        <div class="spec-left">
+          <span class="spec-icon">${s.icon}</span>
+          <span class="spec-name">${s.name}</span>
+        </div>
+        <span class="spec-lvl" style="color:${lvl.color};border-color:${lvl.border};">${s.level}</span>
+      </div>`;
+  }).join('');
+}
+
+function renderAchievements() {
+  return MEMBER.achievements.map(a => {
+    const r = RARITY[a.rarity] || RARITY.common;
+    const lockedClass   = !a.unlocked ? ' locked' : '';
+    const equippedClass = a.equipped && a.unlocked ? ' equipped' : '';
+    const nameColor     = a.unlocked ? r.color : '#5a6a85';
+    return `
+      <div class="title-card${lockedClass}${equippedClass}" style="--rcolor:${r.color};">
+        ${a.equipped && a.unlocked ? '<div class="equipped-badge">EQUIPPED</div>' : ''}
+        <span class="title-icon">${a.icon}</span>
+        <div class="title-rarity" style="color:${r.color};">${r.label}</div>
+        <div class="title-name" style="color:${nameColor};">${a.name}</div>
+        <div class="title-desc">${a.desc}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderSocials() {
+  const links = [
+    { val: MEMBER.github,  ico: "⌥", prefix: "" },
+    { val: MEMBER.twitter, ico: "✕", prefix: "" },
+    { val: MEMBER.htb,     ico: "⬡", prefix: "" },
+    { val: MEMBER.ctftime, ico: "🚩", prefix: "" },
+  ].filter(l => l.val);
+  if (!links.length) return '<span style="color:var(--text-dim);font-size:11px;font-family:var(--mono);">No links set.</span>';
+  return links.map(l => `
+    <a href="https://${l.val.replace(/^https?:\/\//,'')}" target="_blank" class="social-link">
+      <span class="social-ico">${l.ico}</span>${l.val}
+    </a>`).join('');
+}
+
+function renderStats() {
+  const items = [
+    { num: MEMBER.stats.notes,    lbl: "Notes",    color: "" },
+    { num: MEMBER.stats.iocs,     lbl: "IOCs",     color: "#00d4ff" },
+    { num: MEMBER.stats.files,    lbl: "Files",    color: "#f0a500" },
+    { num: MEMBER.stats.findings, lbl: "Findings", color: "#9b5de5" },
+  ];
+  return items.map(i => `
+    <div class="stat-box">
+      <div class="stat-num" style="${i.color ? 'color:'+i.color : ''}">${i.num}</div>
+      <div class="stat-lbl">${i.lbl}</div>
+    </div>`).join('');
+}
+
+// ── Build HTML ────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById('root').innerHTML = `
+
+  <div class="bg-layer"></div>
+  <div class="jp-bg">死猫</div>
+
+  <nav>
+    <div class="nav-left">
+      <span class="nav-logo">DEAD<span>CATS</span></span>
+      <div class="nav-sep"></div>
+      <span class="nav-crumb">members / <span>${MEMBER.handle}</span></span>
+    </div>
+    <div class="nav-right">
+      <a href="../index.html" class="nav-link">Home</a>
+      <a href="#" class="nav-link">Dashboard</a>
+      <a href="#" class="nav-link">Library</a>
+      <a href="#" class="nav-link">IOCs</a>
+      <div class="nav-user">
+        <div class="nav-avatar">${MEMBER.emoji}</div>
+        ${MEMBER.handle}
+      </div>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <!-- BANNER -->
+    <div class="profile-banner">
+      <div class="banner-bg" style="--rcolor:${rank.color};"></div>
+      <div class="banner-slash"></div>
+      <div class="banner-jp">研究者</div>
+      <div class="banner-content">
+        <div class="avatar-wrap">
+          <div class="avatar" style="border-color:${rank.color}; box-shadow: 0 0 32px ${rank.bg}, inset 0 0 24px ${rank.bg};">
+            ${MEMBER.emoji}
+            <div class="avatar-bracket tl"></div>
+            <div class="avatar-bracket tr"></div>
+            <div class="avatar-bracket bl"></div>
+            <div class="avatar-bracket br"></div>
+          </div>
+          <div class="online-ring"></div>
+        </div>
+        <div class="banner-info">
+          <div class="profile-handle">
+            <span style="color:${rank.color};">//</span> ${MEMBER.handle}
+            <span class="rank-badge" style="color:${rank.color}; border-color:${rank.border}; background:${rank.bg};">
+              ${MEMBER.rank}
+            </span>
+          </div>
+          <div class="profile-subtitle" style="color:${rank.color}; opacity:0.7;">
+            ${rank.label} · DEADCATS
+          </div>
+          ${equipped ? `
+          <div class="equipped-title" style="color:${rank.color};">
+            <span>${equipped.icon}</span> ${equipped.name}
+          </div>` : ''}
+        </div>
+        <a href="#" class="btn-edit">✎ Edit Profile</a>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <div class="sidebar-section">
+        <div class="ss-label">Bio</div>
+        <p class="bio-text">${MEMBER.bio}</p>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="ss-label">Stats</div>
+        <div class="stats-grid">${renderStats()}</div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="ss-label">Specializations</div>
+        <div class="spec-list">${renderSpecializations()}</div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="ss-label">Links</div>
+        <div class="social-links">${renderSocials()}</div>
+      </div>
+
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div>
+        <div class="section-head">Titles &amp; Achievements</div>
+        <div class="titles-grid">${renderAchievements()}</div>
+      </div>
+    </main>
+
+  </div>`;
+});
+</script>
+
+<style>
+  :root {
+    --bg:        #05060a;
+    --bg2:       #090b12;
+    --bg3:       #0d1018;
+    --surface:   #111520;
+    --border:    #1a2030;
+    --border2:   #242e45;
+    --red:       #e8001e;
+    --red2:      #ff2040;
+    --red-dim:   #5a000c;
+    --red-glow:  rgba(232,0,30,0.18);
+    --cyan:      #00d4ff;
+    --cyan-dim:  #003a4d;
+    --gold:      #f0a500;
+    --gold-dim:  #4a3200;
+    --green:     #00ff88;
+    --text:      #b8c8e0;
+    --text-dim:  #445060;
+    --text-mid:  #6a7a95;
+    --text-bright:#ddeeff;
+    --mono:    'Share Tech Mono', monospace;
+    --display: 'Syncopate', sans-serif;
+    --jp:      'Noto Sans JP', sans-serif;
+    --body:    'Rajdhani', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-x: hidden;
+    cursor: crosshair;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  .bg-layer {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden;
+  }
+  .bg-layer::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 15% 50%, rgba(232,0,30,0.05) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 60% at 85% 30%, rgba(0,212,255,0.04) 0%, transparent 70%);
+  }
+  .bg-layer::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.2;
+    mask-image: radial-gradient(ellipse 100% 100% at 50% 0%, black 30%, transparent 100%);
+  }
+
+  .jp-bg {
+    position: fixed; top: 0; right: 0;
+    font-family: var(--jp); font-weight: 100; font-size: 180px;
+    color: rgba(232,0,30,0.025);
+    pointer-events: none; z-index: 0; user-select: none;
+    writing-mode: vertical-rl; padding: 20px;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100; height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px;
+    background: rgba(5,6,10,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-left { display: flex; align-items: center; gap: 20px; }
+  .nav-logo { font-family: var(--display); font-size: 10px; font-weight: 700; letter-spacing: 0.3em; color: var(--text-bright); }
+  .nav-logo span { color: var(--red2); }
+  .nav-sep { width: 1px; height: 20px; background: var(--border2); }
+  .nav-crumb { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; }
+  .nav-crumb span { color: var(--cyan); }
+  .nav-right { display: flex; align-items: center; gap: 24px; }
+  .nav-link { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-decoration: none; letter-spacing: 0.15em; text-transform: uppercase; transition: color 0.2s; }
+  .nav-link:hover { color: var(--text); }
+  .nav-user { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 10px; color: var(--text-mid); }
+  .nav-avatar { width: 26px; height: 26px; border: 1px solid var(--border2); background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+
+  /* PAGE LAYOUT */
+  .page {
+    position: relative; z-index: 1; padding-top: 52px;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: auto 1fr;
+    min-height: 100vh;
+  }
+
+  /* BANNER */
+  .profile-banner {
+    grid-column: 1 / -1;
+    position: relative; height: 190px; overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .banner-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--rcolor, #e8001e) 12%, transparent) 0%, transparent 50%), var(--bg2);
+  }
+  .banner-slash { position: absolute; inset: 0; overflow: hidden; }
+  .banner-slash::before {
+    content: ''; position: absolute; top: -50%; left: 10%;
+    width: 2px; height: 300%;
+    background: linear-gradient(to bottom, transparent, rgba(232,0,30,0.15), transparent);
+    transform: rotate(15deg);
+  }
+  .banner-jp {
+    position: absolute; bottom: 16px; right: 40px;
+    font-family: var(--jp); font-weight: 100; font-size: 48px;
+    color: rgba(255,255,255,0.04); user-select: none;
+  }
+  .banner-content {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 0 40px 24px;
+    display: flex; align-items: flex-end; gap: 24px;
+  }
+
+  /* AVATAR */
+  .avatar-wrap { position: relative; flex-shrink: 0; }
+  .avatar {
+    width: 96px; height: 96px;
+    border: 2px solid var(--red2);
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; position: relative; overflow: hidden;
+  }
+  .avatar::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(232,0,30,0.15), transparent); }
+  .avatar-bracket { position: absolute; width: 12px; height: 12px; }
+  .avatar-bracket.tl { top:-4px; left:-4px; border-top:2px solid var(--cyan); border-left:2px solid var(--cyan); }
+  .avatar-bracket.tr { top:-4px; right:-4px; border-top:2px solid var(--cyan); border-right:2px solid var(--cyan); }
+  .avatar-bracket.bl { bottom:-4px; left:-4px; border-bottom:2px solid var(--cyan); border-left:2px solid var(--cyan); }
+  .avatar-bracket.br { bottom:-4px; right:-4px; border-bottom:2px solid var(--cyan); border-right:2px solid var(--cyan); }
+  .online-ring {
+    position: absolute; bottom: 4px; right: 4px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--green); border: 2px solid var(--bg);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse-green 2s ease-in-out infinite;
+  }
+  @keyframes pulse-green {
+    0%,100% { box-shadow: 0 0 8px var(--green); }
+    50%      { box-shadow: 0 0 16px var(--green), 0 0 24px rgba(0,255,136,0.3); }
+  }
+
+  .banner-info { flex: 1; padding-bottom: 4px; }
+  .profile-handle {
+    font-family: var(--display); font-size: 20px; font-weight: 700;
+    letter-spacing: 0.1em; color: var(--text-bright);
+    margin-bottom: 4px; display: flex; align-items: center; gap: 12px;
+  }
+  .rank-badge {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+    padding: 3px 10px; border: 1px solid;
+    text-transform: uppercase;
+  }
+  .profile-subtitle {
+    font-family: var(--jp); font-weight: 300; font-size: 11px;
+    letter-spacing: 0.2em; margin-bottom: 8px;
+  }
+  .equipped-title {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.15em; display: flex; align-items: center; gap: 6px;
+  }
+
+  .btn-edit {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--text-dim);
+    background: transparent; border: 1px solid var(--border2);
+    padding: 7px 16px; cursor: crosshair; transition: all 0.2s;
+    text-decoration: none; align-self: flex-end; margin-bottom: 8px;
+    white-space: nowrap;
+  }
+  .btn-edit:hover { color: var(--text); border-color: var(--text-dim); }
+
+  /* SIDEBAR */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    background: rgba(9,11,18,0.6);
+    padding: 28px 24px;
+    display: flex; flex-direction: column; gap: 28px;
+  }
+  .ss-label {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.3em;
+    color: var(--text-dim); text-transform: uppercase;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .ss-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .bio-text { font-family: var(--body); font-size: 13px; color: var(--text-mid); line-height: 1.7; font-weight: 300; }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-box {
+    background: var(--bg3); border: 1px solid var(--border);
+    padding: 12px; position: relative; overflow: hidden; transition: border-color 0.2s;
+  }
+  .stat-box:hover { border-color: var(--border2); }
+  .stat-box::before { content: ''; position: absolute; top:0; left:0; width:2px; height:100%; background: var(--red2); opacity:0.4; }
+  .stat-num { font-family: var(--display); font-size: 22px; font-weight: 700; color: var(--text-bright); line-height: 1; margin-bottom: 4px; }
+  .stat-lbl { font-family: var(--mono); font-size: 8px; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; }
+
+  .spec-list { display: flex; flex-direction: column; gap: 8px; }
+  .spec-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px; background: var(--bg3); border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .spec-item:hover { border-color: var(--border2); background: var(--surface); }
+  .spec-left { display: flex; align-items: center; gap: 8px; }
+  .spec-icon { font-size: 14px; width: 20px; text-align: center; }
+  .spec-name { font-family: var(--body); font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: 0.05em; }
+  .spec-lvl { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; padding: 2px 7px; border: 1px solid; }
+
+  .social-links { display: flex; flex-direction: column; gap: 6px; }
+  .social-link {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 10px; color: var(--text-dim);
+    text-decoration: none; padding: 7px 10px; border: 1px solid transparent; transition: all 0.2s; letter-spacing: 0.05em;
+  }
+  .social-link:hover { color: var(--text); border-color: var(--border); background: var(--bg3); }
+  .social-ico { font-size: 13px; width: 16px; text-align: center; }
+
+  /* MAIN */
+  .main { padding: 28px 32px; display: flex; flex-direction: column; gap: 28px; }
+  .section-head {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.3em;
+    color: var(--text-dim); text-transform: uppercase;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+  }
+  .section-head::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ACHIEVEMENT CARDS */
+  .titles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .title-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    padding: 16px; position: relative; overflow: hidden; transition: all 0.3s; cursor: default;
+  }
+  .title-card:hover { border-color: var(--rcolor, var(--border2)); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  .title-card.equipped { border-color: color-mix(in srgb, var(--rcolor, #f0a500) 40%, transparent); }
+  .equipped-badge {
+    position: absolute; top: 8px; right: 8px;
+    font-family: var(--mono); font-size: 7px; letter-spacing: 0.2em;
+    color: var(--gold); background: var(--gold-dim, #4a3200); padding: 2px 5px;
+  }
+  .title-card.locked { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
+  .title-icon { font-size: 22px; margin-bottom: 10px; display: block; }
+  .title-rarity { font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 8px; }
+  .title-name { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; }
+  .title-desc { font-family: var(--body); font-size: 11px; color: var(--text-dim); line-height: 1.5; font-weight: 300; }
+
+  /* Entrance animation */
+  #root > * { opacity: 0; animation: fadein 0.5s forwards; }
+  @keyframes fadein { to { opacity: 1; } }
+  .title-card { opacity: 0; animation: slideup 0.4s forwards; }
+  @keyframes slideup { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+</style>
+
+<div id="root"></div>
+</body>
+</html>

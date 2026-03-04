@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEADCATS // Bookmarks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05060a;--bg2:#090b12;--bg3:#0d1018;--surface:#111520;--border:#1a2030;--border2:#242e45;
+  --red:#e8001e;--red2:#ff2040;--red-dim:#3a000a;--red-glow:rgba(232,0,30,0.12);
+  --cyan:#00d4ff;--cyan-dim:#003a4d;--gold:#f0a500;--green:#00ff88;--purple:#9b5de5;
+  --text:#b8c8e0;--text-dim:#445060;--text-mid:#6a7a95;--text-bright:#ddeeff;
+  --mono:'IBM Plex Mono',monospace;--body:'IBM Plex Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;cursor:crosshair;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.05) 3px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999;}
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:0.12;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(5,6,10,0.97);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.3em;color:var(--text-bright);text-decoration:none;}
+.nav-logo span{color:var(--red2);}
+.nav-left,.nav-right{display:flex;align-items:center;gap:20px;}
+.nav-sep{width:1px;height:20px;background:var(--border2);}
+.nav-page{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;}
+.nav-page span{color:var(--gold);}
+.nav-link{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-decoration:none;letter-spacing:0.15em;text-transform:uppercase;transition:color 0.2s;}
+.nav-link:hover{color:var(--text);}
+
+.layout{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:80px 40px 80px;}
+
+.page-header{margin-bottom:36px;}
+.page-eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:0.5em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
+.page-title{font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:0.1em;color:var(--text-bright);}
+.page-title span{color:var(--gold);}
+.page-sub{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;color:var(--text-dim);margin-top:8px;}
+
+.section{margin-bottom:40px;}
+.section-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.section-icon{font-size:16px;}
+.section-label{font-family:var(--mono);font-size:10px;letter-spacing:0.3em;color:var(--text-dim);text-transform:uppercase;}
+.section-count{font-family:var(--mono);font-size:9px;color:var(--text-dim);background:var(--surface);border:1px solid var(--border2);padding:2px 8px;margin-left:auto;}
+
+/* Note cards */
+.note-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;}
+.bm-note-card{background:var(--bg2);border:1px solid var(--border);padding:16px;position:relative;transition:border-color 0.15s;cursor:crosshair;}
+.bm-note-card:hover{border-color:var(--border2);}
+.bm-note-title{font-family:var(--body);font-size:14px;font-weight:600;color:var(--text-bright);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:28px;}
+.bm-note-preview{font-family:var(--body);font-size:12px;color:var(--text-dim);margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.bm-note-meta{font-family:var(--mono);font-size:9px;color:var(--text-dim);display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.bm-tag{font-family:var(--mono);font-size:8px;padding:1px 5px;border:1px solid var(--border2);color:var(--text-mid);}
+.bm-open-link{font-family:var(--mono);font-size:8px;letter-spacing:0.15em;color:var(--cyan);text-decoration:none;border:1px solid var(--cyan-dim);padding:3px 8px;transition:all 0.2s;display:inline-block;margin-top:8px;}
+.bm-open-link:hover{background:rgba(0,212,255,0.06);}
+
+/* IOC rows */
+.ioc-bm-list{background:var(--bg2);border:1px solid var(--border);overflow:hidden;}
+.ioc-bm-row{display:flex;align-items:center;gap:14px;padding:11px 16px;border-bottom:1px solid var(--border);transition:background 0.15s;}
+.ioc-bm-row:last-child{border-bottom:none;}
+.ioc-bm-row:hover{background:var(--surface);}
+.type-badge{font-family:var(--mono);font-size:8px;letter-spacing:0.15em;padding:3px 7px;border:1px solid;text-transform:uppercase;flex-shrink:0;}
+.type-ip{color:#00d4ff;border-color:#003a4d;}.type-domain{color:#9b5de5;border-color:#2a1a4d;}.type-hash{color:#f0a500;border-color:#4a3200;}.type-url{color:#00ff88;border-color:#003a20;}.type-email{color:#ff6b9d;border-color:#4d1a2d;}.type-cve{color:#ff2040;border-color:#3a000a;}
+.sev-badge{font-family:var(--mono);font-size:8px;letter-spacing:0.1em;padding:2px 6px;border:1px solid;text-transform:uppercase;flex-shrink:0;}
+.sev-low{color:#5a6a85;border-color:#1a2030;}.sev-medium{color:#f0a500;border-color:#4a3200;}.sev-high{color:#ff6b35;border-color:#4d2010;}.sev-critical{color:#ff2040;border-color:#3a000a;background:rgba(232,0,30,0.08);}
+.ioc-bm-value{font-family:var(--mono);font-size:11px;color:var(--text-bright);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ioc-bm-meta{font-family:var(--mono);font-size:9px;color:var(--text-dim);white-space:nowrap;}
+
+/* Remove button */
+.bm-remove{position:absolute;top:10px;right:10px;background:transparent;border:none;color:var(--text-dim);font-size:12px;cursor:crosshair;padding:2px 5px;transition:color 0.15s;line-height:1;}
+.bm-remove:hover{color:var(--red2);}
+.ioc-bm-remove{background:transparent;border:none;color:var(--text-dim);font-size:12px;cursor:crosshair;padding:2px 6px;transition:color 0.15s;margin-left:auto;flex-shrink:0;}
+.ioc-bm-remove:hover{color:var(--red2);}
+
+/* Empty states */
+.bm-empty{padding:32px 24px;font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;text-align:center;}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">DEAD<span>CATS</span></a>
+    <div class="nav-sep"></div>
+    <span class="nav-page">// <span>bookmarks</span></span>
+  </div>
+  <div class="nav-right">
+    <a href="dashboard.html" class="nav-link">← Dashboard</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <div class="page-header">
+    <div class="page-eyebrow">Personal</div>
+    <div class="page-title">Your <span>Bookmarks</span></div>
+    <div class="page-sub">Starred notes and IOCs for quick access — visible only to you</div>
+  </div>
+
+  <!-- Bookmarked Notes -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-icon">📖</span>
+      <span class="section-label">Starred Notes</span>
+      <span class="section-count" id="note-count">0</span>
+    </div>
+    <div class="note-grid" id="bm-notes">
+      <div class="bm-empty">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Bookmarked IOCs -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-icon">📌</span>
+      <span class="section-label">Starred IOCs</span>
+      <span class="section-count" id="ioc-count">0</span>
+    </div>
+    <div class="ioc-bm-list" id="bm-iocs">
+      <div class="bm-empty">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API   = '';
+const token = localStorage.getItem('dc_token');
+const me    = JSON.parse(localStorage.getItem('dc_user') || 'null');
+if (!token || !me) window.location.href = 'login.html';
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function timeAgo(d) {
+  if (!d) return '';
+  const s = (Date.now() - new Date(d)) / 1000;
+  if (s < 60)    return 'just now';
+  if (s < 3600)  return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+
+function authFetch(url, opts = {}) {
+  return fetch(API + url, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token,
+      ...(opts.headers || {}),
+    },
+  });
+}
+
+async function removeBookmark(bmId, elId) {
+  const res = await authFetch('/api/bookmarks/' + bmId, { method: 'DELETE' });
+  if (res.ok || res.status === 204) {
+    const el = document.getElementById(elId);
+    if (el) el.remove();
+    updateCounts();
+  }
+}
+
+function updateCounts() {
+  document.getElementById('note-count').textContent =
+    document.querySelectorAll('#bm-notes .bm-note-card').length;
+  document.getElementById('ioc-count').textContent =
+    document.querySelectorAll('#bm-iocs .ioc-bm-row').length;
+
+  if (!document.querySelectorAll('#bm-notes .bm-note-card').length)
+    document.getElementById('bm-notes').innerHTML = '<div class="bm-empty">No starred notes yet — star notes in the Research Library.</div>';
+  if (!document.querySelectorAll('#bm-iocs .ioc-bm-row').length)
+    document.getElementById('bm-iocs').innerHTML = '<div class="bm-empty">No starred IOCs yet — star entries in the IOC Tracker.</div>';
+}
+
+async function loadBookmarks() {
+  const res = await authFetch('/api/bookmarks/');
+  if (!res.ok) {
+    document.getElementById('bm-notes').innerHTML = '<div class="bm-empty">Failed to load bookmarks.</div>';
+    document.getElementById('bm-iocs').innerHTML  = '<div class="bm-empty">Failed to load bookmarks.</div>';
+    return;
+  }
+  const all   = await res.json();
+  const notes = all.filter(b => b.item_type === 'note' && b.data);
+  const iocs  = all.filter(b => b.item_type === 'ioc'  && b.data);
+
+  document.getElementById('note-count').textContent = notes.length;
+  document.getElementById('ioc-count').textContent  = iocs.length;
+
+  // Render notes
+  const notesEl = document.getElementById('bm-notes');
+  if (!notes.length) {
+    notesEl.innerHTML = '<div class="bm-empty">No starred notes yet — star notes in the Research Library.</div>';
+  } else {
+    notesEl.innerHTML = notes.map(b => {
+      const n    = b.data;
+      const tags = (n.tags || []).filter(Boolean).map(t => `<span class="bm-tag">${esc(t.trim())}</span>`).join('');
+      return `
+        <div class="bm-note-card" id="bm-${b.id}">
+          <button class="bm-remove" title="Remove bookmark" onclick="removeBookmark(${b.id},'bm-${b.id}')">✕</button>
+          <div class="bm-note-title">${esc(n.title)}</div>
+          <div class="bm-note-preview">${esc(n.content || 'No content')}</div>
+          <div class="bm-note-meta">
+            <span>${esc(n.author_handle)}</span>
+            <span>${timeAgo(n.updated_at || n.created_at)}</span>
+            ${tags}
+          </div>
+          <a class="bm-open-link" href="library.html">→ Open Library</a>
+        </div>`;
+    }).join('');
+  }
+
+  // Render IOCs
+  const iocsEl = document.getElementById('bm-iocs');
+  if (!iocs.length) {
+    iocsEl.innerHTML = '<div class="bm-empty">No starred IOCs yet — star entries in the IOC Tracker.</div>';
+  } else {
+    iocsEl.innerHTML = iocs.map(b => {
+      const i = b.data;
+      return `
+        <div class="ioc-bm-row" id="bm-${b.id}">
+          <span class="type-badge type-${esc(i.type)}">${esc(i.type)}</span>
+          <span class="ioc-bm-value" title="${esc(i.value)}">${esc(i.value)}</span>
+          <span class="sev-badge sev-${esc(i.severity)}">${esc(i.severity)}</span>
+          <span class="ioc-bm-meta">${esc(i.author)} · ${timeAgo(i.created_at)}</span>
+          <a href="ioc-tracker.html" style="font-family:var(--mono);font-size:8px;color:var(--cyan);text-decoration:none;border:1px solid var(--cyan-dim);padding:2px 7px;white-space:nowrap;transition:all 0.2s;" onmouseover="this.style.background='rgba(0,212,255,0.06)'" onmouseout="this.style.background=''">→ Tracker</a>
+          <button class="ioc-bm-remove" title="Remove bookmark" onclick="removeBookmark(${b.id},'bm-${b.id}')">✕</button>
+        </div>`;
+    }).join('');
+  }
+}
+
+loadBookmarks();
+</script>
+</body>
+</html>

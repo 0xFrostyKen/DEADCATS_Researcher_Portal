@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEADCATS // IOC Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#05060a;--bg2:#090b12;--bg3:#0d1018;--surface:#111520;--border:#1a2030;--border2:#242e45;--red2:#ff2040;--red-dim:#3a000a;--red-glow:rgba(232,0,30,0.12);--cyan:#00d4ff;--cyan-dim:#003a4d;--gold:#f0a500;--green:#00ff88;--purple:#9b5de5;--text:#b8c8e0;--text-dim:#445060;--text-mid:#6a7a95;--text-bright:#ddeeff;--mono:'Share Tech Mono',monospace;--display:'Syncopate',sans-serif;--body:'Rajdhani',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;cursor:crosshair;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.05) 3px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999;}
+.bg-layer{position:fixed;inset:0;z-index:0;}
+.bg-layer::after{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;opacity:0.15;}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(5,6,10,0.97);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:0.3em;color:var(--text-bright);text-decoration:none;}
+.nav-logo span{color:var(--red2);}
+.nav-left,.nav-right{display:flex;align-items:center;gap:20px;}
+.nav-sep{width:1px;height:20px;background:var(--border2);}
+.nav-page{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;}
+.nav-page span{color:var(--cyan);}
+.nav-link{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-decoration:none;letter-spacing:0.15em;text-transform:uppercase;transition:color 0.2s;}
+.nav-link:hover{color:var(--text);}
+.layout{position:relative;z-index:1;max-width:1300px;margin:0 auto;padding:92px 32px 60px;}
+.page-header{margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;}
+.page-title{font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:0.15em;color:var(--text-bright);}
+.page-title span{color:var(--red2);}
+.header-actions{display:flex;gap:10px;}
+.btn{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:9px 18px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;}
+.btn.green{color:var(--green);border-color:rgba(0,255,136,0.3);}
+.btn.green:hover{background:rgba(0,255,136,0.08);}
+.btn.cyan{color:var(--cyan);border-color:var(--cyan-dim);}
+.btn.cyan:hover{background:rgba(0,212,255,0.06);}
+.stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;}
+.stat-pill{background:var(--bg2);border:1px solid var(--border);padding:10px 14px;text-align:center;cursor:crosshair;transition:all 0.2s;}
+.stat-pill.active{border-color:var(--cyan);}
+.sp-num{font-family:var(--display);font-size:18px;font-weight:700;color:var(--text-bright);line-height:1;}
+.sp-lbl{font-family:var(--mono);font-size:8px;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-top:4px;}
+.filters{display:flex;gap:10px;margin-bottom:16px;}
+.filter-input{flex:1;padding:9px 14px;background:var(--bg);border:1px solid var(--border2);color:var(--text-bright);font-family:var(--mono);font-size:12px;outline:none;transition:border-color 0.2s;}
+.filter-input:focus{border-color:var(--cyan-dim);}
+.filter-select{padding:9px 14px;background:var(--bg);border:1px solid var(--border2);color:var(--text-bright);font-family:var(--mono);font-size:11px;outline:none;cursor:crosshair;}
+.ioc-table-wrap{background:var(--bg2);border:1px solid var(--border);overflow:hidden;}
+.ioc-table{width:100%;border-collapse:collapse;}
+.ioc-table th{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;padding:11px 14px;border-bottom:1px solid var(--border2);background:var(--bg3);text-align:left;}
+.ioc-table td{padding:11px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text);vertical-align:middle;}
+.ioc-table tr:hover td{background:var(--surface);}
+.ioc-table tr:last-child td{border-bottom:none;}
+.type-badge{font-family:var(--mono);font-size:8px;letter-spacing:0.15em;padding:3px 7px;border:1px solid;text-transform:uppercase;}
+.type-ip{color:#00d4ff;border-color:#003a4d;}.type-domain{color:#9b5de5;border-color:#2a1a4d;}.type-hash{color:#f0a500;border-color:#4a3200;}.type-url{color:#00ff88;border-color:#003a20;}.type-email{color:#ff6b9d;border-color:#4d1a2d;}.type-cve{color:#ff2040;border-color:#3a000a;}
+.sev-badge{font-family:var(--mono);font-size:8px;letter-spacing:0.1em;padding:2px 6px;border:1px solid;text-transform:uppercase;}
+.sev-low{color:#5a6a85;border-color:#1a2030;}.sev-medium{color:#f0a500;border-color:#4a3200;}.sev-high{color:#ff6b35;border-color:#4d2010;}.sev-critical{color:#ff2040;border-color:#3a000a;background:rgba(232,0,30,0.08);}
+.ioc-value{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-bright);}
+.ioc-tags{display:flex;gap:4px;flex-wrap:wrap;}
+.ioc-tag{font-family:var(--mono);font-size:8px;padding:1px 5px;border:1px solid var(--border2);color:var(--text-mid);}
+.del-btn,.copy-btn{background:transparent;border:none;color:var(--text-dim);cursor:crosshair;font-size:12px;padding:2px 6px;transition:color 0.2s;}
+.del-btn:hover{color:var(--red2);}.copy-btn:hover{color:var(--cyan);}
+.table-empty{padding:40px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;}
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--bg2);border:1px solid var(--border2);padding:28px;width:500px;box-shadow:0 40px 80px rgba(0,0,0,0.6);}
+.modal-title{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:0.2em;color:var(--text-bright);margin-bottom:20px;}
+.modal-row{margin-bottom:14px;}
+.modal-label{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px;display:block;}
+.modal-input,.modal-select,.modal-textarea{width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border2);color:var(--text-bright);font-family:var(--mono);font-size:12px;outline:none;cursor:text;transition:border-color 0.2s;}
+.modal-input:focus,.modal-select:focus,.modal-textarea:focus{border-color:var(--cyan-dim);}
+.modal-textarea{resize:vertical;min-height:80px;font-family:var(--body);font-size:13px;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.modal-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:8px 16px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;}
+.modal-btn.confirm{color:var(--green);border-color:rgba(0,255,136,0.3);}
+.modal-btn.confirm:hover{background:rgba(0,255,136,0.08);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);}
+</style>
+</head>
+<body>
+<div class="bg-layer"></div>
+<div class="modal-overlay hidden" id="iocModal">
+  <div class="modal">
+    <div class="modal-title">Submit IOC</div>
+    <div class="modal-row"><label class="modal-label">Type *</label>
+      <select class="modal-select" id="iocType"><option value="ip">IP Address</option><option value="domain">Domain</option><option value="hash">Hash (MD5 / SHA256)</option><option value="url">URL</option><option value="email">Email</option><option value="cve">CVE</option></select></div>
+    <div class="modal-row"><label class="modal-label">Value *</label><input class="modal-input" type="text" id="iocValue" placeholder="e.g. 185.220.101.47"></div>
+    <div class="modal-row"><label class="modal-label">Severity</label>
+      <select class="modal-select" id="iocSeverity"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
+    <div class="modal-row"><label class="modal-label">Tags (comma separated)</label><input class="modal-input" type="text" id="iocTags" placeholder="c2, agenttesla, ransomware"></div>
+    <div class="modal-row"><label class="modal-label">Notes</label><textarea class="modal-textarea" id="iocNotes" placeholder="Context, source, related campaign..."></textarea></div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn confirm" onclick="submitIOC()">Submit</button>
+    </div>
+  </div>
+</div>
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">DEAD<span>CATS</span></a>
+    <div class="nav-sep"></div>
+    <span class="nav-page">// <span>ioc tracker</span></span>
+  </div>
+  <div class="nav-right"><a href="dashboard.html" class="nav-link">← Dashboard</a></div>
+</nav>
+<div class="layout">
+  <div class="page-header">
+    <div class="page-title">IOC <span>Tracker</span></div>
+    <div class="header-actions">
+      <button class="btn cyan" onclick="exportCSV()">↓ Export CSV</button>
+      <button class="btn green" onclick="openModal()">+ Submit IOC</button>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-pill active" onclick="filterByType(null,this)"><div class="sp-num" id="count-all">0</div><div class="sp-lbl">All</div></div>
+    <div class="stat-pill" onclick="filterByType('ip',this)"><div class="sp-num" id="count-ip" style="color:#00d4ff;">0</div><div class="sp-lbl">IPs</div></div>
+    <div class="stat-pill" onclick="filterByType('domain',this)"><div class="sp-num" id="count-domain" style="color:#9b5de5;">0</div><div class="sp-lbl">Domains</div></div>
+    <div class="stat-pill" onclick="filterByType('hash',this)"><div class="sp-num" id="count-hash" style="color:#f0a500;">0</div><div class="sp-lbl">Hashes</div></div>
+    <div class="stat-pill" onclick="filterByType('url',this)"><div class="sp-num" id="count-url" style="color:#00ff88;">0</div><div class="sp-lbl">URLs</div></div>
+    <div class="stat-pill" onclick="filterByType('cve',this)"><div class="sp-num" id="count-cve" style="color:#ff2040;">0</div><div class="sp-lbl">CVEs</div></div>
+  </div>
+  <div class="filters">
+    <input class="filter-input" type="text" id="searchInput" placeholder="Search IOCs..." oninput="applyFilters()">
+    <select class="filter-select" id="sevFilter" onchange="applyFilters()">
+      <option value="">All Severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option>
+    </select>
+  </div>
+  <div class="ioc-table-wrap">
+    <table class="ioc-table">
+      <thead><tr><th>Type</th><th>Value</th><th>Severity</th><th>Tags</th><th>Author</th><th>Added</th><th></th></tr></thead>
+      <tbody id="iocTableBody"><tr><td colspan="7" class="table-empty">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<script>
+const API=''
+const token=localStorage.getItem('dc_token')
+const me=JSON.parse(localStorage.getItem('dc_user')||'null')
+if(!token||!me)window.location.href='login.html'
+let allIOCs=[],activeType=null
+let bookmarkedIOCs=new Set(),bmIdMapIOC={}
+function authFetch(url,opts={}){return fetch(API+url,{...opts,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(opts.headers||{})}})}
+async function loadBookmarks(){try{const res=await authFetch('/api/bookmarks/');if(!res.ok)return;const bms=await res.json();bookmarkedIOCs=new Set();bmIdMapIOC={};bms.forEach(bm=>{if(bm.item_type==='ioc'){bookmarkedIOCs.add(bm.item_id);bmIdMapIOC[bm.item_id]=bm.id;}});}catch(e){console.error('Bookmark load error:',e);}}
+async function toggleBmIOC(btn,iocId){if(bookmarkedIOCs.has(iocId)){const res=await authFetch('/api/bookmarks/'+bmIdMapIOC[iocId],{method:'DELETE'});if(res.ok||res.status===204){bookmarkedIOCs.delete(iocId);delete bmIdMapIOC[iocId];btn.textContent='☆';btn.title='Bookmark this IOC';btn.style.color='';}}else{const res=await authFetch('/api/bookmarks/',{method:'POST',body:JSON.stringify({item_type:'ioc',item_id:iocId})});if(res.ok){const bm=await res.json();bookmarkedIOCs.add(iocId);bmIdMapIOC[iocId]=bm.id;btn.textContent='★';btn.title='Remove bookmark';btn.style.color='var(--gold)';}}}
+
+function timeAgo(d){if(!d)return '';const s=(Date.now()-new Date(d))/1000;if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
+async function loadIOCs(){const res=await authFetch('/api/iocs/');allIOCs=res.ok?await res.json():[];updateCounts();renderTable(allIOCs);}
+async function initPage(){await loadBookmarks();await loadIOCs();}
+function updateCounts(){document.getElementById('count-all').textContent=allIOCs.length;['ip','domain','hash','url','cve'].forEach(t=>document.getElementById('count-'+t).textContent=allIOCs.filter(i=>i.type===t).length);}
+function renderTable(iocs){
+  const tbody=document.getElementById('iocTableBody')
+  if(!iocs.length){tbody.innerHTML='<tr><td colspan="7" class="table-empty">No IOCs found.</td></tr>';return;}
+  tbody.innerHTML=iocs.map(i=>{
+    const tags=i.tags.filter(Boolean).map(t=>'<span class="ioc-tag">'+t.trim()+'</span>').join('')
+    const canDel=me.is_admin||me.id===i.author_id
+    const val=i.value.replace(/\\/g,'\\\\').replace(/'/g,"\\'")
+    const starred=bookmarkedIOCs.has(i.id)
+    return '<tr><td><span class="type-badge type-'+i.type+'">'+i.type+'</span></td><td><div class="ioc-value" title="'+i.value+'">'+i.value+'</div>'+(i.notes?'<div style="font-size:9px;color:var(--text-dim);margin-top:3px;">'+i.notes.substring(0,80)+(i.notes.length>80?'...':'')+'</div>':'')+'</td><td><span class="sev-badge sev-'+i.severity+'">'+i.severity+'</span></td><td><div class="ioc-tags">'+(tags||'<span style="color:var(--text-dim);font-size:9px;">—</span>')+'</div></td><td style="font-size:10px;color:var(--text-mid);">'+i.author+'</td><td style="font-size:10px;color:var(--text-dim);">'+timeAgo(i.created_at)+'</td><td style="white-space:nowrap;"><button class="copy-btn" title="Copy value" onclick="copyVal(\''+val+'\')">⎘</button><button class="copy-btn bm-star-btn" title="'+(starred?'Remove bookmark':'Bookmark this IOC')+'" style="color:'+(starred?'var(--gold)':'')+'" onclick="toggleBmIOC(this,'+i.id+')">'+(starred?'★':'☆')+'</button>'+(canDel?'<button class="del-btn" onclick="deleteIOC('+i.id+')">✕</button>':'')+'</td></tr>'
+  }).join('')
+}
+function filterByType(type,el){activeType=type;document.querySelectorAll('.stat-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');applyFilters();}
+function applyFilters(){const search=document.getElementById('searchInput').value.toLowerCase();const sev=document.getElementById('sevFilter').value;let f=allIOCs;if(activeType)f=f.filter(i=>i.type===activeType);if(sev)f=f.filter(i=>i.severity===sev);if(search)f=f.filter(i=>i.value.toLowerCase().includes(search)||i.tags.join(' ').toLowerCase().includes(search)||(i.notes||'').toLowerCase().includes(search));renderTable(f);}
+function openModal(){document.getElementById('iocModal').classList.remove('hidden');document.getElementById('iocValue').focus();}
+function closeModal(){document.getElementById('iocModal').classList.add('hidden');}
+async function submitIOC(){const value=document.getElementById('iocValue').value.trim();if(!value){alert('Value required.');return;}const res=await authFetch('/api/iocs/',{method:'POST',body:JSON.stringify({type:document.getElementById('iocType').value,value,severity:document.getElementById('iocSeverity').value,tags:document.getElementById('iocTags').value,notes:document.getElementById('iocNotes').value})});if(res.ok){closeModal();document.getElementById('iocValue').value='';document.getElementById('iocTags').value='';document.getElementById('iocNotes').value='';await loadIOCs();}else{const e=await res.json();alert(e.detail||'Failed.');}}
+async function deleteIOC(id){if(!confirm('Delete this IOC?'))return;await authFetch('/api/iocs/'+id,{method:'DELETE'});await loadIOCs();}
+function copyVal(val){navigator.clipboard.writeText(val).then(()=>{const btn=event.target;btn.textContent='✓';btn.style.color='var(--green)';setTimeout(()=>{btn.textContent='⎘';btn.style.color='';},1500);});}
+function exportCSV(){authFetch('/api/iocs/export').then(r=>r.blob()).then(blob=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deadcats_iocs.csv';a.click();});}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+initPage()
+</script>
+</body>
+</html>

@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEADCATS // Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#05060a;--bg2:#090b12;--bg3:#0d1018;--surface:#111520;--border:#1a2030;--border2:#242e45;
+  --red:#e8001e;--red2:#ff2040;--red-dim:#3a000a;--red-glow:rgba(232,0,30,0.15);
+  --cyan:#00d4ff;--cyan-dim:#003a4d;--cyan-glow:rgba(0,212,255,0.15);
+  --gold:#f0a500;--gold-glow:rgba(240,165,0,0.15);
+  --green:#00ff88;--purple:#9b5de5;--pink:#ff4fa3;
+  --text:#c8d8f0;--text-dim:#556070;--text-mid:#8a9ab5;--text-bright:#ddeeff;
+  --mono:'IBM Plex Mono',monospace;--body:'IBM Plex Sans',sans-serif;
+  --rank-fc:#f0a500;--rank-lr:#00d4ff;--rank-scholar:#9b5de5;--rank-dc:#556070;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.6;overflow-x:hidden;cursor:crosshair;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04) 3px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:9999;}
+
+/* GRID */
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);background-size:40px 40px;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(5,6,10,0.97);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.3em;color:var(--text-bright);text-decoration:none;}
+.nav-logo span{color:var(--red2);}
+.nav-left,.nav-right{display:flex;align-items:center;gap:20px;}
+.nav-sep{width:1px;height:20px;background:var(--border2);}
+.nav-link{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-decoration:none;letter-spacing:0.15em;text-transform:uppercase;transition:color 0.2s;}
+.nav-link:hover{color:var(--text);}
+.nav-edit-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:6px 14px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;display:none;}
+.nav-edit-btn:hover{color:var(--cyan);border-color:var(--cyan-dim);}
+.nav-edit-btn.visible{display:block;}
+
+/* BANNER */
+.banner-wrap{position:relative;width:100%;height:280px;overflow:hidden;margin-top:52px;}
+.banner-img{width:100%;height:100%;object-fit:cover;display:block;}
+.banner-default{width:100%;height:100%;background:linear-gradient(135deg,#05060a 0%,#090b20 30%,#050d1a 60%,#0a0510 100%);position:relative;overflow:hidden;}
+.banner-default::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.06) 1px,transparent 1px);background-size:30px 30px;}
+.banner-default::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(0,212,255,0.08) 0%,transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(232,0,30,0.06) 0%,transparent 60%);}
+.banner-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(5,6,10,0.7) 70%,var(--bg) 100%);}
+.banner-upload-btn{position:absolute;bottom:12px;right:12px;z-index:10;font-family:var(--mono);font-size:9px;letter-spacing:0.15em;padding:6px 12px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.6);color:rgba(255,255,255,0.6);cursor:crosshair;transition:all 0.2s;display:none;backdrop-filter:blur(8px);}
+.banner-upload-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.banner-upload-btn.visible{display:block;}
+
+/* GLITCH DATA LINES on banner */
+.data-lines{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+.data-line{position:absolute;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:0;animation:dataflow 4s infinite;}
+.data-line:nth-child(1){top:20%;width:60%;left:-60%;animation-delay:0s;}
+.data-line:nth-child(2){top:45%;width:40%;left:-40%;animation-delay:1.2s;}
+.data-line:nth-child(3){top:70%;width:80%;left:-80%;animation-delay:2.4s;}
+@keyframes dataflow{0%{left:-80%;opacity:0;}20%{opacity:0.4;}80%{opacity:0.4;}100%{left:100%;opacity:0;}}
+
+/* PROFILE LAYOUT */
+.profile-layout{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:0 32px 80px;}
+
+/* IDENTITY BLOCK */
+.identity{display:flex;align-items:flex-end;gap:24px;margin-top:-60px;margin-bottom:32px;position:relative;z-index:3;}
+.avatar-wrap{position:relative;flex-shrink:0;}
+.avatar{width:110px;height:110px;border:3px solid var(--bg);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:48px;position:relative;overflow:hidden;cursor:crosshair;}
+.avatar img{width:100%;height:100%;object-fit:cover;}
+.avatar-glow{position:absolute;inset:-3px;z-index:-1;border-radius:0;}
+.avatar-upload{position:absolute;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;cursor:crosshair;font-family:var(--mono);font-size:9px;letter-spacing:0.1em;color:var(--cyan);}
+.avatar-wrap:hover .avatar-upload.editable{opacity:1;}
+.identity-info{flex:1;padding-bottom:8px;}
+.identity-handle{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--text-bright);letter-spacing:0.05em;line-height:1;margin-bottom:8px;}
+.identity-rank{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:0.25em;text-transform:uppercase;padding:4px 12px;border:1px solid;margin-bottom:8px;}
+.identity-title{font-family:var(--mono);font-size:11px;letter-spacing:0.15em;color:var(--gold);border-left:2px solid var(--gold);padding-left:10px;background:rgba(240,165,0,0.04);padding:4px 10px;display:inline-block;margin-bottom:4px;}
+.identity-admin{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--red2);border:1px solid var(--red-dim);padding:2px 8px;display:inline-block;margin-left:8px;vertical-align:middle;}
+
+/* RANK COLORS */
+.rank-fc{color:var(--rank-fc);border-color:rgba(240,165,0,0.3);background:rgba(240,165,0,0.05);}
+.rank-lr{color:var(--rank-lr);border-color:rgba(0,212,255,0.3);background:rgba(0,212,255,0.05);}
+.rank-scholar{color:var(--rank-scholar);border-color:rgba(155,93,229,0.3);background:rgba(155,93,229,0.05);}
+.rank-dc{color:var(--rank-dc);border-color:var(--border2);background:transparent;}
+.glow-fc{box-shadow:0 0 0 3px rgba(240,165,0,0.2),0 0 20px rgba(240,165,0,0.1);}
+.glow-lr{box-shadow:0 0 0 3px rgba(0,212,255,0.2),0 0 20px rgba(0,212,255,0.1);}
+.glow-scholar{box-shadow:0 0 0 3px rgba(155,93,229,0.2),0 0 20px rgba(155,93,229,0.1);}
+.glow-dc{box-shadow:none;}
+
+/* MAIN GRID */
+.main-grid{display:grid;grid-template-columns:1fr 320px;gap:24px;}
+
+/* LEFT COLUMN */
+.left-col{display:flex;flex-direction:column;gap:20px;}
+
+/* PANEL */
+.panel{background:var(--bg2);border:1px solid var(--border);overflow:hidden;}
+.panel-head{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.panel-title{font-family:var(--mono);font-size:10px;letter-spacing:0.25em;color:var(--text-mid);text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+.panel-title-accent{width:3px;height:14px;}
+.panel-body{padding:18px;}
+
+/* BIO */
+.bio-text{font-family:var(--body);font-size:15px;color:var(--text);line-height:1.7;}
+.bio-empty{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.1em;font-style:italic;}
+.bio-edit{width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border2);color:var(--text-bright);font-family:var(--body);font-size:15px;outline:none;resize:vertical;min-height:80px;cursor:text;transition:border-color 0.2s;display:none;}
+.bio-edit:focus{border-color:var(--cyan-dim);}
+.bio-save-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;padding:6px 14px;border:1px solid rgba(0,255,136,0.3);background:transparent;color:var(--green);cursor:crosshair;transition:all 0.2s;margin-top:8px;display:none;}
+.bio-save-btn:hover{background:rgba(0,255,136,0.06);}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);}
+.stat-box{background:var(--bg2);padding:18px 14px;text-align:center;position:relative;overflow:hidden;}
+.stat-box::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--scolor,var(--border2));transform:scaleX(0);transform-origin:left;transition:transform 0.4s;}
+.stat-box:hover::before{transform:scaleX(1);}
+.stat-num{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--text-bright);line-height:1;margin-bottom:4px;}
+.stat-lbl{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;}
+
+/* ACHIEVEMENTS */
+.achievements-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.achievement{background:var(--bg3);border:1px solid var(--border);padding:14px;display:flex;gap:12px;align-items:flex-start;transition:all 0.2s;position:relative;overflow:hidden;}
+.achievement::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.02),transparent);pointer-events:none;}
+.achievement:hover{border-color:var(--border2);transform:translateY(-1px);}
+.ach-icon{font-size:24px;flex-shrink:0;width:40px;height:40px;background:var(--bg2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;}
+.ach-info{flex:1;min-width:0;}
+.ach-name{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text-bright);letter-spacing:0.05em;margin-bottom:2px;}
+.ach-desc{font-family:var(--body);font-size:11px;color:var(--text-dim);line-height:1.4;}
+.ach-rare{position:absolute;top:6px;right:6px;font-family:var(--mono);font-size:7px;letter-spacing:0.15em;padding:1px 5px;border:1px solid;}
+.ach-rare.legendary{color:var(--gold);border-color:rgba(240,165,0,0.3);}
+.ach-rare.rare{color:var(--purple);border-color:rgba(155,93,229,0.3);}
+.ach-rare.common{color:var(--text-dim);border-color:var(--border2);}
+.ach-empty{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;padding:20px;text-align:center;border:1px dashed var(--border);opacity:0.5;}
+
+/* SPECIALIZATIONS */
+.spec-list{display:flex;flex-wrap:wrap;gap:8px;}
+.spec-tag{font-family:var(--mono);font-size:11px;letter-spacing:0.12em;padding:5px 12px;border:1px solid var(--border2);color:var(--text-mid);position:relative;overflow:hidden;transition:all 0.2s;}
+.spec-tag::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,212,255,0.04),transparent);transform:translateX(-100%);transition:transform 0.4s;}
+.spec-tag:hover::before{transform:translateX(100%);}
+.spec-tag:hover{border-color:var(--cyan-dim);color:var(--cyan);}
+
+/* RIGHT COLUMN */
+.right-col{display:flex;flex-direction:column;gap:20px;}
+
+/* SOCIAL LINKS */
+.social-list{display:flex;flex-direction:column;gap:8px;}
+.social-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--border);background:var(--bg3);transition:all 0.2s;text-decoration:none;}
+.social-item:hover{border-color:var(--border2);background:var(--surface);}
+.social-ico{font-size:16px;width:24px;text-align:center;flex-shrink:0;}
+.social-info{flex:1;min-width:0;}
+.social-platform{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;}
+.social-handle{font-family:var(--mono);font-size:12px;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.social-empty{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.1em;padding:8px;text-align:center;opacity:0.5;}
+
+/* ONLINE STATUS */
+.status-panel{padding:14px 18px;display:flex;align-items:center;gap:12px;}
+.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.status-dot.online{background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+.status-dot.offline{background:var(--text-dim);}
+@keyframes pulse{0%,100%{box-shadow:0 0 4px var(--green);}50%{box-shadow:0 0 12px var(--green);}}
+.status-text{font-family:var(--mono);font-size:11px;color:var(--text-mid);letter-spacing:0.1em;}
+.status-time{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.08em;margin-left:auto;}
+
+/* MEMBER SINCE */
+.meta-list{display:flex;flex-direction:column;gap:0;}
+.meta-row{display:flex;justify-content:space-between;align-items:center;padding:9px 18px;border-bottom:1px solid var(--border);}
+.meta-row:last-child{border-bottom:none;}
+.meta-key{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;}
+.meta-val{font-family:var(--mono);font-size:11px;color:var(--text-mid);letter-spacing:0.05em;}
+
+/* ANIMATIONS */
+@keyframes fadeup{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.identity{opacity:0;animation:fadeup 0.4s 0.1s forwards;}
+.main-grid{opacity:0;animation:fadeup 0.4s 0.2s forwards;}
+
+/* EDIT INPUTS */
+.edit-input{width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border2);color:var(--text-bright);font-family:var(--mono);font-size:12px;outline:none;cursor:text;transition:border-color 0.2s;margin-bottom:8px;}
+.edit-input:focus{border-color:var(--cyan-dim);}
+.edit-label{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;display:block;margin-bottom:4px;}
+.edit-row{margin-bottom:12px;}
+.save-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;padding:7px 16px;border:1px solid rgba(0,255,136,0.3);background:transparent;color:var(--green);cursor:crosshair;transition:all 0.2s;}
+.save-btn:hover{background:rgba(0,255,136,0.06);}
+
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<nav>
+  <div class="nav-left">
+    <a href="../index.html" class="nav-logo">DEAD<span>CATS</span></a>
+    <div class="nav-sep"></div>
+    <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;">// <span style="color:var(--cyan);">profile</span></span>
+  </div>
+  <div class="nav-right">
+    <button class="nav-edit-btn" id="editToggleBtn" onclick="toggleEdit()">⚙ Edit Profile</button>
+    <a href="../dashboard.html" class="nav-link">← Dashboard</a>
+  </div>
+</nav>
+
+<!-- BANNER -->
+<div class="banner-wrap" id="bannerWrap">
+  <div class="banner-default" id="bannerDefault">
+    <div class="data-lines">
+      <div class="data-line"></div>
+      <div class="data-line"></div>
+      <div class="data-line"></div>
+    </div>
+  </div>
+  <img id="bannerImg" class="banner-img" style="display:none;" alt="banner">
+  <div class="banner-overlay"></div>
+  <button class="banner-upload-btn" id="bannerUploadBtn" onclick="document.getElementById('bannerFileInput').click()">⬆ Change Banner</button>
+  <input type="file" id="bannerFileInput" accept="image/*" style="display:none;" onchange="uploadBanner(this.files[0])">
+</div>
+
+<div class="profile-layout">
+  <!-- IDENTITY -->
+  <div class="identity" id="identityBlock">
+    <div class="avatar-wrap">
+      <div class="avatar" id="avatarEl">
+        <span id="avatarEmoji">🐱</span>
+        <img id="avatarImg" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" alt="avatar">
+      </div>
+      <div class="avatar-upload editable" id="avatarUploadOverlay" onclick="document.getElementById('avatarFileInput').click()">⬆ Upload</div>
+      <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="uploadAvatar(this.files[0])">
+    </div>
+    <div class="identity-info">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;">
+        <div class="identity-handle" id="handleEl">—</div>
+        <span id="adminBadge" class="identity-admin" style="display:none;">ADMIN</span>
+      </div>
+      <div id="rankBadge" class="identity-rank rank-dc">DEADCAT</div>
+      <div id="titleEl" class="identity-title" style="display:none;margin-top:6px;"></div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+    <!-- LEFT -->
+    <div class="left-col">
+
+      <!-- STATUS + META -->
+      <div class="panel">
+        <div class="status-panel">
+          <div class="status-dot offline" id="statusDot"></div>
+          <span class="status-text" id="statusText">Offline</span>
+          <span class="status-time" id="statusTime"></span>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-box" style="--scolor:var(--cyan);">
+          <div class="stat-num cyan" id="statNotes">0</div>
+          <div class="stat-lbl">Research Notes</div>
+        </div>
+        <div class="stat-box" style="--scolor:var(--red2);">
+          <div class="stat-num" style="color:var(--red2);" id="statIOCs">0</div>
+          <div class="stat-lbl">IOCs Submitted</div>
+        </div>
+        <div class="stat-box" style="--scolor:var(--gold);">
+          <div class="stat-num" style="color:var(--gold);" id="statFiles">0</div>
+          <div class="stat-lbl">Files Uploaded</div>
+        </div>
+        <div class="stat-box" style="--scolor:var(--green);">
+          <div class="stat-num" style="color:var(--green);" id="statAchs">0</div>
+          <div class="stat-lbl">Achievements</div>
+        </div>
+      </div>
+
+      <!-- BIO -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><div class="panel-title-accent" style="background:var(--cyan);"></div>Biography</div>
+          <button id="bioEditBtn" style="display:none;font-family:var(--mono);font-size:9px;letter-spacing:0.15em;padding:4px 10px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;" onclick="toggleBioEdit()">Edit</button>
+        </div>
+        <div class="panel-body">
+          <div id="bioDisplay"><span class="bio-empty">No biography written yet.</span></div>
+          <textarea class="bio-edit" id="bioEdit" placeholder="Write your biography..."></textarea>
+          <button class="bio-save-btn" id="bioSaveBtn" onclick="saveBio()">Save Bio</button>
+        </div>
+      </div>
+
+      <!-- SPECIALIZATIONS -->
+      <div class="panel" id="specPanel">
+        <div class="panel-head">
+          <div class="panel-title"><div class="panel-title-accent" style="background:var(--purple);"></div>Specializations</div>
+        </div>
+        <div class="panel-body">
+          <div class="spec-list" id="specList"><span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.1em;">No specializations listed.</span></div>
+        </div>
+      </div>
+
+      <!-- ACHIEVEMENTS -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><div class="panel-title-accent" style="background:var(--gold);"></div>Achievements</div>
+          <span id="achCount" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:0.1em;"></span>
+        </div>
+        <div class="panel-body">
+          <div class="achievements-grid" id="achGrid">
+            <div class="ach-empty">No achievements unlocked yet.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-col">
+
+      <!-- META INFO -->
+      <div class="panel">
+        <div class="meta-list" id="metaList">
+          <div class="meta-row"><span class="meta-key">Member Since</span><span class="meta-val" id="metaSince">—</span></div>
+          <div class="meta-row"><span class="meta-key">Last Active</span><span class="meta-val" id="metaLast">—</span></div>
+          <div class="meta-row"><span class="meta-key">Rank</span><span class="meta-val" id="metaRank">—</span></div>
+        </div>
+      </div>
+
+      <!-- SOCIAL LINKS -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><div class="panel-title-accent" style="background:var(--green);"></div>Links</div>
+        </div>
+        <div class="panel-body" style="padding:10px;">
+          <div id="socialList"></div>
+          <!-- Edit form (own profile) -->
+          <div id="socialEditForm" style="display:none;margin-top:12px;">
+            <div class="edit-row"><label class="edit-label">HackTheBox</label><input class="edit-input" id="editHtb" placeholder="username"></div>
+            <div class="edit-row"><label class="edit-label">CTFtime</label><input class="edit-input" id="editCtftime" placeholder="username"></div>
+            <div class="edit-row"><label class="edit-label">GitHub</label><input class="edit-input" id="editGithub" placeholder="username"></div>
+            <div class="edit-row"><label class="edit-label">Twitter / X</label><input class="edit-input" id="editTwitter" placeholder="@handle"></div>
+            <button class="save-btn" onclick="saveSocials()">Save Links</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const token = localStorage.getItem('dc_token');
+const me    = JSON.parse(localStorage.getItem('dc_user') || 'null');
+if (!token || !me) window.location.href = '../login.html';
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+const params  = new URLSearchParams(window.location.search);
+const handle  = params.get('user') || me.handle;
+const isOwn   = me.handle === handle;
+const isAdmin = me.is_admin;
+
+let profileData = null;
+let editMode    = false;
+
+async function authFetch(url, opts={}) {
+  const res = await fetch(url, {...opts, headers:{'Authorization':'Bearer '+token,...(opts.headers||{})}});
+  if (res.status === 401) {
+    localStorage.removeItem('dc_token');
+    localStorage.removeItem('dc_user');
+    window.location.href = '../login.html';
+  }
+  return res;
+}
+
+function timeAgo(d) {
+  if (!d) return 'never';
+  const s = (Date.now()-new Date(d))/1000;
+  if (s<60)    return 'just now';
+  if (s<3600)  return Math.floor(s/60)+'m ago';
+  if (s<86400) return Math.floor(s/3600)+'h ago';
+  if (s<604800)return Math.floor(s/86400)+'d ago';
+  return new Date(d).toLocaleDateString();
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+}
+
+function getRankClass(rank) {
+  if (rank==='Founding Circle') return 'fc';
+  if (rank==='Lead Researcher') return 'lr';
+  if (rank==='Scholar')         return 'scholar';
+  return 'dc';
+}
+
+function getRankLabel(rank) {
+  const icons = {'Founding Circle':'◈','Lead Researcher':'◆','Scholar':'◇','DEADCAT':'·'};
+  return (icons[rank]||'·')+' '+rank;
+}
+
+function render(u) {
+  profileData = u;
+  document.title = 'DEADCATS // '+u.handle;
+
+  // Handle + admin badge
+  document.getElementById('handleEl').textContent = u.handle;
+  if (u.is_admin) document.getElementById('adminBadge').style.display='inline-block';
+
+  // Rank badge
+  const rc = getRankClass(u.rank);
+  const rb = document.getElementById('rankBadge');
+  rb.textContent = getRankLabel(u.rank);
+  rb.className   = 'identity-rank rank-'+rc;
+
+  // Avatar glow
+  const aw = document.querySelector('.avatar');
+  aw.className = 'avatar';
+  if (rc!=='dc') aw.style.cssText += ';box-shadow:0 0 0 3px var(--bg),0 0 0 5px rgba(var(--rank-'+rc+'-rgb,0,212,255),0.3)';
+
+  // Rank-specific avatar border
+  const borderColors = {fc:'rgba(240,165,0,0.5)',lr:'rgba(0,212,255,0.4)',scholar:'rgba(155,93,229,0.4)',dc:'var(--border2)'};
+  document.querySelector('.avatar').style.borderColor = borderColors[rc]||'var(--border2)';
+
+  // Title
+  if (u.title) {
+    const te = document.getElementById('titleEl');
+    te.textContent = '⚡ '+u.title;
+    te.style.display='inline-block';
+  }
+
+  // Banner
+  if (u.banner_url) {
+    document.getElementById('bannerDefault').style.display='none';
+    const bi = document.getElementById('bannerImg');
+    bi.src = u.banner_url; bi.style.display='block';
+  }
+
+  // Avatar
+  if (u.avatar_url) {
+    document.getElementById('avatarEmoji').style.display='none';
+    const ai = document.getElementById('avatarImg');
+    ai.src = u.avatar_url; ai.style.display='block';
+  } else {
+    document.getElementById('avatarEmoji').textContent = u.emoji || '🐱';
+  }
+
+  // Online status
+  const online = u.last_seen && (Date.now()-new Date(u.last_seen))/1000 < 300;
+  const dot    = document.getElementById('statusDot');
+  dot.className= 'status-dot '+(online?'online':'offline');
+  document.getElementById('statusText').textContent = online?'Online Now':'Offline';
+  document.getElementById('statusTime').textContent = u.last_seen?timeAgo(u.last_seen):'';
+
+  // Stats
+  document.getElementById('statNotes').textContent = u.notes_count  || 0;
+  document.getElementById('statIOCs').textContent  = u.iocs_count   || 0;
+  document.getElementById('statFiles').textContent = u.files_count  || 0;
+  document.getElementById('statAchs').textContent  = u.achievements.length;
+
+  // Bio
+  const bioD = document.getElementById('bioDisplay');
+  bioD.innerHTML = u.bio
+    ? '<p class="bio-text">'+esc(u.bio).replace(/\n/g,'<br>')+'</p>'
+    : '<span class="bio-empty">No biography written yet.</span>';
+
+  // Specializations
+  const specs = u.specializations || [];
+  document.getElementById('specList').innerHTML = specs.length
+    ? specs.map(s=>`<span class="spec-tag">${esc(s.icon||'')} ${esc(s.name)} <span style="font-size:9px;opacity:0.6;">${esc(s.level||'')}</span></span>`).join('')
+    : '<span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.1em;">No specializations listed.</span>';
+
+  // Achievements
+  const achs = u.achievements || [];
+  document.getElementById('achCount').textContent = achs.length ? achs.length+' unlocked' : '';
+  document.getElementById('achGrid').innerHTML = achs.length
+    ? achs.map(a=>`
+        <div class="achievement">
+          <div class="ach-icon">${esc(a.icon||'🏆')}</div>
+          <div class="ach-info">
+            <div class="ach-name">${esc(a.name)}</div>
+            <div class="ach-desc">${esc(a.desc||'')}</div>
+          </div>
+          ${a.rarity?`<span class="ach-rare ${esc(a.rarity)}">${esc(a.rarity.toUpperCase())}</span>`:''}
+        </div>`).join('')
+    : '<div class="ach-empty">No achievements unlocked yet.</div>';
+
+  // Meta
+  document.getElementById('metaSince').textContent = formatDate(u.created_at);
+  document.getElementById('metaLast').textContent  = timeAgo(u.last_seen);
+  document.getElementById('metaRank').textContent  = u.rank;
+
+  // Social links
+  renderSocials(u);
+
+  // Show edit controls if own profile
+  if (isOwn || isAdmin) {
+    document.getElementById('editToggleBtn').classList.add('visible');
+    document.getElementById('bannerUploadBtn').classList.add('visible');
+    document.querySelector('.avatar-upload').classList.add('editable');
+    document.getElementById('bioEditBtn').style.display='block';
+  }
+}
+
+function renderSocials(u) {
+  const socials = [
+    {key:'htb',     icon:'⚔️', label:'HackTheBox', url: u.htb     ? 'https://app.hackthebox.com/users/'+u.htb     : null, val:u.htb},
+    {key:'ctftime', icon:'🚩', label:'CTFtime',    url: u.ctftime  ? 'https://ctftime.org/user/'+u.ctftime         : null, val:u.ctftime},
+    {key:'github',  icon:'💻', label:'GitHub',     url: u.github   ? 'https://github.com/'+u.github                : null, val:u.github},
+    {key:'twitter', icon:'🐦', label:'Twitter/X',  url: u.twitter  ? 'https://x.com/'+u.twitter.replace('@','')    : null, val:u.twitter},
+  ];
+  const list = document.getElementById('socialList');
+  const visible = socials.filter(s=>s.val);
+  if (!visible.length) {
+    list.innerHTML = '<div class="social-empty">No links added.</div>';
+  } else {
+    list.innerHTML = visible.map(s=>`
+      <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" class="social-item">
+        <div class="social-ico">${s.icon}</div>
+        <div class="social-info">
+          <div class="social-platform">${esc(s.label)}</div>
+          <div class="social-handle">${esc(s.val)}</div>
+        </div>
+      </a>`).join('');
+  }
+  // Pre-fill edit form
+  if (isOwn) {
+    document.getElementById('editHtb').value     = u.htb     || '';
+    document.getElementById('editCtftime').value = u.ctftime || '';
+    document.getElementById('editGithub').value  = u.github  || '';
+    document.getElementById('editTwitter').value = u.twitter || '';
+  }
+}
+
+function toggleEdit() {
+  editMode = !editMode;
+  document.getElementById('editToggleBtn').textContent = editMode ? '✕ Done Editing' : '⚙ Edit Profile';
+  document.getElementById('bioEditBtn').style.display  = editMode ? 'block' : 'block';
+  document.getElementById('socialEditForm').style.display = editMode ? 'block' : 'none';
+  if (editMode && profileData) {
+    document.getElementById('bioEdit').value = profileData.bio || '';
+  }
+}
+
+function toggleBioEdit() {
+  const ed = document.getElementById('bioEdit');
+  const sv = document.getElementById('bioSaveBtn');
+  const showing = ed.style.display === 'block';
+  ed.style.display = showing ? 'none' : 'block';
+  sv.style.display = showing ? 'none' : 'block';
+  document.getElementById('bioDisplay').style.display = showing ? 'block' : 'none';
+  if (!showing) ed.value = profileData.bio || '';
+}
+
+async function saveBio() {
+  const bio = document.getElementById('bioEdit').value;
+  const res = await authFetch('/api/users/'+handle, {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({bio})
+  });
+  if (res.ok) { await loadProfile(); toggleBioEdit(); }
+}
+
+async function saveSocials() {
+  const res = await authFetch('/api/users/'+handle, {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      htb:     document.getElementById('editHtb').value,
+      ctftime: document.getElementById('editCtftime').value,
+      github:  document.getElementById('editGithub').value,
+      twitter: document.getElementById('editTwitter').value,
+    })
+  });
+  if (res.ok) { await loadProfile(); }
+}
+
+async function uploadAvatar(file) {
+  if (!file) return;
+  const fd = new FormData(); fd.append('file', file);
+  const res = await authFetch('/api/users/'+handle+'/avatar', {method:'POST', body:fd});
+  if (res.ok) await loadProfile();
+}
+
+async function uploadBanner(file) {
+  if (!file) return;
+  const fd = new FormData(); fd.append('file', file);
+  const res = await authFetch('/api/users/'+handle+'/banner', {method:'POST', body:fd});
+  if (res.ok) await loadProfile();
+}
+
+async function loadProfile() {
+  const res = await authFetch('/api/users/'+handle);
+  if (!res.ok) { document.body.innerHTML='<div style="padding:100px;text-align:center;font-family:var(--mono);color:var(--red2);">Member not found.</div>'; return; }
+  const u = await res.json();
+
+  const [achRes, specRes] = await Promise.all([
+    authFetch('/api/achievements/user/'+u.id),
+    authFetch('/api/achievements/user/'+u.id+'/specs'),
+  ]);
+  u.achievements    = achRes.ok  ? await achRes.json()  : [];
+  u.specializations = specRes.ok ? await specRes.json() : [];
+
+  render(u);
+}
+
+loadProfile();
+</script>
+</body>
+</html>

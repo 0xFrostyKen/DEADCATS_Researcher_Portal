@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEADCATS // Authenticate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/theme-portal.css">
+  <link rel="stylesheet" href="assets/css/login.css">
+  <script src="assets/js/login.js" defer></script>
+</head>
+
+<body>
+
+  <div class="bg"></div>
+  <div class="jp-bg">死猫</div>
+
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
+  <div class="strip top">DEADCATS RESEARCH NETWORK // RESTRICTED ACCESS // TAILSCALE MESH ONLY</div>
+  <div class="strip bottom">
+    <span>NODE <span>DC-RESEARCH-01</span></span>
+    <span>ENC <span>WIREGUARD/E2E</span></span>
+    <span>STATUS <span>OPERATIONAL</span></span>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="logo-mark">
+        <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="1" width="10" height="10" fill="#e8001e" opacity="0.8" />
+          <rect x="15" y="1" width="10" height="10" stroke="#e8001e" stroke-width="1" opacity="0.35" />
+          <rect x="1" y="15" width="10" height="10" stroke="#e8001e" stroke-width="1" opacity="0.35" />
+          <rect x="15" y="15" width="10" height="10" fill="#e8001e" opacity="0.15" />
+          <line x1="0" y1="13" x2="26" y2="13" stroke="#1a2030" stroke-width="0.5" />
+          <line x1="13" y1="0" x2="13" y2="26" stroke="#1a2030" stroke-width="0.5" />
+        </svg>
+      </div>
+      <div class="card-title">DEAD<span>CATS</span></div>
+      <div class="card-subtitle">Researcher Portal // Authentication</div>
+      <div class="auth-status">
+        <div class="status-dot"></div>
+        SECURE CHANNEL ACTIVE
+      </div>
+    </div>
+
+    <!-- Tab switcher -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Login</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div class="card-body" id="form-login">
+      <div class="error-msg" id="errMsg">⚠ Invalid credentials. Access denied.</div>
+
+      <div class="form-group">
+        <label class="form-label">Handle <span>*</span></label>
+        <div class="input-wrap">
+          <span class="input-ico">❯</span>
+          <input class="form-input" type="text" id="handle" placeholder="your_handle" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Passphrase <span>*</span></label>
+        <div class="input-wrap">
+          <span class="input-ico">◈</span>
+          <input class="form-input" type="password" id="pass" placeholder="••••••••••••••••">
+        </div>
+      </div>
+
+      <button class="btn-submit" id="submitBtn" onclick="handleLogin()">Authenticate →</button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div class="card-body hidden" id="form-register">
+      <div class="error-msg" id="regErrMsg">⚠ Registration failed.</div>
+
+      <div class="form-group">
+        <label class="form-label">Handle <span>*</span></label>
+        <div class="input-wrap">
+          <span class="input-ico">❯</span>
+          <input class="form-input" type="text" id="reg-handle" placeholder="your_handle" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password <span>*</span></label>
+        <div class="input-wrap">
+          <span class="input-ico">◈</span>
+          <input class="form-input" type="password" id="reg-pass" placeholder="••••••••••••••••">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirm Password <span>*</span></label>
+        <div class="input-wrap">
+          <span class="input-ico">◈</span>
+          <input class="form-input" type="password" id="reg-pass2" placeholder="••••••••••••••••">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Access Token <span>*</span></label>
+        <div class="input-wrap">
+          <span class="input-ico">🔑</span>
+          <input class="form-input" type="password" id="reg-token" placeholder="provided by admin">
+        </div>
+      </div>
+
+      <button class="btn-submit" id="regBtn" onclick="handleRegister()">Request Access →</button>
+    </div>
+
+    <div class="card-footer">
+      <span class="footer-note">No token? <a href="#">Contact admin</a></span>
+      <span class="footer-version">v1.0.0</span>
+    </div>
+  </div>
+
+</body>
+
+</html>

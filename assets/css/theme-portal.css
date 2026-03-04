@@ -1,0 +1,41 @@
+:root{
+  --bg:#05060a;
+  --bg2:#090b12;
+  --bg3:#0d1018;
+
+  --surface:#111520;
+  --surface2:#161b28;
+
+  --border:#1a2030;
+  --border2:#242e45;
+
+  --red:#e8001e;
+  --red2:#ff2040;
+  --red-dim:#3a000a;
+  --red-glow:rgba(232,0,30,0.12);
+
+  --cyan:#00d4ff;
+  --cyan-dim:#003a4d;
+  --cyan-glow:rgba(0,212,255,0.1);
+
+  --gold:#f0a500;
+  --gold-dim:#4a3200;
+
+  --green:#00ff88;
+  --purple:#9b5de5;
+  --pink:#ff4fa3;
+
+  --text:#c8d8f0;
+  --text-dim:#556070;
+  --text-mid:#8a9ab5;
+  --text-bright:#ddeeff;
+
+  --sidebar-w:220px;
+  --nav-h:52px;
+
+  --mono:'Share Tech Mono', monospace;
+  --display:'Syncopate', sans-serif;
+  --jp:'Noto Sans JP', sans-serif;
+  --body:'Rajdhani', sans-serif;
+}
+

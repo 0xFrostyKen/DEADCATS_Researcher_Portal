@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEADCATS // CTF Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05060a;--bg2:#090b12;--bg3:#0d1018;--surface:#111520;--surface2:#161b28;
+  --border:#1a2030;--border2:#242e45;
+  --red:#e8001e;--red2:#ff2040;--red-dim:#3a000a;--red-glow:rgba(232,0,30,0.12);
+  --cyan:#00d4ff;--cyan-dim:#003a4d;--gold:#f0a500;--green:#00ff88;--purple:#9b5de5;
+  --text:#b8c8e0;--text-dim:#445060;--text-mid:#6a7a95;--text-bright:#ddeeff;
+  --mono:'IBM Plex Mono',monospace;--body:'IBM Plex Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;cursor:crosshair;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.05) 3px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999;}
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:0.12;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(5,6,10,0.97);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.3em;color:var(--text-bright);text-decoration:none;}
+.nav-logo span{color:var(--red2);}
+.nav-left,.nav-right{display:flex;align-items:center;gap:20px;}
+.nav-sep{width:1px;height:20px;background:var(--border2);}
+.nav-page{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;}
+.nav-page span{color:var(--red2);}
+.nav-link{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-decoration:none;letter-spacing:0.1em;transition:color 0.2s;}
+.nav-link:hover{color:var(--text);}
+.nav-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:6px 14px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;}
+.nav-btn:hover{color:var(--text);border-color:var(--text-mid);}
+.nav-btn.green{color:var(--green);border-color:rgba(0,255,136,0.3);}
+.nav-btn.green:hover{background:rgba(0,255,136,0.08);}
+
+.layout{position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:80px 40px 80px;}
+
+/* ── TEAM HEADER ── */
+.team-header{background:var(--bg2);border:1px solid var(--border);padding:28px 32px;margin-bottom:36px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;}
+.team-logo{font-size:48px;flex-shrink:0;}
+.team-info{flex:1;min-width:200px;}
+.team-name{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:0.1em;color:var(--text-bright);margin-bottom:4px;}
+.team-aka{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:10px;}
+.team-stats{display:flex;gap:24px;flex-wrap:wrap;}
+.stat-item{text-align:center;}
+.stat-num{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text-bright);}
+.stat-num.gold{color:var(--gold);}
+.stat-num.cyan{color:var(--cyan);}
+.stat-num.red{color:var(--red2);}
+.stat-lbl{font-family:var(--mono);font-size:8px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-top:2px;}
+.team-ctftime-link{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--cyan);text-decoration:none;border:1px solid var(--cyan-dim);padding:5px 12px;transition:all 0.2s;white-space:nowrap;align-self:flex-start;}
+.team-ctftime-link:hover{background:rgba(0,212,255,0.06);}
+
+/* ── SECTION HEADERS ── */
+.section{margin-bottom:40px;}
+.section-head{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
+.section-title{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.35em;color:var(--text-dim);text-transform:uppercase;white-space:nowrap;}
+.section-line{flex:1;height:1px;background:var(--border);}
+.section-actions{display:flex;gap:8px;}
+
+/* ── UPCOMING TABLE ── */
+.upcoming-wrap{background:var(--bg2);border:1px solid var(--border);overflow:hidden;}
+.ctf-table{width:100%;border-collapse:collapse;}
+.ctf-table th{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;padding:10px 14px;border-bottom:1px solid var(--border2);background:var(--bg3);text-align:left;}
+.ctf-table td{padding:11px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text);vertical-align:middle;}
+.ctf-table tr:last-child td{border-bottom:none;}
+.ctf-table tr:hover td{background:var(--surface);}
+.ctf-name{font-family:var(--body);font-size:13px;font-weight:600;color:var(--text-bright);}
+.ctf-name a{color:inherit;text-decoration:none;border-bottom:1px solid transparent;transition:border-color 0.2s;}
+.ctf-name a:hover{border-color:var(--cyan-dim);}
+.format-badge{font-family:var(--mono);font-size:8px;letter-spacing:0.1em;padding:2px 7px;border:1px solid var(--border2);color:var(--text-mid);text-transform:uppercase;}
+.weight-val{color:var(--gold);font-weight:600;}
+.table-empty{padding:36px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;}
+.del-btn{background:transparent;border:none;color:var(--text-dim);cursor:crosshair;font-size:12px;padding:2px 6px;transition:color 0.2s;}
+.del-btn:hover{color:var(--red2);}
+
+/* ── PAST RESULTS ── */
+.year-tabs{display:flex;gap:0;margin-bottom:0;border-bottom:1px solid var(--border);}
+.year-tab{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;padding:8px 18px;cursor:crosshair;color:var(--text-dim);border:1px solid transparent;border-bottom:none;background:transparent;transition:all 0.2s;position:relative;top:1px;}
+.year-tab:hover{color:var(--text);}
+.year-tab.active{color:var(--text-bright);border-color:var(--border);border-bottom:1px solid var(--bg2);background:var(--bg2);}
+.past-wrap{background:var(--bg2);border:1px solid var(--border);border-top:none;overflow:hidden;}
+
+.result-row{cursor:pointer;}
+.result-row td{transition:background 0.15s;}
+.result-row:hover td{background:var(--surface);}
+.place-badge{font-family:var(--mono);font-size:13px;font-weight:700;}
+.place-badge.p1{color:var(--gold);}
+.place-badge.p2{color:#c0c0c0;}
+.place-badge.p3{color:#cd7f32;}
+.place-badge.pn{color:var(--text-mid);}
+.pts{color:var(--cyan);font-weight:600;}
+.rating{color:var(--green);}
+.expand-arrow{font-size:10px;color:var(--text-dim);transition:transform 0.2s;display:inline-block;}
+.expand-arrow.open{transform:rotate(90deg);}
+
+.participants-row td{padding:0 !important;background:var(--bg3) !important;}
+.participants-row.hidden{display:none;}
+.participants-inner{padding:10px 14px 12px 44px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.participant-chip{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border2);padding:4px 10px;font-family:var(--mono);font-size:10px;}
+.p-handle{color:var(--text-bright);}
+.p-pts{color:var(--gold);}
+.p-del{background:none;border:none;color:var(--text-dim);cursor:crosshair;font-size:10px;padding:0 2px;transition:color 0.15s;}
+.p-del:hover{color:var(--red2);}
+.participants-add{background:none;border:1px dashed var(--border2);color:var(--text-dim);font-family:var(--mono);font-size:9px;letter-spacing:0.1em;padding:4px 10px;cursor:crosshair;transition:all 0.2s;}
+.participants-add:hover{color:var(--cyan);border-color:var(--cyan-dim);}
+
+.result-actions{display:flex;gap:6px;align-items:center;}
+.act-btn{font-family:var(--mono);font-size:8px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;}
+.act-btn:hover{color:var(--text);border-color:var(--text-mid);}
+.act-btn.cyan{color:var(--cyan);border-color:var(--cyan-dim);}
+.act-btn.cyan:hover{background:rgba(0,212,255,0.06);}
+
+/* ── SEARCH DROPDOWN ── */
+.search-wrap{position:relative;}
+.ctf-search{width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border2);color:var(--text-bright);font-family:var(--mono);font-size:11px;outline:none;transition:border-color 0.2s;cursor:text;}
+.ctf-search:focus{border-color:var(--cyan-dim);}
+.search-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-top:none;z-index:50;max-height:260px;overflow-y:auto;}
+.search-dropdown.hidden{display:none;}
+.sd-item{padding:10px 14px;cursor:crosshair;transition:background 0.1s;border-bottom:1px solid var(--border);}
+.sd-item:last-child{border-bottom:none;}
+.sd-item:hover{background:var(--surface);}
+.sd-title{font-family:var(--body);font-size:13px;color:var(--text-bright);}
+.sd-meta{font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px;letter-spacing:0.08em;}
+.sd-empty{padding:14px;font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:center;letter-spacing:0.15em;}
+
+/* ── MODALS ── */
+.modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--bg2);border:1px solid var(--border2);padding:28px;width:460px;box-shadow:0 40px 80px rgba(0,0,0,0.6);}
+.modal-title{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.2em;color:var(--text-bright);margin-bottom:20px;text-transform:uppercase;}
+.modal-row{margin-bottom:14px;}
+.modal-label{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px;display:block;}
+.modal-input,.modal-select{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border2);color:var(--text-bright);font-family:var(--mono);font-size:11px;outline:none;transition:border-color 0.2s;cursor:text;}
+.modal-input:focus,.modal-select:focus{border-color:var(--cyan-dim);}
+.modal-select{cursor:crosshair;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.modal-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:8px 16px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;}
+.modal-btn:hover{color:var(--text);border-color:var(--text-mid);}
+.modal-btn.confirm{color:var(--green);border-color:rgba(0,255,136,0.3);}
+.modal-btn.confirm:hover{background:rgba(0,255,136,0.08);}
+
+/* participant add row inside modal */
+.p-add-row{display:flex;gap:8px;margin-bottom:8px;}
+.p-add-row .modal-input{flex:1;}
+.p-add-row .modal-input.pts{width:90px;flex:none;}
+.p-add-row-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;padding:9px 12px;border:1px solid rgba(0,255,136,0.3);background:transparent;color:var(--green);cursor:crosshair;}
+.p-add-row-btn:hover{background:rgba(0,255,136,0.08);}
+.p-list{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;margin-top:6px;}
+.p-list-item{display:flex;align-items:center;gap:8px;background:var(--surface);padding:6px 10px;font-family:var(--mono);font-size:10px;}
+.p-list-item .handle{flex:1;color:var(--text-bright);}
+.p-list-item .ppts{color:var(--gold);}
+.p-list-item .rem{background:none;border:none;color:var(--text-dim);cursor:crosshair;font-size:11px;}
+.p-list-item .rem:hover{color:var(--red2);}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<!-- ── MODALS ─────────────────────────────────────────────────── -->
+
+<!-- Add CTF Modal -->
+<div class="modal-overlay hidden" id="addCtfModal">
+  <div class="modal">
+    <div class="modal-title">Add Upcoming CTF</div>
+    <div class="modal-row">
+      <label class="modal-label">Search CTFtime events</label>
+      <div class="search-wrap">
+        <input class="modal-input ctf-search" type="text" id="ctfSearchInput" placeholder="Type to search..." autocomplete="off">
+        <div class="search-dropdown hidden" id="searchDropdown"></div>
+      </div>
+    </div>
+    <div id="selectedCtfPreview" style="display:none;background:var(--surface);border:1px solid var(--border2);padding:10px 12px;margin-bottom:14px;">
+      <div style="font-family:var(--body);font-size:13px;color:var(--text-bright);" id="previewTitle"></div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:4px;" id="previewMeta"></div>
+    </div>
+    <div class="modal-row" id="manualFields">
+      <label class="modal-label">Or enter manually</label>
+      <input class="modal-input" type="text" id="manualTitle" placeholder="CTF name *" style="margin-bottom:8px;">
+      <input class="modal-input" type="text" id="manualUrl" placeholder="URL" style="margin-bottom:8px;">
+      <div style="display:flex;gap:8px;">
+        <input class="modal-input" type="text" id="manualStart" placeholder="Start (ISO or blank)">
+        <input class="modal-input" type="text" id="manualEnd" placeholder="End (ISO or blank)">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeAddCtf()">Cancel</button>
+      <button class="modal-btn confirm" onclick="submitAddCtf()">Add CTF</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Result Modal -->
+<div class="modal-overlay hidden" id="addResultModal">
+  <div class="modal" style="width:400px;">
+    <div class="modal-title">Log CTF Result</div>
+    <div id="addResultEventName" style="font-family:var(--body);font-size:13px;color:var(--cyan);margin-bottom:18px;"></div>
+    <div class="modal-row">
+      <label class="modal-label">Team Placement #</label>
+      <input class="modal-input" type="number" id="resultPlace" min="1" placeholder="e.g. 42">
+    </div>
+    <div class="modal-row">
+      <label class="modal-label">CTF Points</label>
+      <input class="modal-input" type="number" id="resultCtfPts" min="0" step="0.01" placeholder="e.g. 3500">
+    </div>
+    <div class="modal-row">
+      <label class="modal-label">Rating Points</label>
+      <input class="modal-input" type="number" id="resultRatingPts" min="0" step="0.001" placeholder="e.g. 9.108">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeAddResult()">Cancel</button>
+      <button class="modal-btn confirm" onclick="submitResult()">Save Result</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Participants Modal -->
+<div class="modal-overlay hidden" id="addParticipantsModal">
+  <div class="modal">
+    <div class="modal-title">Who Played?</div>
+    <div id="addParticipantsEventName" style="font-family:var(--body);font-size:13px;color:var(--cyan);margin-bottom:18px;"></div>
+    <div class="p-add-row">
+      <input class="modal-input" type="text" id="pHandle" placeholder="Member handle" list="memberHandles">
+      <datalist id="memberHandles"></datalist>
+      <input class="modal-input pts" type="number" id="pPoints" placeholder="Points" min="0" step="0.01">
+      <button class="p-add-row-btn" onclick="addParticipantRow()">+ Add</button>
+    </div>
+    <div class="p-list" id="pList"></div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="modal-btn" onclick="closeAddParticipants()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── NAV ─────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">DEAD<span>CATS</span></a>
+    <div class="nav-sep"></div>
+    <span class="nav-page">// <span>ctf tracker</span></span>
+  </div>
+  <div class="nav-right">
+    <a href="dashboard.html" class="nav-link">← Dashboard</a>
+    <button class="nav-btn green hidden" id="addCtfBtn" onclick="openAddCtf()">+ Add CTF</button>
+  </div>
+</nav>
+
+<div class="layout">
+
+  <!-- TEAM HEADER -->
+  <div class="team-header" id="teamHeader">
+    <div class="team-logo">💀</div>
+    <div class="team-info">
+      <div class="team-name" id="teamName">NP DEADCATS</div>
+      <div class="team-aka" id="teamAka"></div>
+      <div class="team-stats" id="teamStats">
+        <div class="stat-item"><div class="stat-num" id="statRating">—</div><div class="stat-lbl">Global Rank</div></div>
+        <div class="stat-item"><div class="stat-num gold" id="statCountry">—</div><div class="stat-lbl">Country Rank</div></div>
+        <div class="stat-item"><div class="stat-num cyan" id="statPts">—</div><div class="stat-lbl">Rating Pts</div></div>
+        <div class="stat-item"><div class="stat-num red" id="statEvents">—</div><div class="stat-lbl">Events</div></div>
+      </div>
+    </div>
+    <a class="team-ctftime-link" href="https://ctftime.org/team/367609" target="_blank" rel="noopener noreferrer">↗ CTFtime</a>
+  </div>
+
+  <!-- UPCOMING CTFs -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-title">Plan to Participate</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="upcoming-wrap">
+      <table class="ctf-table">
+        <thead><tr><th>Event</th><th>Date</th><th>Format</th><th>Weight</th><th></th></tr></thead>
+        <tbody id="upcomingBody"><tr><td colspan="5" class="table-empty">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAST RESULTS -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-title">Participated In</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="year-tabs" id="yearTabs"></div>
+    <div class="past-wrap">
+      <table class="ctf-table">
+        <thead><tr><th>#</th><th>Event</th><th>CTF Points</th><th>Rating Points</th><th></th></tr></thead>
+        <tbody id="pastBody"><tr><td colspan="5" class="table-empty">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API   = '';
+const token = localStorage.getItem('dc_token');
+const me    = JSON.parse(localStorage.getItem('dc_user') || 'null');
+if (!token || !me) window.location.href = 'login.html';
+
+if (me && me.is_admin) {
+  document.getElementById('addCtfBtn').classList.remove('hidden');
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function authFetch(url, opts = {}) {
+  return fetch(API + url, { ...opts, headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token, ...(opts.headers||{}) } });
+}
+function fmtDate(s) {
+  if (!s) return '—';
+  const d = new Date(s);
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+function fmtPts(n) {
+  if (n == null) return '—';
+  return Number(n).toFixed(3);
+}
+function placeBadge(n) {
+  if (!n) return '<span class="place-badge pn">—</span>';
+  const cls = n === 1 ? 'p1' : n === 2 ? 'p2' : n === 3 ? 'p3' : 'pn';
+  return `<span class="place-badge ${cls}">${n}</span>`;
+}
+
+// ── State ──────────────────────────────────────────────────────
+let allEvents            = [];
+let ctftimeTasks         = {};  // year (string) → [{place, ctf_points, rating_points, task_name, task_id}]
+let activeYear           = null;
+let _resultEventId       = null;
+let _participantsEventId = null;
+let _pendingParticipants = [];
+let _selectedCtf         = null;
+let _memberHandles       = [];
+
+// ── Team stats ─────────────────────────────────────────────────
+async function loadTeamStats() {
+  try {
+    const res = await authFetch('/api/ctf/proxy/team');
+    if (!res.ok) return;
+    const t = await res.json();
+    document.getElementById('teamName').textContent = t.name || 'NP DEADCATS';
+    if (t.aliases && t.aliases.length) {
+      document.getElementById('teamAka').textContent = 'aka ' + t.aliases.join(', ');
+    }
+    // Rating stats — find most recent year with actual data
+    const years = t.rating ? Object.keys(t.rating).sort().reverse() : [];
+    const bestYear = years.find(y => t.rating[y].rating_points != null) || years[0];
+    if (bestYear) {
+      const r = t.rating[bestYear];
+      document.getElementById('statRating').textContent  = r.rating_place  ? '#' + r.rating_place  : '—';
+      document.getElementById('statCountry').textContent = r.country_place ? '#' + r.country_place : '—';
+      document.getElementById('statPts').textContent     = r.rating_points != null ? Number(r.rating_points).toFixed(3) : '—';
+    }
+    // Count years where team had a ranking
+    const activeYears = t.rating ? Object.values(t.rating).filter(r => r.rating_place || r.country_place).length : 0;
+    document.getElementById('statEvents').textContent = activeYears || '—';
+    renderPast();
+  } catch(e) { console.error('Team stats error:', e); }
+}
+
+// ── Events ─────────────────────────────────────────────────────
+async function loadEvents() {
+  try {
+    const res = await authFetch('/api/ctf/events');
+    if (!res.ok) return;
+    allEvents = await res.json();
+    renderUpcoming();
+    renderPast();
+  } catch(e) { console.error('Events error:', e); }
+}
+
+function renderUpcoming() {
+  const tbody = document.getElementById('upcomingBody');
+  const upcoming = allEvents.filter(e => e.status === 'upcoming')
+    .sort((a,b) => new Date(a.start_time||0) - new Date(b.start_time||0));
+
+  if (!upcoming.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No upcoming CTFs tracked yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = upcoming.map(ev => `
+    <tr>
+      <td class="ctf-name">${ev.url ? `<a href="${esc(ev.url)}" target="_blank" rel="noopener">${esc(ev.title)}</a>` : esc(ev.title)}</td>
+      <td>${fmtDate(ev.start_time)}</td>
+      <td>${ev.format ? `<span class="format-badge">${esc(ev.format)}</span>` : '—'}</td>
+      <td>${ev.weight != null ? `<span class="weight-val">${ev.weight.toFixed(2)}</span>` : '—'}</td>
+      <td style="text-align:right;">
+        ${me.is_admin ? `
+          <button class="act-btn cyan" onclick="openAddResult(${ev.id})">+ Result</button>
+          <button class="del-btn" onclick="deleteEvent(${ev.id})">✕</button>
+        ` : ''}
+      </td>
+    </tr>`).join('');
+}
+
+function renderPast() {
+  // Combine years from CTFtime tasks + local completed events
+  const allYearsSet = new Set();
+  Object.keys(ctftimeTasks).forEach(y => allYearsSet.add(Number(y)));
+  allEvents.filter(e => e.status === 'completed').forEach(e => {
+    const d = new Date(e.start_time || e.created_at);
+    if (!isNaN(d)) allYearsSet.add(d.getFullYear());
+  });
+  const years = [...allYearsSet].filter(Boolean).sort((a,b) => b - a);
+
+  const tabsEl = document.getElementById('yearTabs');
+  if (!years.length) {
+    tabsEl.innerHTML = '';
+    document.getElementById('pastBody').innerHTML =
+      '<tr><td colspan="5" class="table-empty">No results yet.</td></tr>';
+    return;
+  }
+  if (!activeYear || !years.includes(activeYear)) activeYear = years[0];
+  tabsEl.innerHTML = years.map(y =>
+    `<button class="year-tab ${y === activeYear ? 'active' : ''}" onclick="switchYear(${y})">${y}</button>`
+  ).join('');
+  renderPastTable(activeYear);
+}
+
+function switchYear(y) {
+  activeYear = y;
+  renderPast();
+}
+
+function renderPastTable(year) {
+  const tbody = document.getElementById('pastBody');
+
+  // CTFtime tasks for this year, sorted by place
+  const tasks = (ctftimeTasks[String(year)] || []).slice().sort((a,b) => a.place - b.place);
+  const taskIds = new Set(tasks.map(t => t.task_id));
+
+  // Local completed events not already covered by a CTFtime task
+  const localExtra = allEvents.filter(e => {
+    if (e.status !== 'completed') return false;
+    const d = new Date(e.start_time || e.created_at);
+    if (isNaN(d) || d.getFullYear() !== year) return false;
+    return !(e.ctftime_event_id && taskIds.has(e.ctftime_event_id));
+  }).sort((a,b) => (a.result?.place ?? 9999) - (b.result?.place ?? 9999));
+
+  if (!tasks.length && !localExtra.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No results for this year.</td></tr>';
+    return;
+  }
+
+  // Rows from CTFtime API tasks (primary source)
+  const ctftimeRows = tasks.map(task => {
+    const localEv = allEvents.find(e => e.ctftime_event_id === task.task_id);
+    const pid     = `ct-${task.task_id}`;
+    const url     = `https://ctftime.org/event/${task.task_id}`;
+    return `
+      <tr class="result-row" onclick="toggleParticipants('${pid}')">
+        <td>${placeBadge(task.place)}</td>
+        <td class="ctf-name"><a href="${url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(task.task_name)}</a></td>
+        <td class="pts">${fmtPts(task.ctf_points)}</td>
+        <td class="rating">${fmtPts(task.rating_points)}</td>
+        <td style="text-align:right;" onclick="event.stopPropagation()">
+          <div class="result-actions">
+            ${me.is_admin ? `<button class="act-btn" onclick="openAddParticipantsForTask(${task.task_id})">+ Players</button>` : ''}
+            <span class="expand-arrow" id="arrow-${pid}">▶</span>
+          </div>
+        </td>
+      </tr>
+      <tr class="participants-row hidden" id="prow-${pid}">
+        <td colspan="5">
+          <div class="participants-inner" id="pinner-${pid}">
+            ${localEv ? renderParticipantsInner(localEv) : '<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);">No players logged.</span>'}
+          </div>
+        </td>
+      </tr>`;
+  });
+
+  // Rows from local-only completed events (not on CTFtime or manually tracked)
+  const localRows = localExtra.map(ev => {
+    const r = ev.result;
+    return `
+      <tr class="result-row" onclick="toggleParticipants(${ev.id})">
+        <td>${r ? placeBadge(r.place) : '<span class="place-badge pn">—</span>'}</td>
+        <td class="ctf-name">${ev.url ? `<a href="${esc(ev.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(ev.title)}</a>` : esc(ev.title)}</td>
+        <td class="pts">${r ? fmtPts(r.ctf_points) : '—'}</td>
+        <td class="rating">${r ? fmtPts(r.rating_points) : '—'}</td>
+        <td style="text-align:right;" onclick="event.stopPropagation()">
+          <div class="result-actions">
+            ${me.is_admin ? `
+              <button class="act-btn cyan" onclick="openAddResult(${ev.id})">✎ Result</button>
+              <button class="act-btn" onclick="openAddParticipants(${ev.id})">+ Players</button>
+              <button class="del-btn" onclick="deleteEvent(${ev.id})">✕</button>
+            ` : ''}
+            <span class="expand-arrow" id="arrow-${ev.id}">▶</span>
+          </div>
+        </td>
+      </tr>
+      <tr class="participants-row hidden" id="prow-${ev.id}">
+        <td colspan="5">
+          <div class="participants-inner" id="pinner-${ev.id}">
+            ${renderParticipantsInner(ev)}
+          </div>
+        </td>
+      </tr>`;
+  });
+
+  tbody.innerHTML = [...ctftimeRows, ...localRows].join('');
+}
+
+function renderParticipantsInner(ev) {
+  if (!ev.participants || !ev.participants.length) {
+    return '<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);">No players logged.</span>';
+  }
+  return ev.participants.map(p => `
+    <div class="participant-chip">
+      <span class="p-handle">${esc(p.member_handle)}</span>
+      <span class="p-pts">${p.points.toFixed(0)} pts</span>
+      ${me.is_admin ? `<button class="p-del" onclick="deleteParticipant(${p.id},${ev.id})" title="Remove">✕</button>` : ''}
+    </div>`).join('');
+}
+
+function toggleParticipants(id) {
+  const prow  = document.getElementById(`prow-${id}`);
+  const arrow = document.getElementById(`arrow-${id}`);
+  if (!prow) return;
+  const isHidden = prow.classList.contains('hidden');
+  prow.classList.toggle('hidden', !isHidden);
+  if (arrow) arrow.classList.toggle('open', isHidden);
+}
+
+// ── Delete event ───────────────────────────────────────────────
+async function deleteEvent(id) {
+  if (!confirm('Remove this CTF event and all its data?')) return;
+  const res = await authFetch(`/api/ctf/events/${id}`, { method:'DELETE' });
+  if (res.ok || res.status === 204) await loadEvents();
+}
+
+async function deleteParticipant(pid, eid) {
+  const res = await authFetch(`/api/ctf/participants/${pid}`, { method:'DELETE' });
+  if (res.ok || res.status === 204) {
+    await loadEvents();
+    const prow = document.getElementById(`prow-${eid}`);
+    if (prow) prow.classList.remove('hidden');
+    const arrow = document.getElementById(`arrow-${eid}`);
+    if (arrow) arrow.classList.add('open');
+  }
+}
+
+// ── Add CTF modal ──────────────────────────────────────────────
+let _searchTimer = null;
+
+function openAddCtf() {
+  _selectedCtf = null;
+  document.getElementById('ctfSearchInput').value = '';
+  document.getElementById('searchDropdown').classList.add('hidden');
+  document.getElementById('selectedCtfPreview').style.display = 'none';
+  document.getElementById('manualTitle').value = '';
+  document.getElementById('manualUrl').value = '';
+  document.getElementById('manualStart').value = '';
+  document.getElementById('manualEnd').value = '';
+  document.getElementById('addCtfModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('ctfSearchInput').focus(), 50);
+}
+function closeAddCtf() {
+  document.getElementById('addCtfModal').classList.add('hidden');
+}
+
+document.getElementById('ctfSearchInput').addEventListener('input', function() {
+  clearTimeout(_searchTimer);
+  const q = this.value.trim();
+  if (!q) { document.getElementById('searchDropdown').classList.add('hidden'); return; }
+  _searchTimer = setTimeout(() => searchCTFtime(q), 350);
+});
+
+async function searchCTFtime(q) {
+  const dropdown = document.getElementById('searchDropdown');
+  dropdown.innerHTML = '<div class="sd-empty">Searching...</div>';
+  dropdown.classList.remove('hidden');
+  try {
+    const res = await authFetch(`/api/ctf/proxy/upcoming?q=${encodeURIComponent(q)}`);
+    if (!res.ok) { dropdown.innerHTML = '<div class="sd-empty">Search failed.</div>'; return; }
+    const events = await res.json();
+    if (!events.length) { dropdown.innerHTML = '<div class="sd-empty">No events found.</div>'; return; }
+    dropdown.innerHTML = events.map(e => {
+      const start = e.start ? fmtDate(e.start) : '—';
+      const fmt   = e.format || '';
+      const weight = e.weight != null ? ` · ${Number(e.weight).toFixed(2)}w` : '';
+      return `<div class="sd-item" onclick="selectCtf(${JSON.stringify(JSON.stringify(e))})">
+        <div class="sd-title">${esc(e.title)}</div>
+        <div class="sd-meta">${start} · ${fmt}${weight}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { dropdown.innerHTML = '<div class="sd-empty">Error.</div>'; }
+}
+
+function selectCtf(jsonStr) {
+  _selectedCtf = JSON.parse(jsonStr);
+  document.getElementById('searchDropdown').classList.add('hidden');
+  document.getElementById('ctfSearchInput').value = _selectedCtf.title;
+  document.getElementById('selectedCtfPreview').style.display = 'block';
+  document.getElementById('previewTitle').textContent = _selectedCtf.title;
+  const start = _selectedCtf.start ? fmtDate(_selectedCtf.start) : '—';
+  const fmt = _selectedCtf.format || '—';
+  document.getElementById('previewMeta').textContent =
+    `${start} · ${fmt} · weight: ${_selectedCtf.weight != null ? Number(_selectedCtf.weight).toFixed(2) : '—'}`;
+  document.getElementById('manualTitle').value = '';
+  document.getElementById('manualUrl').value = '';
+}
+
+async function submitAddCtf() {
+  let body;
+  if (_selectedCtf) {
+    body = {
+      title:            _selectedCtf.title,
+      url:              _selectedCtf.url || '',
+      ctftime_event_id: _selectedCtf.id  || null,
+      start_time:       _selectedCtf.start || null,
+      end_time:         _selectedCtf.finish || null,
+      format:           _selectedCtf.format || null,
+      weight:           _selectedCtf.weight != null ? Number(_selectedCtf.weight) : null,
+    };
+  } else {
+    const title = document.getElementById('manualTitle').value.trim();
+    if (!title) { alert('Event name required.'); return; }
+    body = {
+      title,
+      url:        document.getElementById('manualUrl').value.trim() || null,
+      start_time: document.getElementById('manualStart').value.trim() || null,
+      end_time:   document.getElementById('manualEnd').value.trim() || null,
+    };
+  }
+  const res = await authFetch('/api/ctf/events', { method:'POST', body: JSON.stringify(body) });
+  if (res.ok) { closeAddCtf(); await loadEvents(); }
+  else { const e = await res.json(); alert(e.detail || 'Failed to add CTF.'); }
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) {
+    document.getElementById('searchDropdown').classList.add('hidden');
+  }
+});
+
+// ── Add Result modal ───────────────────────────────────────────
+function openAddResult(eventId) {
+  _resultEventId = eventId;
+  const ev = allEvents.find(e => e.id === eventId);
+  document.getElementById('addResultEventName').textContent = ev ? ev.title : '';
+  if (ev && ev.result) {
+    document.getElementById('resultPlace').value     = ev.result.place;
+    document.getElementById('resultCtfPts').value    = ev.result.ctf_points;
+    document.getElementById('resultRatingPts').value = ev.result.rating_points;
+  } else {
+    document.getElementById('resultPlace').value     = '';
+    document.getElementById('resultCtfPts').value    = '';
+    document.getElementById('resultRatingPts').value = '';
+  }
+  document.getElementById('addResultModal').classList.remove('hidden');
+}
+function closeAddResult() { document.getElementById('addResultModal').classList.add('hidden'); }
+
+async function submitResult() {
+  const place  = parseInt(document.getElementById('resultPlace').value);
+  const ctfPts = parseFloat(document.getElementById('resultCtfPts').value);
+  const ratPts = parseFloat(document.getElementById('resultRatingPts').value);
+  if (!place || isNaN(place)) { alert('Placement required.'); return; }
+  if (isNaN(ctfPts))          { alert('CTF points required.'); return; }
+  if (isNaN(ratPts))          { alert('Rating points required.'); return; }
+  const res = await authFetch(`/api/ctf/events/${_resultEventId}/result`, {
+    method: 'POST',
+    body: JSON.stringify({ place, ctf_points: ctfPts, rating_points: ratPts }),
+  });
+  if (res.ok) { closeAddResult(); await loadEvents(); }
+  else { const e = await res.json(); alert(e.detail || 'Failed to save result.'); }
+}
+
+// ── Add Participants modal ─────────────────────────────────────
+function openAddParticipants(eventId) {
+  _participantsEventId = eventId;
+  _pendingParticipants = [];
+  const ev = allEvents.find(e => e.id === eventId);
+  document.getElementById('addParticipantsEventName').textContent = ev ? ev.title : '';
+  document.getElementById('pHandle').value = '';
+  document.getElementById('pPoints').value = '';
+  document.getElementById('pList').innerHTML = '';
+  document.getElementById('addParticipantsModal').classList.remove('hidden');
+}
+function closeAddParticipants() {
+  document.getElementById('addParticipantsModal').classList.add('hidden');
+  loadEvents();
+}
+
+// For CTFtime tasks: auto-create local event record if needed, then open participants modal
+async function openAddParticipantsForTask(taskId) {
+  // Find the task in ctftimeTasks
+  let task = null;
+  for (const tasks of Object.values(ctftimeTasks)) {
+    task = tasks.find(t => t.task_id === taskId);
+    if (task) break;
+  }
+  if (!task) return;
+
+  // Check if a local event already exists for this CTFtime task
+  let localEv = allEvents.find(e => e.ctftime_event_id === taskId);
+
+  if (!localEv) {
+    // Create local event record so we can attach participants
+    const res = await authFetch('/api/ctf/events', {
+      method: 'POST',
+      body: JSON.stringify({
+        title:            task.task_name,
+        url:              `https://ctftime.org/event/${taskId}`,
+        ctftime_event_id: taskId,
+      })
+    });
+    if (!res.ok) { alert('Failed to create event record.'); return; }
+    const ev = await res.json();
+    // Mark completed and store the result from CTFtime
+    await authFetch(`/api/ctf/events/${ev.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'completed' })
+    });
+    await authFetch(`/api/ctf/events/${ev.id}/result`, {
+      method: 'POST',
+      body: JSON.stringify({ place: task.place, ctf_points: task.ctf_points, rating_points: task.rating_points })
+    });
+    await loadEvents();
+    localEv = allEvents.find(e => e.ctftime_event_id === taskId);
+  }
+
+  if (localEv) openAddParticipants(localEv.id);
+}
+
+async function addParticipantRow() {
+  const handle = document.getElementById('pHandle').value.trim();
+  const pts    = parseFloat(document.getElementById('pPoints').value);
+  if (!handle) { alert('Handle required.'); return; }
+  if (isNaN(pts)) { alert('Points required.'); return; }
+  const res = await authFetch(`/api/ctf/events/${_participantsEventId}/participants`, {
+    method: 'POST',
+    body: JSON.stringify({ member_handle: handle, points: pts }),
+  });
+  if (res.ok) {
+    document.getElementById('pHandle').value = '';
+    document.getElementById('pPoints').value = '';
+    const p = await res.json();
+    const item = document.createElement('div');
+    item.className = 'p-list-item';
+    item.innerHTML = `<span class="handle">${esc(p.member_handle)}</span><span class="ppts">${p.points.toFixed(0)} pts</span>`;
+    document.getElementById('pList').appendChild(item);
+    document.getElementById('pHandle').focus();
+  } else { const e = await res.json(); alert(e.detail || 'Failed.'); }
+}
+
+document.getElementById('pPoints').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addParticipantRow();
+});
+
+// ── Load member handles for datalist ─────────────────────────
+async function loadMemberHandles() {
+  try {
+    const res = await authFetch('/api/users/');
+    if (!res.ok) return;
+    const users = await res.json();
+    _memberHandles = users.map(u => u.handle);
+    const dl = document.getElementById('memberHandles');
+    dl.innerHTML = _memberHandles.map(h => `<option value="${esc(h)}">`).join('');
+  } catch(e) {}
+}
+
+// ── Init ──────────────────────────────────────────────────────
+loadTeamStats();
+loadEvents();
+if (me.is_admin) loadMemberHandles();
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeAddCtf(); closeAddResult(); closeAddParticipants();
+  }
+});
+</script>
+</body>
+</html>

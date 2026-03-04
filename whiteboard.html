@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEADCATS // War Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:         #05060a;
+  --bg2:        #090b12;
+  --bg3:        #0d1018;
+  --surface:    #111520;
+  --surface2:   #161b28;
+  --border:     #1a2030;
+  --border2:    #242e45;
+  --red:        #e8001e;
+  --red2:       #ff2040;
+  --red-dim:    #3a000a;
+  --red-glow:   rgba(232,0,30,0.12);
+  --cyan:       #00d4ff;
+  --cyan-dim:   #003a4d;
+  --gold:       #f0a500;
+  --green:      #00ff88;
+  --purple:     #9b5de5;
+  --text:       #b8c8e0;
+  --text-dim:   #445060;
+  --text-mid:   #6a7a95;
+  --text-bright:#ddeeff;
+  --nav-h:      52px;
+  --mono:       'IBM Plex Mono', monospace;
+  --body:       'IBM Plex Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  cursor: crosshair;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.05) 3px, rgba(0,0,0,0.05) 4px);
+  pointer-events: none; z-index: 9999;
+}
+
+/* ── NAV ─────────────────────────────────────────────────────────── */
+.topnav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--nav-h);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+  background: rgba(5,6,10,0.97);
+  border-bottom: 1px solid var(--border);
+}
+.nav-left  { display: flex; align-items: center; gap: 14px; }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.nav-logo  { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.3em; color: var(--text-bright); text-decoration: none; }
+.nav-logo span { color: var(--red2); }
+.nav-sep   { width: 1px; height: 20px; background: var(--border2); }
+.nav-page  { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.15em; }
+.nav-page span { color: var(--red2); }
+.nav-back  { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-decoration: none; letter-spacing: 0.1em; transition: color 0.2s; }
+.nav-back:hover { color: var(--text); }
+.nav-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
+  text-transform: uppercase; padding: 5px 12px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text-dim); cursor: crosshair; transition: all 0.2s;
+}
+.nav-btn:hover  { color: var(--text); border-color: var(--text-mid); }
+.nav-btn.danger { color: var(--red2); border-color: var(--red-dim); }
+.nav-btn.danger:hover { background: var(--red-glow); }
+
+/* ── LAYOUT ──────────────────────────────────────────────────────── */
+.war-room {
+  display: grid;
+  grid-template-columns: 200px 1fr 260px;
+  height: calc(100vh - var(--nav-h));
+  margin-top: var(--nav-h);
+}
+
+/* ── MEMBERS SIDEBAR ─────────────────────────────────────────────── */
+.members-panel {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.panel-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: 0.25em; color: var(--text-dim);
+  text-transform: uppercase;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-count {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  font-size: 8px; padding: 1px 6px;
+  color: var(--text-dim);
+}
+.members-list {
+  flex: 1; overflow-y: auto;
+  padding: 6px 0;
+}
+.member-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 12px;
+  transition: background 0.15s;
+}
+.member-row:hover { background: var(--surface); }
+.m-ava {
+  position: relative; font-size: 16px;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.m-dot {
+  position: absolute; bottom: -1px; right: -2px;
+  width: 7px; height: 7px; border-radius: 50%;
+  border: 1px solid var(--bg2);
+}
+.m-dot.online  { background: var(--green); }
+.m-dot.away    { background: var(--gold); }
+.m-dot.offline { background: var(--text-dim); }
+.m-info { min-width: 0; }
+.m-handle {
+  font-family: var(--body); font-size: 12px; font-weight: 500;
+  color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.m-rank {
+  font-family: var(--mono); font-size: 8px;
+  letter-spacing: 0.08em; color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+/* ── CANVAS CENTER ───────────────────────────────────────────────── */
+.canvas-pane {
+  position: relative;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.canvas-loading {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; background: var(--bg);
+  z-index: 10;
+}
+.canvas-loading.hidden { display: none; }
+.loading-icon  { font-size: 36px; opacity: 0.3; }
+.loading-text  { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; }
+#excalidraw-frame {
+  flex: 1;
+  width: 100%; height: 100%;
+  border: none;
+}
+
+/* ── GOALS SIDEBAR ───────────────────────────────────────────────── */
+.goals-panel {
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.goal-add-wrap {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 6px;
+}
+.goal-input {
+  flex: 1; padding: 7px 10px;
+  background: var(--bg); border: 1px solid var(--border2);
+  color: var(--text-bright); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color 0.2s; cursor: text;
+}
+.goal-input:focus { border-color: var(--cyan-dim); }
+.goal-add-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
+  text-transform: uppercase; padding: 7px 12px;
+  border: 1px solid rgba(0,255,136,0.3); background: transparent;
+  color: var(--green); cursor: crosshair; transition: all 0.2s;
+  white-space: nowrap;
+}
+.goal-add-btn:hover { background: rgba(0,255,136,0.08); }
+
+.goals-list {
+  flex: 1; overflow-y: auto;
+  padding: 6px 0;
+}
+.goal-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.goal-item:last-child { border-bottom: none; }
+.goal-item:hover { background: var(--surface); }
+.goal-item.done { opacity: 0.5; }
+
+.goal-cb {
+  width: 14px; height: 14px; flex-shrink: 0;
+  margin-top: 2px;
+  accent-color: var(--green); cursor: crosshair;
+}
+.goal-cb:disabled { cursor: not-allowed; opacity: 0.4; }
+
+.goal-body { flex: 1; min-width: 0; }
+.goal-text {
+  font-family: var(--body); font-size: 13px;
+  color: var(--text); line-height: 1.4;
+  word-break: break-word;
+}
+.goal-item.done .goal-text { text-decoration: line-through; color: var(--text-dim); }
+.goal-meta {
+  font-family: var(--mono); font-size: 8px;
+  color: var(--text-dim); margin-top: 4px;
+  letter-spacing: 0.08em;
+}
+.goal-del {
+  background: transparent; border: none;
+  color: var(--text-dim); font-size: 11px;
+  cursor: crosshair; padding: 0 3px;
+  transition: color 0.15s; flex-shrink: 0;
+  margin-top: 2px;
+}
+.goal-del:hover { color: var(--red2); }
+.goals-empty {
+  padding: 32px 16px; text-align: center;
+  font-family: var(--mono); font-size: 9px;
+  color: var(--text-dim); letter-spacing: 0.15em;
+}
+
+/* ── CONFIRM MODAL ───────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.75);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.hidden { display: none; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border2);
+  padding: 28px; width: 360px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+}
+.modal-title {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.2em; color: var(--text-bright); margin-bottom: 12px;
+}
+.modal-body {
+  font-family: var(--body); font-size: 13px;
+  color: var(--text-mid); margin-bottom: 22px; line-height: 1.5;
+}
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; padding: 8px 16px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text-dim); cursor: crosshair; transition: all 0.2s;
+}
+.modal-btn:hover { color: var(--text); border-color: var(--text-mid); }
+.modal-btn.confirm { color: var(--red2); border-color: var(--red-dim); }
+.modal-btn.confirm:hover { background: var(--red-glow); }
+
+/* ── SCROLLBARS ──────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); }
+</style>
+</head>
+<body>
+
+<!-- Reset Room Confirm Modal -->
+<div class="modal-overlay hidden" id="resetModal">
+  <div class="modal">
+    <div class="modal-title">Reset Whiteboard Room?</div>
+    <div class="modal-body">This will generate a new Excalidraw room. The current drawing will be permanently lost and all members will need to reload the page.</div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeResetModal()">Cancel</button>
+      <button class="modal-btn confirm" onclick="confirmReset()">Reset Room</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="topnav">
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">DEAD<span>CATS</span></a>
+    <div class="nav-sep"></div>
+    <span class="nav-page">// <span>war room</span></span>
+  </div>
+  <div class="nav-right">
+    <a href="dashboard.html" class="nav-back">← Dashboard</a>
+    <button class="nav-btn danger hidden" id="resetRoomBtn" onclick="openResetModal()">↺ Reset Room</button>
+  </div>
+</nav>
+
+<div class="war-room">
+
+  <!-- MEMBERS SIDEBAR -->
+  <aside class="members-panel">
+    <div class="panel-head">
+      Members
+      <span class="panel-count" id="member-count">0</span>
+    </div>
+    <div class="members-list" id="membersList">
+      <div class="goals-empty">Loading...</div>
+    </div>
+  </aside>
+
+  <!-- CANVAS -->
+  <div class="canvas-pane">
+    <div class="canvas-loading" id="canvasLoading">
+      <div class="loading-icon">🖊️</div>
+      <div class="loading-text">Loading whiteboard...</div>
+    </div>
+    <iframe id="excalidraw-frame"
+            allow="clipboard-read; clipboard-write; fullscreen"
+            title="DEADCATS Shared Whiteboard">
+    </iframe>
+  </div>
+
+  <!-- GOALS SIDEBAR -->
+  <aside class="goals-panel">
+    <div class="panel-head">
+      Team Goals
+      <span class="panel-count" id="goal-count">0</span>
+    </div>
+    <div class="goal-add-wrap hidden" id="goalAddWrap">
+      <input class="goal-input" type="text" id="goalInput" placeholder="New goal..." maxlength="500">
+      <button class="goal-add-btn" onclick="addGoal()">Add</button>
+    </div>
+    <div class="goals-list" id="goalsList">
+      <div class="goals-empty">Loading...</div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+const API   = '';
+const token = localStorage.getItem('dc_token');
+const me    = JSON.parse(localStorage.getItem('dc_user') || 'null');
+if (!token || !me) window.location.href = 'login.html';
+
+const RANK_COLORS = {
+  'Founding Circle': '#f0a500',
+  'Lead Researcher': '#00d4ff',
+  Scholar:           '#9b5de5',
+  DEADCAT:           '#445060',
+};
+
+// Show admin controls
+if (me && me.is_admin) {
+  document.getElementById('resetRoomBtn').classList.remove('hidden');
+  document.getElementById('goalAddWrap').classList.remove('hidden');
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function authFetch(url, opts = {}) {
+  return fetch(API + url, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token,
+      ...(opts.headers || {}),
+    },
+  });
+}
+
+function timeAgo(d) {
+  if (!d) return '';
+  const s = (Date.now() - new Date(d)) / 1000;
+  if (s < 60)    return 'just now';
+  if (s < 3600)  return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+
+function isOnline(dateStr) {
+  if (!dateStr) return 'offline';
+  const s = (Date.now() - new Date(dateStr)) / 1000;
+  if (s < 300)  return 'online';
+  if (s < 3600) return 'away';
+  return 'offline';
+}
+
+// ── Whiteboard room ───────────────────────────────────────────────
+
+async function loadRoom() {
+  try {
+    const res = await authFetch('/api/whiteboard/config');
+    if (!res.ok) return;
+    const { room_url } = await res.json();
+    const frame = document.getElementById('excalidraw-frame');
+    frame.src = room_url;
+    frame.addEventListener('load', () => {
+      document.getElementById('canvasLoading').classList.add('hidden');
+    }, { once: true });
+    // Fallback: hide loader after 5s regardless
+    setTimeout(() => document.getElementById('canvasLoading').classList.add('hidden'), 5000);
+  } catch (e) { console.error('Room load error:', e); }
+}
+
+function openResetModal()  { document.getElementById('resetModal').classList.remove('hidden'); }
+function closeResetModal() { document.getElementById('resetModal').classList.add('hidden'); }
+
+async function confirmReset() {
+  closeResetModal();
+  const res = await authFetch('/api/whiteboard/config/reset', { method: 'POST' });
+  if (res.ok) {
+    const { room_url } = await res.json();
+    const frame = document.getElementById('excalidraw-frame');
+    document.getElementById('canvasLoading').classList.remove('hidden');
+    frame.src = room_url;
+    frame.addEventListener('load', () => {
+      document.getElementById('canvasLoading').classList.add('hidden');
+    }, { once: true });
+    setTimeout(() => document.getElementById('canvasLoading').classList.add('hidden'), 5000);
+  }
+}
+
+// ── Members ───────────────────────────────────────────────────────
+
+async function loadMembers() {
+  try {
+    const res = await authFetch('/api/users/');
+    if (!res.ok) return;
+    const members = await res.json();
+    const el = document.getElementById('membersList');
+    document.getElementById('member-count').textContent = members.length;
+
+    if (!members.length) {
+      el.innerHTML = '<div class="goals-empty">No members found.</div>';
+      return;
+    }
+
+    // Sort: online first, then away, then offline
+    const order = { online: 0, away: 1, offline: 2 };
+    members.sort((a, b) => order[isOnline(a.last_seen)] - order[isOnline(b.last_seen)]);
+
+    el.innerHTML = members.map(m => {
+      const status = isOnline(m.last_seen);
+      const color  = RANK_COLORS[m.rank] || '#445060';
+      return `<div class="member-row">
+        <div class="m-ava">${esc(m.emoji)}<div class="m-dot ${status}"></div></div>
+        <div class="m-info">
+          <div class="m-handle">${esc(m.handle)}</div>
+          <div class="m-rank" style="color:${color};">${esc(String(m.rank || '').toUpperCase())}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) { console.error('Members error:', e); }
+}
+
+// ── Goals ─────────────────────────────────────────────────────────
+
+async function loadGoals() {
+  try {
+    const res = await authFetch('/api/whiteboard/goals');
+    if (!res.ok) return;
+    const goals = await res.json();
+    renderGoals(goals);
+  } catch (e) { console.error('Goals error:', e); }
+}
+
+function renderGoals(goals) {
+  const el = document.getElementById('goalsList');
+  document.getElementById('goal-count').textContent = goals.length;
+
+  if (!goals.length) {
+    el.innerHTML = '<div class="goals-empty">No team goals yet.</div>';
+    return;
+  }
+
+  el.innerHTML = goals.map(g => {
+    const delBtn = me.is_admin
+      ? `<button class="goal-del" title="Delete goal" onclick="deleteGoal(${g.id})">✕</button>`
+      : '';
+    const cbDisabled = me.is_admin ? '' : 'disabled';
+    const meta = g.completed
+      ? `Completed by ${esc(g.completed_by)} · ${timeAgo(g.completed_at)}`
+      : `Added by ${esc(g.created_by)} · ${timeAgo(g.created_at)}`;
+    return `
+      <div class="goal-item${g.completed ? ' done' : ''}" id="goal-${g.id}">
+        <input type="checkbox" class="goal-cb" ${g.completed ? 'checked' : ''} ${cbDisabled}
+               onchange="toggleGoal(${g.id}, this.checked)">
+        <div class="goal-body">
+          <div class="goal-text">${esc(g.text)}</div>
+          <div class="goal-meta">${meta}</div>
+        </div>
+        ${delBtn}
+      </div>`;
+  }).join('');
+}
+
+async function addGoal() {
+  const input = document.getElementById('goalInput');
+  const text  = input.value.trim();
+  if (!text) return;
+  const res = await authFetch('/api/whiteboard/goals', {
+    method: 'POST',
+    body: JSON.stringify({ text }),
+  });
+  if (res.ok) {
+    input.value = '';
+    await loadGoals();
+  } else {
+    const err = await res.json();
+    alert(err.detail || 'Failed to add goal.');
+  }
+}
+
+async function toggleGoal(id, completed) {
+  const res = await authFetch(`/api/whiteboard/goals/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ completed }),
+  });
+  if (res.ok) await loadGoals();
+}
+
+async function deleteGoal(id) {
+  if (!confirm('Delete this goal?')) return;
+  const res = await authFetch(`/api/whiteboard/goals/${id}`, { method: 'DELETE' });
+  if (res.ok || res.status === 204) await loadGoals();
+}
+
+// Enter key in goal input
+document.getElementById('goalInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addGoal();
+});
+
+// ── Init & polling ────────────────────────────────────────────────
+
+loadRoom();
+loadMembers();
+loadGoals();
+
+setInterval(loadMembers, 30000);
+setInterval(loadGoals,   20000);
+</script>
+</body>
+</html>

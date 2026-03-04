@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEADCATS // Research Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<style>
+:root {
+  --bg:        #05060a;
+  --bg2:       #090b12;
+  --bg3:       #0d1018;
+  --surface:   #111520;
+  --surface2:  #161b28;
+  --border:    #1a2030;
+  --border2:   #242e45;
+  --red:       #e8001e;
+  --red2:      #ff2040;
+  --red-dim:   #3a000a;
+  --red-glow:  rgba(232,0,30,0.12);
+  --cyan:      #00d4ff;
+  --cyan-dim:  #003a4d;
+  --gold:      #f0a500;
+  --green:     #00ff88;
+  --purple:    #9b5de5;
+  --text:      #b8c8e0;
+  --text-dim:  #445060;
+  --text-mid:  #6a7a95;
+  --text-bright:#ddeeff;
+  --nav-h:     52px;
+  --sidebar-w: 240px;
+  --list-w:    300px;
+  --mono:    'Share Tech Mono', monospace;
+  --display: 'Syncopate', sans-serif;
+  --body:    'Rajdhani', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  cursor: crosshair;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.05) 3px, rgba(0,0,0,0.05) 4px);
+  pointer-events: none; z-index: 9999;
+}
+
+/* ── NAV ── */
+.topnav {
+  position: fixed; top:0; left:0; right:0; z-index: 100;
+  height: var(--nav-h);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(5,6,10,0.97);
+  border-bottom: 1px solid var(--border);
+}
+.nav-left  { display: flex; align-items: center; gap: 16px; }
+.nav-right { display: flex; align-items: center; gap: 16px; }
+.nav-logo  { font-family: var(--display); font-size: 10px; font-weight: 700; letter-spacing: 0.3em; color: var(--text-bright); text-decoration: none; }
+.nav-logo span { color: var(--red2); }
+.nav-sep   { width:1px; height:20px; background: var(--border2); }
+.nav-page  { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.15em; }
+.nav-page span { color: var(--cyan); }
+.nav-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; padding: 6px 14px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text-dim); cursor: crosshair; transition: all 0.2s;
+}
+.nav-btn:hover  { color: var(--text); border-color: var(--text-dim); }
+.nav-btn.red    { border-color: var(--red-dim); color: var(--red2); background: var(--red-glow); }
+.nav-btn.red:hover { background: rgba(232,0,30,0.2); }
+.nav-back { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-decoration: none; letter-spacing: 0.1em; transition: color 0.2s; }
+.nav-back:hover { color: var(--text); }
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) var(--list-w) 1fr;
+  height: calc(100vh - var(--nav-h));
+  margin-top: var(--nav-h);
+}
+
+/* ── FOLDER SIDEBAR ── */
+.folder-sidebar {
+  border-right: 1px solid var(--border);
+  background: rgba(9,11,18,0.97);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.fs-head {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.fs-title {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: 0.25em; color: var(--text-dim);
+  text-transform: uppercase;
+}
+.fs-add {
+  width: 22px; height: 22px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text-dim); font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: crosshair; transition: all 0.2s;
+}
+.fs-add:hover { color: var(--green); border-color: var(--green); }
+.folder-tree { flex:1; overflow-y: auto; padding: 8px 0; }
+
+.folder-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 16px;
+  font-family: var(--body); font-size: 13px; font-weight: 500;
+  color: var(--text-mid); cursor: crosshair;
+  transition: all 0.15s; border: 1px solid transparent;
+  position: relative;
+}
+.folder-item:hover { color: var(--text); background: var(--surface); }
+.folder-item.active {
+  color: var(--text-bright); background: var(--surface);
+  border-color: var(--border);
+}
+.folder-item.active::before {
+  content: '';
+  position: absolute; left:-1px; top:0; bottom:0;
+  width: 2px; background: var(--cyan);
+}
+.folder-ico { font-size: 13px; }
+.folder-count {
+  margin-left: auto;
+  font-family: var(--mono); font-size: 8px;
+  color: var(--text-dim); letter-spacing: 0.1em;
+}
+.folder-del {
+  margin-left: 4px;
+  background: transparent; border: none;
+  color: var(--text-dim); font-size: 11px;
+  cursor: crosshair; opacity: 0; transition: opacity 0.15s;
+  padding: 0 2px;
+}
+.folder-item:hover .folder-del { opacity: 1; }
+.folder-del:hover { color: var(--red2); }
+
+/* ── NOTE LIST ── */
+.note-list-panel {
+  border-right: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.nl-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nl-title {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: 0.2em; color: var(--text-dim);
+  text-transform: uppercase;
+}
+.nl-new {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
+  background: transparent; border: 1px solid var(--border2);
+  color: var(--cyan); padding: 4px 10px;
+  cursor: crosshair; transition: all 0.2s;
+}
+.nl-new:hover { background: var(--cyan-dim); border-color: var(--cyan); }
+
+.note-items { flex:1; overflow-y: auto; }
+
+.note-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: crosshair; transition: background 0.15s;
+  position: relative;
+}
+.note-item:hover { background: var(--surface); }
+.note-item.active { background: var(--surface); border-left: 2px solid var(--red2); }
+.ni-title {
+  font-family: var(--body); font-size: 14px; font-weight: 600;
+  color: var(--text-bright); margin-bottom: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ni-preview {
+  font-family: var(--body); font-size: 12px; font-weight: 300;
+  color: var(--text-dim); margin-bottom: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ni-meta {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--text-dim); letter-spacing: 0.08em;
+  display: flex; gap: 10px; align-items: center;
+}
+.ni-tag {
+  font-family: var(--mono); font-size: 8px;
+  padding: 1px 5px; border: 1px solid var(--border2);
+  color: var(--text-mid);
+}
+.note-empty {
+  padding: 40px 16px; text-align: center;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--text-dim); letter-spacing: 0.15em;
+}
+.ni-bm-btn {
+  position: absolute; top: 10px; right: 10px;
+  background: transparent; border: none;
+  color: var(--text-dim); font-size: 13px;
+  cursor: crosshair; padding: 2px 4px;
+  transition: color 0.15s; line-height: 1;
+}
+.ni-bm-btn:hover { color: var(--gold); }
+
+/* ── CONTENT PANE ── */
+.content-pane {
+  display: flex; flex-direction: column;
+  overflow: hidden; background: var(--bg);
+}
+
+/* toolbar */
+.content-toolbar {
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg2);
+  min-height: 44px;
+}
+.ct-title {
+  font-family: var(--display); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.15em; color: var(--text-bright); flex:1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ct-meta {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--text-dim); letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.ct-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
+  text-transform: uppercase; padding: 5px 12px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text-dim); cursor: crosshair; transition: all 0.2s;
+  white-space: nowrap;
+}
+.ct-btn:hover  { color: var(--text); border-color: var(--text-mid); }
+.ct-btn.active { color: var(--cyan); border-color: var(--cyan-dim); background: rgba(0,212,255,0.05); }
+.ct-btn.save   { color: var(--green); border-color: rgba(0,255,136,0.3); }
+.ct-btn.save:hover { background: rgba(0,255,136,0.08); }
+.ct-btn.danger { color: var(--red2); border-color: var(--red-dim); }
+.ct-btn.danger:hover { background: var(--red-glow); }
+
+/* viewer */
+.note-viewer {
+  flex:1; overflow-y: auto;
+  padding: 40px 48px;
+}
+.note-viewer.hidden { display: none; }
+
+/* markdown styles */
+.md-body { max-width: 800px; line-height: 1.8; }
+.md-body h1 { font-family: var(--display); font-size: 22px; font-weight: 700; color: var(--text-bright); letter-spacing: 0.1em; margin: 0 0 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border2); }
+.md-body h2 { font-family: var(--display); font-size: 15px; font-weight: 700; color: var(--text-bright); letter-spacing: 0.1em; margin: 32px 0 16px; }
+.md-body h3 { font-family: var(--body); font-size: 16px; font-weight: 700; color: var(--cyan); margin: 24px 0 12px; }
+.md-body p  { color: var(--text); margin-bottom: 16px; font-size: 15px; }
+.md-body a  { color: var(--cyan); text-decoration: none; border-bottom: 1px solid var(--cyan-dim); }
+.md-body a:hover { border-color: var(--cyan); }
+.md-body strong { color: var(--text-bright); font-weight: 700; }
+.md-body em { color: var(--gold); font-style: italic; }
+.md-body code { font-family: var(--mono); font-size: 12px; background: var(--surface); color: var(--red2); padding: 2px 6px; border: 1px solid var(--border2); }
+.md-body pre { background: var(--bg3); border: 1px solid var(--border2); margin: 16px 0; overflow-x: auto; }
+.md-body pre code { background: none; border: none; color: inherit; padding: 0; font-size: 13px; }
+.md-body blockquote { border-left: 2px solid var(--red2); padding: 8px 16px; margin: 16px 0; background: rgba(232,0,30,0.04); color: var(--text-mid); }
+.md-body ul, .md-body ol { padding-left: 24px; margin-bottom: 16px; color: var(--text); }
+.md-body li { margin-bottom: 6px; }
+.md-body hr { border: none; border-top: 1px solid var(--border2); margin: 32px 0; }
+.md-body table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+.md-body th { background: var(--surface); color: var(--text-bright); font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; padding: 10px 14px; border: 1px solid var(--border2); text-align: left; }
+.md-body td { padding: 9px 14px; border: 1px solid var(--border); color: var(--text); }
+.md-body tr:hover td { background: var(--surface); }
+
+/* editor */
+.note-editor {
+  flex:1; display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.note-editor.hidden { display: none; }
+
+.editor-title-input {
+  width: 100%; padding: 16px 24px;
+  background: transparent; border: none;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--display); font-size: 16px;
+  font-weight: 700; letter-spacing: 0.1em;
+  color: var(--text-bright); outline: none;
+  cursor: text;
+}
+.editor-title-input::placeholder { color: var(--text-dim); }
+
+.editor-tags-input {
+  width: 100%; padding: 8px 24px;
+  background: transparent; border: none;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono); font-size: 10px;
+  color: var(--text-mid); outline: none;
+  cursor: text; letter-spacing: 0.1em;
+}
+.editor-tags-input::placeholder { color: var(--text-dim); }
+
+.editor-textarea {
+  flex:1; padding: 24px;
+  background: transparent; border: none;
+  font-family: var(--mono); font-size: 13px;
+  color: var(--text); outline: none; resize: none;
+  line-height: 1.8; cursor: text;
+  tab-size: 2;
+}
+.editor-textarea::placeholder { color: var(--text-dim); }
+
+/* empty state */
+.empty-state {
+  flex:1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px;
+  color: var(--text-dim);
+}
+.empty-state.hidden { display: none; }
+.es-icon { font-size: 48px; opacity: 0.3; }
+.es-text { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
+
+/* modal */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.hidden { display: none; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border2);
+  padding: 28px; width: 380px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+}
+.modal-title {
+  font-family: var(--display); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.2em; color: var(--text-bright); margin-bottom: 20px;
+}
+.modal-input {
+  width: 100%; padding: 10px 14px;
+  background: var(--bg); border: 1px solid var(--border2);
+  color: var(--text-bright); font-family: var(--mono); font-size: 12px;
+  outline: none; margin-bottom: 16px; cursor: text;
+  transition: border-color 0.2s;
+}
+.modal-input:focus { border-color: var(--cyan-dim); }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; padding: 8px 16px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text-dim); cursor: crosshair; transition: all 0.2s;
+}
+.modal-btn:hover { color: var(--text); border-color: var(--text-mid); }
+.modal-btn.confirm { color: var(--green); border-color: rgba(0,255,136,0.3); }
+.modal-btn.confirm:hover { background: rgba(0,255,136,0.08); }
+
+/* scrollbars */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topnav">
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">DEAD<span>CATS</span></a>
+    <div class="nav-sep"></div>
+    <span class="nav-page">// <span>research library</span></span>
+  </div>
+  <div class="nav-right">
+    <a href="dashboard.html" class="nav-back">← Dashboard</a>
+    <div id="adminControls" style="display:none;">
+      <button class="nav-btn" onclick="showNewFolderModal()">+ Folder</button>
+    </div>
+  </div>
+</nav>
+
+<!-- FOLDER MODAL -->
+<div class="modal-overlay hidden" id="folderModal">
+  <div class="modal">
+    <div class="modal-title">New Folder</div>
+    <input class="modal-input" type="text" id="folderNameInput" placeholder="folder name" autocomplete="off">
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeFolderModal()">Cancel</button>
+      <button class="modal-btn confirm" onclick="createFolder()">Create</button>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- FOLDER SIDEBAR -->
+  <aside class="folder-sidebar">
+    <div class="fs-head">
+      <span class="fs-title">Folders</span>
+    </div>
+    <div class="folder-tree" id="folderTree">
+      <div class="folder-item active" data-id="null" onclick="selectFolder(null, this)">
+        <span class="folder-ico">📂</span>
+        All Notes
+        <span class="folder-count" id="count-all">0</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- NOTE LIST -->
+  <div class="note-list-panel">
+    <div class="nl-head">
+      <span class="nl-title" id="currentFolderName">All Notes</span>
+      <button class="nl-new" onclick="newNote()">+ New</button>
+    </div>
+    <div class="note-items" id="noteItems">
+      <div class="note-empty">No notes yet — create one</div>
+    </div>
+  </div>
+
+  <!-- CONTENT PANE -->
+  <div class="content-pane">
+
+    <!-- toolbar -->
+    <div class="content-toolbar" id="toolbar" style="display:none;">
+      <span class="ct-title" id="toolbarTitle">Untitled</span>
+      <span class="ct-meta" id="toolbarMeta"></span>
+      <button class="ct-btn" id="btnPreview" onclick="setMode('view')">Preview</button>
+      <button class="ct-btn active" id="btnEdit" onclick="setMode('edit')">Edit</button>
+      <button class="ct-btn save" onclick="saveNote()">Save</button>
+      <button class="ct-btn danger" id="btnDelete" onclick="deleteNote()" style="display:none;">Delete</button>
+    </div>
+
+    <!-- empty state -->
+    <div class="empty-state" id="emptyState">
+      <div class="es-icon">📖</div>
+      <div class="es-text">Select or create a note</div>
+    </div>
+
+    <!-- viewer -->
+    <div class="note-viewer hidden" id="noteViewer">
+      <div class="md-body" id="mdBody"></div>
+    </div>
+
+    <!-- editor -->
+    <div class="note-editor hidden" id="noteEditor">
+      <input class="editor-title-input" type="text" id="editorTitle" placeholder="Note title...">
+      <input class="editor-tags-input" type="text" id="editorTags" placeholder="tags: malware, c2, windows (comma separated)">
+      <textarea class="editor-textarea" id="editorContent" placeholder="Write in Markdown...
+
+# Heading
+## Subheading
+**bold**, *italic*, `code`
+
+\`\`\`python
+# code block with syntax highlighting
+print('hello')
+\`\`\`
+
+| Col 1 | Col 2 |
+|-------|-------|
+| IOC   | value |
+"></textarea>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API     = '';
+const token   = localStorage.getItem('dc_token');
+const user    = JSON.parse(localStorage.getItem('dc_user') || 'null');
+
+if (!token || !user) window.location.href = 'login.html';
+
+// Show admin controls
+if (user && user.is_admin) {
+  document.getElementById('adminControls').style.display = 'flex';
+  document.getElementById('btnDelete').style.display = 'block';
+}
+
+// ── State ─────────────────────────────────────────────────────────
+let folders        = [];
+let notes          = [];
+let currentFolder  = null;
+let currentNote    = null;
+let mode           = 'edit'; // 'edit' | 'view'
+let isNew          = false;
+let bookmarkedNotes = new Set(); // item_id values the user has bookmarked
+let bookmarkIdMap   = {};        // item_id → bookmark.id (for DELETE)
+
+// ── Marked config ─────────────────────────────────────────────────
+marked.setOptions({ breaks: true, gfm: true });
+
+// ── API helpers ───────────────────────────────────────────────────
+function authFetch(url, opts = {}) {
+  return fetch(API + url, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...(opts.headers || {}),
+    },
+  });
+}
+
+function timeAgo(d) {
+  if (!d) return '';
+  const s = (Date.now() - new Date(d)) / 1000;
+  if (s < 60)    return 'just now';
+  if (s < 3600)  return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
+}
+
+// ── Load folders ──────────────────────────────────────────────────
+async function loadFolders() {
+  const res  = await authFetch('/api/notes/folders');
+  folders    = await res.json();
+  renderFolderTree();
+}
+
+function renderFolderTree() {
+  const tree = document.getElementById('folderTree');
+  const allCount = notes.length;
+
+  let html = `
+    <div class="folder-item ${currentFolder === null ? 'active' : ''}" data-id="null" onclick="selectFolder(null, this)">
+      <span class="folder-ico">📂</span> All Notes
+      <span class="folder-count">${allCount}</span>
+    </div>`;
+
+  folders.forEach(f => {
+    const count = notes.filter(n => n.folder_id === f.id).length;
+    const delBtn = user.is_admin
+      ? `<button class="folder-del" onclick="deleteFolder(event,${f.id})">✕</button>`
+      : '';
+    html += `
+      <div class="folder-item ${currentFolder === f.id ? 'active' : ''}" data-id="${f.id}" onclick="selectFolder(${f.id}, this)">
+        <span class="folder-ico">📁</span> ${f.name}
+        <span class="folder-count">${count}</span>
+        ${delBtn}
+      </div>`;
+  });
+
+  tree.innerHTML = html;
+}
+
+// ── Load notes ────────────────────────────────────────────────────
+async function loadNotes(folderId = null) {
+  const url = folderId !== null
+    ? `/api/notes/?folder_id=${folderId}`
+    : '/api/notes/';
+  const res = await authFetch(url);
+  notes     = await res.json();
+  renderNoteList();
+  renderFolderTree();
+}
+
+function renderNoteList() {
+  const el = document.getElementById('noteItems');
+  const folderName = currentFolder === null
+    ? 'All Notes'
+    : (folders.find(f => f.id === currentFolder)?.name || 'Notes');
+
+  document.getElementById('currentFolderName').textContent = folderName;
+
+  if (!notes.length) {
+    el.innerHTML = '<div class="note-empty">No notes here yet</div>';
+    return;
+  }
+
+  el.innerHTML = notes.map(n => {
+    const tags = n.tags.length ? n.tags.filter(Boolean).map(t =>
+      `<span class="ni-tag">${t.trim()}</span>`).join('') : '';
+    const starred = bookmarkedNotes.has(n.id);
+    return `
+      <div class="note-item ${currentNote?.id === n.id ? 'active' : ''}"
+           onclick="openNote(${n.id})">
+        <button class="ni-bm-btn" data-noteid="${n.id}" title="${starred ? 'Remove bookmark' : 'Bookmark this note'}"
+                onclick="event.stopPropagation(); toggleBookmark(this, ${n.id})">${starred ? '★' : '☆'}</button>
+        <div class="ni-title">${n.title}</div>
+        <div class="ni-preview">${n.content || 'No content'}</div>
+        <div class="ni-meta">
+          <span>${n.author_handle}</span>
+          <span>${timeAgo(n.updated_at || n.created_at)}</span>
+          ${tags}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Select folder ─────────────────────────────────────────────────
+function selectFolder(id, el) {
+  currentFolder = id;
+  currentNote   = null;
+  isNew         = false;
+  showEmpty();
+  loadNotes(id);
+}
+
+// ── Open note ─────────────────────────────────────────────────────
+async function openNote(id) {
+  const res  = await authFetch(`/api/notes/${id}`);
+  currentNote= await res.json();
+  isNew      = false;
+
+  // Check if current user can edit
+  const canEdit = user.is_admin || currentNote.author_id === user.id;
+
+  document.getElementById('toolbar').style.display    = 'flex';
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('toolbarTitle').textContent = currentNote.title;
+  document.getElementById('toolbarMeta').textContent  =
+    `by ${currentNote.author_handle} · ${timeAgo(currentNote.updated_at || currentNote.created_at)}`;
+
+  // Show/hide edit button based on permission
+  document.getElementById('btnEdit').style.display = canEdit ? 'block' : 'none';
+  if (user.is_admin) document.getElementById('btnDelete').style.display = 'block';
+
+  // Populate editor
+  document.getElementById('editorTitle').value   = currentNote.title;
+  document.getElementById('editorTags').value    = currentNote.tags.join(', ');
+  document.getElementById('editorContent').value = currentNote.content;
+
+  setMode('view');
+  renderNoteList();
+}
+
+// ── New note ──────────────────────────────────────────────────────
+function newNote() {
+  currentNote = null;
+  isNew       = true;
+
+  document.getElementById('toolbar').style.display    = 'flex';
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('toolbarTitle').textContent = 'New Note';
+  document.getElementById('toolbarMeta').textContent  = '';
+  document.getElementById('btnDelete').style.display  = 'none';
+  document.getElementById('btnEdit').style.display    = 'block';
+
+  document.getElementById('editorTitle').value   = '';
+  document.getElementById('editorTags').value    = '';
+  document.getElementById('editorContent').value = '';
+
+  setMode('edit');
+}
+
+// ── Mode toggle ───────────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  const viewer = document.getElementById('noteViewer');
+  const editor = document.getElementById('noteEditor');
+  const btnP   = document.getElementById('btnPreview');
+  const btnE   = document.getElementById('btnEdit');
+
+  if (m === 'view') {
+    const content = currentNote
+      ? currentNote.content
+      : document.getElementById('editorContent').value;
+    document.getElementById('mdBody').innerHTML = marked.parse(content || '*No content yet.*');
+    document.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+    viewer.classList.remove('hidden');
+    editor.classList.add('hidden');
+    btnP.classList.add('active');
+    btnE.classList.remove('active');
+  } else {
+    viewer.classList.add('hidden');
+    editor.classList.remove('hidden');
+    btnP.classList.remove('active');
+    btnE.classList.add('active');
+    document.getElementById('editorContent').focus();
+  }
+}
+
+// ── Save note ─────────────────────────────────────────────────────
+async function saveNote() {
+  const title   = document.getElementById('editorTitle').value.trim();
+  const content = document.getElementById('editorContent').value;
+  const tags    = document.getElementById('editorTags').value;
+
+  if (!title) {
+    alert('Please add a title.');
+    return;
+  }
+
+  const body = JSON.stringify({
+    title,
+    content,
+    tags,
+    folder_id: currentFolder,
+  });
+
+  let res;
+  if (isNew) {
+    res = await authFetch('/api/notes/', { method: 'POST', body });
+  } else {
+    res = await authFetch(`/api/notes/${currentNote.id}`, { method: 'PATCH', body });
+  }
+
+  if (res.ok) {
+    currentNote = await res.json();
+    isNew       = false;
+    document.getElementById('toolbarTitle').textContent = currentNote.title;
+    document.getElementById('toolbarMeta').textContent  =
+      `by ${currentNote.author_handle} · just now`;
+    if (user.is_admin) document.getElementById('btnDelete').style.display = 'block';
+    await loadNotes(currentFolder);
+    setMode('view');
+  } else {
+    const err = await res.json();
+    alert(err.detail || 'Failed to save note.');
+  }
+}
+
+// ── Delete note ───────────────────────────────────────────────────
+async function deleteNote() {
+  if (!currentNote) return;
+  if (!confirm(`Delete "${currentNote.title}"? This cannot be undone.`)) return;
+  const res = await authFetch(`/api/notes/${currentNote.id}`, { method: 'DELETE' });
+  if (res.ok) {
+    currentNote = null;
+    showEmpty();
+    await loadNotes(currentFolder);
+  }
+}
+
+// ── Folder modals ─────────────────────────────────────────────────
+function showNewFolderModal() {
+  document.getElementById('folderModal').classList.remove('hidden');
+  document.getElementById('folderNameInput').value = '';
+  document.getElementById('folderNameInput').focus();
+}
+function closeFolderModal() {
+  document.getElementById('folderModal').classList.add('hidden');
+}
+async function createFolder() {
+  const name = document.getElementById('folderNameInput').value.trim();
+  if (!name) return;
+  const res = await authFetch('/api/notes/folders', {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  });
+  if (res.ok) {
+    closeFolderModal();
+    await loadFolders();
+  }
+}
+async function deleteFolder(e, id) {
+  e.stopPropagation();
+  if (!confirm('Delete this folder? Notes inside will be moved to root.')) return;
+  const res = await authFetch(`/api/notes/folders/${id}`, { method: 'DELETE' });
+  if (res.ok) {
+    if (currentFolder === id) currentFolder = null;
+    await loadFolders();
+    await loadNotes(currentFolder);
+  }
+}
+
+function showEmpty() {
+  document.getElementById('toolbar').style.display = 'none';
+  document.getElementById('emptyState').classList.remove('hidden');
+  document.getElementById('noteViewer').classList.add('hidden');
+  document.getElementById('noteEditor').classList.add('hidden');
+}
+
+// Enter key in folder modal
+document.getElementById('folderNameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') createFolder();
+  if (e.key === 'Escape') closeFolderModal();
+});
+
+// Ctrl+S to save
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    if (!document.getElementById('noteEditor').classList.contains('hidden')) saveNote();
+  }
+});
+
+// ── Bookmarks ─────────────────────────────────────────────────────
+async function loadBookmarks() {
+  try {
+    const res = await authFetch('/api/bookmarks/');
+    if (!res.ok) return;
+    const bms = await res.json();
+    bookmarkedNotes = new Set();
+    bookmarkIdMap   = {};
+    bms.forEach(bm => {
+      if (bm.item_type === 'note') {
+        bookmarkedNotes.add(bm.item_id);
+        bookmarkIdMap[bm.item_id] = bm.id;
+      }
+    });
+  } catch (e) { console.error('Bookmark load error:', e); }
+}
+
+function _freshNoteBtn(noteId) {
+  return document.querySelector(`.ni-bm-btn[data-noteid="${noteId}"]`);
+}
+
+async function toggleBookmark(btn, noteId) {
+  if (bookmarkedNotes.has(noteId)) {
+    const bmId = bookmarkIdMap[noteId];
+    // Optimistic update — do this before the fetch so any re-render sees the right state
+    bookmarkedNotes.delete(noteId);
+    delete bookmarkIdMap[noteId];
+    btn.textContent = '☆';
+    btn.title = 'Bookmark this note';
+
+    const res = await authFetch(`/api/bookmarks/${bmId}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) {
+      // Rollback
+      bookmarkedNotes.add(noteId);
+      bookmarkIdMap[noteId] = bmId;
+      const b = _freshNoteBtn(noteId);
+      if (b) { b.textContent = '★'; b.title = 'Remove bookmark'; }
+    }
+  } else {
+    // Optimistic update
+    bookmarkedNotes.add(noteId);
+    btn.textContent = '★';
+    btn.title = 'Remove bookmark';
+
+    const res = await authFetch('/api/bookmarks/', {
+      method: 'POST',
+      body: JSON.stringify({ item_type: 'note', item_id: noteId }),
+    });
+    if (res.ok) {
+      const bm = await res.json();
+      bookmarkIdMap[noteId] = bm.id;
+      // Refresh button in case DOM was re-rendered during the fetch
+      const b = _freshNoteBtn(noteId);
+      if (b) { b.textContent = '★'; b.title = 'Remove bookmark'; }
+    } else {
+      // Rollback
+      bookmarkedNotes.delete(noteId);
+      const b = _freshNoteBtn(noteId);
+      if (b) { b.textContent = '☆'; b.title = 'Bookmark this note'; }
+    }
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+(async () => {
+  await loadBookmarks();
+  await loadFolders();
+  await loadNotes(null);
+})();
+</script>
+
+</body>
+</html>
