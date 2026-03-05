@@ -349,9 +349,7 @@ body::before {
 
 <script>
 const API   = '';
-const token = localStorage.getItem('dc_token');
-const me    = JSON.parse(localStorage.getItem('dc_user') || 'null');
-if (!token || !me) window.location.href = 'login.html';
+let me      = JSON.parse(localStorage.getItem('dc_user') || 'null');
 
 const RANK_COLORS = {
   'Founding Circle': '#f0a500',
@@ -360,10 +358,11 @@ const RANK_COLORS = {
   DEADCAT:           '#445060',
 };
 
-// Show admin controls
-if (me && me.is_admin) {
-  document.getElementById('resetRoomBtn').classList.remove('hidden');
-  document.getElementById('goalAddWrap').classList.remove('hidden');
+function applyAdminControls() {
+  if (me && me.is_admin) {
+    document.getElementById('resetRoomBtn').classList.remove('hidden');
+    document.getElementById('goalAddWrap').classList.remove('hidden');
+  }
 }
 
 function esc(s) {
@@ -373,12 +372,40 @@ function esc(s) {
 function authFetch(url, opts = {}) {
   return fetch(API + url, {
     ...opts,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token,
       ...(opts.headers || {}),
     },
+  }).then((res) => {
+    if (res.status === 401) {
+      localStorage.removeItem('dc_user');
+      window.location.href = 'login.html';
+    }
+    return res;
   });
+}
+
+async function ensureSession() {
+  try {
+    const res = await fetch(`${API}/api/auth/me`, { credentials: 'include' });
+    if (!res.ok) {
+      localStorage.removeItem('dc_user');
+      window.location.replace('login.html');
+      return false;
+    }
+    me = await res.json();
+    localStorage.setItem('dc_user', JSON.stringify(me));
+    applyAdminControls();
+    return true;
+  } catch (_) {
+    if (me) {
+      applyAdminControls();
+      return true;
+    }
+    window.location.replace('login.html');
+    return false;
+  }
 }
 
 function timeAgo(d) {
@@ -398,20 +425,53 @@ function isOnline(dateStr) {
   return 'offline';
 }
 
+const MEMBERS_POLL_MS = 30000;
+const GOALS_POLL_MS   = 5000;
+const ROOM_POLL_MS    = 10000;
+let _membersTimer = null;
+let _goalsTimer = null;
+let _roomTimer = null;
+let _lastRoomUrl = '';
+let _lastGoalsSig = '';
+
+function goalsSignature(goals) {
+  if (!Array.isArray(goals)) return '';
+  return JSON.stringify(
+    [...goals]
+      .map(g => ({
+        id: g.id,
+        text: g.text,
+        completed: !!g.completed,
+        completed_by: g.completed_by || '',
+        completed_at: g.completed_at || '',
+        created_by: g.created_by || '',
+        created_at: g.created_at || '',
+      }))
+      .sort((a, b) => a.id - b.id)
+  );
+}
+
+function applyRoom(roomUrl, forceReload = false) {
+  const frame = document.getElementById('excalidraw-frame');
+  if (!frame || !roomUrl) return;
+  if (!forceReload && _lastRoomUrl === roomUrl && frame.src === roomUrl) return;
+  _lastRoomUrl = roomUrl;
+  document.getElementById('canvasLoading').classList.remove('hidden');
+  frame.src = roomUrl;
+  frame.addEventListener('load', () => {
+    document.getElementById('canvasLoading').classList.add('hidden');
+  }, { once: true });
+  setTimeout(() => document.getElementById('canvasLoading').classList.add('hidden'), 5000);
+}
+
 // ── Whiteboard room ───────────────────────────────────────────────
 
-async function loadRoom() {
+async function loadRoom(forceReload = false) {
   try {
     const res = await authFetch('/api/whiteboard/config');
     if (!res.ok) return;
     const { room_url } = await res.json();
-    const frame = document.getElementById('excalidraw-frame');
-    frame.src = room_url;
-    frame.addEventListener('load', () => {
-      document.getElementById('canvasLoading').classList.add('hidden');
-    }, { once: true });
-    // Fallback: hide loader after 5s regardless
-    setTimeout(() => document.getElementById('canvasLoading').classList.add('hidden'), 5000);
+    applyRoom(room_url, forceReload);
   } catch (e) { console.error('Room load error:', e); }
 }
 
@@ -423,13 +483,7 @@ async function confirmReset() {
   const res = await authFetch('/api/whiteboard/config/reset', { method: 'POST' });
   if (res.ok) {
     const { room_url } = await res.json();
-    const frame = document.getElementById('excalidraw-frame');
-    document.getElementById('canvasLoading').classList.remove('hidden');
-    frame.src = room_url;
-    frame.addEventListener('load', () => {
-      document.getElementById('canvasLoading').classList.add('hidden');
-    }, { once: true });
-    setTimeout(() => document.getElementById('canvasLoading').classList.add('hidden'), 5000);
+    applyRoom(room_url, true);
   }
 }
 
@@ -468,11 +522,14 @@ async function loadMembers() {
 
 // ── Goals ─────────────────────────────────────────────────────────
 
-async function loadGoals() {
+async function loadGoals(forceRender = false) {
   try {
     const res = await authFetch('/api/whiteboard/goals');
     if (!res.ok) return;
     const goals = await res.json();
+    const sig = goalsSignature(goals);
+    if (!forceRender && sig === _lastGoalsSig) return;
+    _lastGoalsSig = sig;
     renderGoals(goals);
   } catch (e) { console.error('Goals error:', e); }
 }
@@ -517,7 +574,7 @@ async function addGoal() {
   });
   if (res.ok) {
     input.value = '';
-    await loadGoals();
+    await loadGoals(true);
   } else {
     const err = await res.json();
     alert(err.detail || 'Failed to add goal.');
@@ -529,13 +586,13 @@ async function toggleGoal(id, completed) {
     method: 'PATCH',
     body: JSON.stringify({ completed }),
   });
-  if (res.ok) await loadGoals();
+  if (res.ok) await loadGoals(true);
 }
 
 async function deleteGoal(id) {
   if (!confirm('Delete this goal?')) return;
   const res = await authFetch(`/api/whiteboard/goals/${id}`, { method: 'DELETE' });
-  if (res.ok || res.status === 204) await loadGoals();
+  if (res.ok || res.status === 204) await loadGoals(true);
 }
 
 // Enter key in goal input
@@ -545,12 +602,41 @@ document.getElementById('goalInput').addEventListener('keydown', e => {
 
 // ── Init & polling ────────────────────────────────────────────────
 
-loadRoom();
-loadMembers();
-loadGoals();
+function startPolling() {
+  if (_membersTimer || _goalsTimer || _roomTimer) return;
+  _membersTimer = setInterval(loadMembers, MEMBERS_POLL_MS);
+  _goalsTimer   = setInterval(() => loadGoals(false), GOALS_POLL_MS);
+  _roomTimer    = setInterval(() => loadRoom(false), ROOM_POLL_MS);
+}
 
-setInterval(loadMembers, 30000);
-setInterval(loadGoals,   20000);
+function stopPolling() {
+  if (_membersTimer) clearInterval(_membersTimer);
+  if (_goalsTimer) clearInterval(_goalsTimer);
+  if (_roomTimer) clearInterval(_roomTimer);
+  _membersTimer = null;
+  _goalsTimer = null;
+  _roomTimer = null;
+}
+
+(async () => {
+  const ok = await ensureSession();
+  if (!ok) return;
+  loadRoom(true);
+  loadMembers();
+  loadGoals(true);
+  startPolling();
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopPolling();
+    } else {
+      loadRoom(false);
+      loadGoals(false);
+      loadMembers();
+      startPolling();
+    }
+  });
+})();
 </script>
 </body>
 </html>

@@ -4,11 +4,39 @@ function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-function initDashboard() {
-  const token = localStorage.getItem('dc_token');
-  const user = JSON.parse(localStorage.getItem('dc_user') || 'null');
+function readCachedUser() {
+  try {
+    const raw = localStorage.getItem('dc_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    localStorage.removeItem('dc_user');
+    return null;
+  }
+}
 
-  if (!token || !user) { window.location.href = 'login.html'; return; }
+async function fetchMeWithRetry() {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const meRes = await fetch(`${API}/api/auth/me`, { credentials: 'include', cache: 'no-store' });
+      if (meRes.ok) return await meRes.json();
+    } catch (_) {}
+    await new Promise((r) => setTimeout(r, 120));
+  }
+  return null;
+}
+
+async function initDashboard() {
+  let user = readCachedUser();
+  const liveUser = await fetchMeWithRetry();
+  if (liveUser) {
+    user = liveUser;
+    localStorage.setItem('dc_user', JSON.stringify(user));
+  } else if (!user) {
+    localStorage.removeItem('dc_token');
+    localStorage.removeItem('dc_user');
+    window.location.href = 'login.html';
+    return;
+  }
 
   const RANK_COLORS = {
     DEADCAT: '#445060', Scholar: '#00d4ff', 'Lead Researcher': '#00d4ff',
@@ -16,14 +44,29 @@ function initDashboard() {
   };
 
   async function authFetch(url, opts = {}) {
-    const res = await fetch(`${API}${url}`, {
+    let res = await fetch(`${API}${url}`, {
       ...opts,
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+      cache: 'no-store',
     });
     if (res.status === 401) {
-      localStorage.removeItem('dc_token');
-      localStorage.removeItem('dc_user');
-      window.location.href = 'login.html';
+      const refreshed = await fetchMeWithRetry();
+      if (refreshed) {
+        user = refreshed;
+        localStorage.setItem('dc_user', JSON.stringify(user));
+        res = await fetch(`${API}${url}`, {
+          ...opts,
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+          cache: 'no-store',
+        });
+      }
+      if (res.status === 401) {
+        localStorage.removeItem('dc_token');
+        localStorage.removeItem('dc_user');
+        window.location.href = 'login.html';
+      }
     }
     return res;
   }
@@ -59,13 +102,23 @@ function initDashboard() {
     const handleEl = document.getElementById('nav-handle');
     const rankEl = document.getElementById('nav-rank');
     const profileLink = document.getElementById('nav-profile-link');
-    if (profileLink) profileLink.href = `members/profile.html?user=${user.handle}`;
+    if (profileLink) {
+      const myProfileUrl = `members/profile.html?user=${encodeURIComponent(user.handle)}`;
+      profileLink.href = myProfileUrl;
+      if (!profileLink.dataset.navBound) {
+        profileLink.dataset.navBound = '1';
+        profileLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.location.assign(myProfileUrl);
+        });
+      }
+    }
     if (!ava || !handleEl || !rankEl || !profileLink) return;
     ava.textContent = user.emoji || '🐱';
     handleEl.textContent = user.handle;
     rankEl.textContent = String(user.rank || '').toUpperCase();
     rankEl.style.color = RANK_COLORS[user.rank] || '#445060';
-    profileLink.href = `members/profile.html?user=${user.handle}`;
+    profileLink.href = `members/profile.html?user=${encodeURIComponent(user.handle)}`;
   }
 
   async function loadMembers() {
@@ -89,7 +142,7 @@ function initDashboard() {
         return `<div class="member-row">
           <div class="m-ava">${esc(m.emoji)}<div class="m-status ${status}"></div></div>
           <div class="m-info">
-            <div class="m-handle"><a href="members/profile.html?user=${esc(m.handle)}" style="color:inherit;text-decoration:none;">${esc(m.handle)}</a></div>
+            <div class="m-handle"><a href="members/profile.html?user=${encodeURIComponent(m.handle)}" style="color:inherit;text-decoration:none;">${esc(m.handle)}</a></div>
             <div class="m-rank" style="color:${esc(color)};">${esc(String(m.rank || '').toUpperCase())}</div>
           </div>
           <span class="m-last">${timeAgo(m.last_seen)}</span>
@@ -104,7 +157,7 @@ function initDashboard() {
           return `<div class="member-row">
             <div class="m-ava">${esc(m.emoji)}<div class="m-status ${isOnline(m.last_seen)}"></div></div>
             <div class="m-info">
-              <div class="m-handle"><a href="members/profile.html?user=${esc(m.handle)}" style="color:inherit;text-decoration:none;">${esc(m.handle)}</a></div>
+              <div class="m-handle"><a href="members/profile.html?user=${encodeURIComponent(m.handle)}" style="color:inherit;text-decoration:none;">${esc(m.handle)}</a></div>
               <div class="m-rank" style="color:${esc(color)};">${esc(String(m.rank || '').toUpperCase())}</div>
             </div>
             <span class="m-last">${timeAgo(m.last_seen)}</span>
@@ -176,16 +229,20 @@ function initDashboard() {
           <div class="note-meta">
             <span>${esc(n.author_handle)}</span>
             <span>${timeAgo(n.updated_at || n.created_at)}</span>
-            ${n.tags.filter(Boolean).map(t => `<span class="note-tag">${esc(t.trim())}</span>`).join('')}
+            ${(Array.isArray(n.tags) ? n.tags : []).filter(Boolean).map(t => `<span class="note-tag">${esc(String(t).trim())}</span>`).join('')}
           </div>
         </div>`).join('');
     } catch (e) { console.error('Notes error:', e); }
   }
 
-  function logout() {
-    localStorage.removeItem('dc_token');
-    localStorage.removeItem('dc_user');
-    window.location.href = 'login.html';
+  function logout(e) {
+    if (e) e.preventDefault();
+    fetch(`${API}/api/auth/logout`, { method: 'POST', credentials: 'include', keepalive: true })
+      .finally(() => {
+        localStorage.removeItem('dc_token');
+        localStorage.removeItem('dc_user');
+        window.location.replace('login.html');
+      });
   }
 
   const logoutBtn = document.getElementById('logout-btn');
@@ -220,11 +277,13 @@ function initDashboard() {
 
   // ── Notifications ──────────────────────────────────────────────
   let _notifAll = [];
+  let _notifKnownIds = new Set();
 
   function renderNotifDot() {
     const seen = JSON.parse(localStorage.getItem('dc_seen_notifs') || '[]');
+    const dismissed = JSON.parse(localStorage.getItem('dc_dismissed_notifs') || '[]');
     const dot = document.getElementById('notif-dot');
-    const hasUnread = _notifAll.some(a => !seen.includes(a.id));
+    const hasUnread = _notifAll.some(a => !seen.includes(a.id) && !dismissed.includes(a.id));
     if (dot) dot.style.display = hasUnread ? 'block' : 'none';
   }
 
@@ -232,14 +291,19 @@ function initDashboard() {
     const body = document.getElementById('notif-panel-body');
     if (!body) return;
     const seen = JSON.parse(localStorage.getItem('dc_seen_notifs') || '[]');
-    if (!_notifAll.length) {
+    const dismissed = JSON.parse(localStorage.getItem('dc_dismissed_notifs') || '[]');
+    const visibleNotifs = _notifAll.filter((a) => !dismissed.includes(a.id));
+    if (!visibleNotifs.length) {
       body.innerHTML = '<div class="notif-empty">No notifications.</div>';
       return;
     }
-    body.innerHTML = _notifAll.map(a => {
+    body.innerHTML = visibleNotifs.map(a => {
       const isUnread = !seen.includes(a.id);
       return `<div class="notif-item${isUnread ? ' unread' : ''}">
-        <div class="notif-item-title">${esc(a.title)}</div>
+        <div class="notif-item-top">
+          <div class="notif-item-title">${esc(a.title)}</div>
+          <button class="notif-close-btn" data-notif-id="${a.id}" title="Dismiss">✕</button>
+        </div>
         <div class="notif-item-meta">
           <span class="notif-item-type-${esc(a.type)}">[${esc(a.type)}]</span>
           <span>${esc(a.author)}</span>
@@ -247,6 +311,37 @@ function initDashboard() {
         </div>
       </div>`;
     }).join('');
+    body.querySelectorAll('.notif-close-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = Number(btn.getAttribute('data-notif-id'));
+        if (!Number.isFinite(id)) return;
+        const dismissedNow = new Set(JSON.parse(localStorage.getItem('dc_dismissed_notifs') || '[]'));
+        dismissedNow.add(id);
+        localStorage.setItem('dc_dismissed_notifs', JSON.stringify(Array.from(dismissedNow)));
+        renderNotifPanel();
+        renderNotifDot();
+      });
+    });
+  }
+
+  async function maybeRequestNotificationPermission() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+      try { await Notification.requestPermission(); } catch (_) {}
+    }
+  }
+
+  function pushDesktopNotification(ann) {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    const body = `${ann.type.toUpperCase()} • ${ann.author}`;
+    try {
+      const n = new Notification(`DEADCATS: ${ann.title}`, { body, tag: `dc-ann-${ann.id}` });
+      n.onclick = () => {
+        window.focus();
+      };
+    } catch (_) {}
   }
 
   async function loadNotifications() {
@@ -254,6 +349,19 @@ function initDashboard() {
       const res = await authFetch('/api/announcements/');
       if (!res.ok) return;
       _notifAll = await res.json();
+      const dismissed = new Set(JSON.parse(localStorage.getItem('dc_dismissed_notifs') || '[]'));
+      const visible = _notifAll.filter((a) => !dismissed.has(a.id));
+      if (_notifKnownIds.size === 0) {
+        visible.forEach((a) => _notifKnownIds.add(a.id));
+      } else {
+        visible.forEach((a) => {
+          if (!_notifKnownIds.has(a.id)) {
+            pushDesktopNotification(a);
+            _notifKnownIds.add(a.id);
+          }
+        });
+      }
+      renderNotifPanel();
       renderNotifDot();
     } catch (e) { console.error('Notifications error:', e); }
   }
@@ -268,7 +376,8 @@ function initDashboard() {
       if (isHidden) {
         renderNotifPanel();
         notifPanel.classList.remove('hidden');
-        const ids = _notifAll.map(a => a.id);
+        const dismissed = new Set(JSON.parse(localStorage.getItem('dc_dismissed_notifs') || '[]'));
+        const ids = _notifAll.filter((a) => !dismissed.has(a.id)).map(a => a.id);
         localStorage.setItem('dc_seen_notifs', JSON.stringify(ids));
         renderNotifDot();
       } else {
@@ -287,6 +396,8 @@ function initDashboard() {
   loadAnnouncements();
   loadRecentNotes();
   loadNotifications();
+  maybeRequestNotificationPermission();
+  setInterval(loadNotifications, 30000);
 }
 
 // ── Global modal functions ────────────────────────────────────────
@@ -309,14 +420,14 @@ function closePostModal() {
 }
 
 async function submitPost() {
-  const token      = localStorage.getItem('dc_token');
   const title      = document.getElementById('postTitle').value.trim();
   const content    = document.getElementById('postContent').value.trim();
   const expires_in = parseInt(document.getElementById('postExpires').value);
   if (!title) { alert('Title required.'); return; }
-  const res = await fetch('/api/announcements/', {
+  const res = await fetch(`${API}/api/announcements/`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, content, type: _postType, expires_in }),
   });
   if (res.ok) { closePostModal(); location.reload(); }
@@ -324,11 +435,10 @@ async function submitPost() {
 }
 
 async function deleteAnnouncement(id) {
-  const token = localStorage.getItem('dc_token');
   if (!confirm('Delete this?')) return;
-  await fetch(`/api/announcements/${id}`, {
+  await fetch(`${API}/api/announcements/${id}`, {
     method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
   });
   location.reload();
 }

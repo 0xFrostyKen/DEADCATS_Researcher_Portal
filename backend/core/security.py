@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 import bcrypt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from core.config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_MINUTES
 from core.database import get_db
 
-oauth2_scheme  = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme  = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 # ── Password ──────────────────────────────────────────────────────
 
@@ -36,9 +36,26 @@ def decode_token(token: str) -> dict:
 
 # ── Auth dependencies ─────────────────────────────────────────────
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def _extract_token(request: Request, bearer_token: str | None) -> str:
+    cookie_token = request.cookies.get("dc_access_token")
+    if cookie_token:
+        return cookie_token
+    if bearer_token:
+        return bearer_token
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not authenticated",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+def get_current_user(
+    request: Request,
+    token: str | None = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
     from models.user import User
-    payload = decode_token(token)
+    payload = decode_token(_extract_token(request, token))
     handle  = payload.get("sub")
     if not handle:
         raise HTTPException(status_code=401, detail="Invalid token payload")

@@ -88,11 +88,33 @@ body{
 }
 .notif-item:last-child{border-bottom:none}
 .notif-item.unread{background:var(--surface2)}
+.notif-item-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
 .notif-item-title{
   font-family:var(--mono);
   font-size:11px;
   color:var(--text-mid);
   margin-bottom:4px;
+}
+.notif-close-btn{
+  border:1px solid var(--border2);
+  background:transparent;
+  color:var(--text-dim);
+  width:18px;
+  height:18px;
+  line-height:14px;
+  font-size:11px;
+  cursor:crosshair;
+  flex-shrink:0;
+}
+.notif-close-btn:hover{
+  color:var(--red2);
+  border-color:var(--red-dim);
+  background:var(--red-glow);
 }
 .notif-item.unread .notif-item-title{color:var(--text-bright)}
 .notif-item-meta{
@@ -636,4 +658,3 @@ body{
 .main-inner>*:nth-child(5){animation-delay:0.25s}
 .main-inner>*:nth-child(6){animation-delay:0.3s}
 @keyframes slideup{from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)}}
-

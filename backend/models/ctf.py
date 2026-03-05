@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, UniqueConstraint, Text
 from sqlalchemy.sql import func
 from core.database import Base
 
@@ -14,6 +14,7 @@ class CTFEvent(Base):
     end_time          = Column(DateTime(timezone=True), nullable=True)
     format            = Column(String(50), nullable=True)
     weight            = Column(Float, nullable=True)
+    description       = Column(Text, nullable=True)
     status            = Column(String(20), nullable=False, default="upcoming")  # upcoming | completed
     added_by          = Column(String(50), nullable=False)
     created_at        = Column(DateTime(timezone=True), server_default=func.now())
@@ -28,6 +29,7 @@ class CTFEvent(Base):
             "end_time":         self.end_time.isoformat()   if self.end_time   else None,
             "format":           self.format,
             "weight":           self.weight,
+            "description":      self.description,
             "status":           self.status,
             "added_by":         self.added_by,
             "created_at":       self.created_at.isoformat() if self.created_at else None,

@@ -623,15 +623,33 @@ nav {
 
 <script>
 const API   = '';
-const token = localStorage.getItem('dc_token');
-const me    = JSON.parse(localStorage.getItem('dc_user') || 'null');
+let me      = JSON.parse(localStorage.getItem('dc_user') || 'null');
 
 function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-if (!token || !me) window.location.href = 'login.html';
-if (!me.is_admin)  window.location.href = 'dashboard.html';
+async function ensureSession() {
+  try {
+    const res = await fetch(`${API}/api/auth/me`, { credentials: 'include' });
+    if (!res.ok) {
+      localStorage.removeItem('dc_user');
+      window.location.replace('login.html');
+      return false;
+    }
+    me = await res.json();
+    localStorage.setItem('dc_user', JSON.stringify(me));
+    if (!me.is_admin) {
+      window.location.replace('dashboard.html');
+      return false;
+    }
+    return true;
+  } catch (_) {
+    if (me && me.is_admin) return true;
+    window.location.replace(me ? 'dashboard.html' : 'login.html');
+    return false;
+  }
+}
 
 const RANK_COLORS = {
   'DEADCAT':   '#5a6a85',
@@ -660,7 +678,14 @@ let userAchievements    = [];
 function authFetch(url, opts = {}) {
   return fetch(API + url, {
     ...opts,
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...(opts.headers||{}) }
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...(opts.headers||{}) }
+  }).then((res) => {
+    if (res.status === 401) {
+      localStorage.removeItem('dc_user');
+      window.location.href = 'login.html';
+    }
+    return res;
   });
 }
 
@@ -1012,6 +1037,10 @@ document.getElementById('searchHandle').addEventListener('keydown', e => {
 document.getElementById('regHandle').addEventListener('keydown', e => {
   if (e.key === 'Enter') registerUser();
 });
+
+(async () => {
+  await ensureSession();
+})();
 </script>
 
 </body>

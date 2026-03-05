@@ -2,10 +2,11 @@ import secrets
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from core.database import get_db
 from core.security import get_current_user, require_admin
+from core.validation import clean_text, reject_html
 from models.user import User
 from models.goal import TeamGoal
 from models.whiteboard_config import WhiteboardConfig
@@ -59,10 +60,10 @@ def reset_room(
 # ── Team goals ─────────────────────────────────────────────────────
 
 class GoalCreate(BaseModel):
-    text: str
+    text: str = Field(min_length=1, max_length=500)
 
 class GoalUpdate(BaseModel):
-    text:      Optional[str]  = None
+    text:      Optional[str]  = Field(default=None, min_length=1, max_length=500)
     completed: Optional[bool] = None
 
 
@@ -87,7 +88,7 @@ def create_goal(
     admin:   User    = Depends(require_admin),
 ):
     """Create a new team goal (admin only)."""
-    text = payload.text.strip()
+    text = reject_html(clean_text(payload.text, field="Goal text", max_len=500), field="Goal text")
     if not text:
         raise HTTPException(status_code=400, detail="Goal text cannot be empty.")
     if len(text) > 500:
@@ -111,9 +112,11 @@ def update_goal(
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found.")
     if payload.text is not None:
-        text = payload.text.strip()
+        text = reject_html(clean_text(payload.text, field="Goal text", max_len=500), field="Goal text")
         if not text:
             raise HTTPException(status_code=400, detail="Goal text cannot be empty.")
+        if len(text) > 500:
+            raise HTTPException(status_code=400, detail="Goal text too long (max 500 chars).")
         goal.text = text
     if payload.completed is not None:
         goal.completed    = payload.completed

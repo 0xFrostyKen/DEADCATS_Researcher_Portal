@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response
 from contextlib import asynccontextmanager
-import os
 import os as _os
+from sqlalchemy import text
 
 from core.config import FRONTEND_ORIGIN, ADMIN_HANDLE, ADMIN_PASSWORD
 from core.database import engine, Base
@@ -24,6 +24,10 @@ from core.security import get_current_user
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    # Minimal startup migration for existing deployments.
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE ctf_events ADD COLUMN IF NOT EXISTS description TEXT"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_status VARCHAR(40) DEFAULT 'available'"))
 
     from core.database import SessionLocal
     db = SessionLocal()
@@ -66,8 +70,8 @@ async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"]        = "DENY"
-    response.headers["X-XSS-Protection"]       = "1; mode=block"
     response.headers["Referrer-Policy"]        = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"]     = "camera=(), microphone=(), geolocation=()"
     return response
 
 # ── CORS ─────────────────────────────────────────────────────────
@@ -135,4 +139,38 @@ async def serve_upload(folder: str, filename: str):
 
 # ── Frontend static files ─────────────────────────────────────────
 
-app.mount("/", StaticFiles(directory=_os.path.abspath(_os.path.join(_os.path.dirname(__file__), "..")), html=True), name="frontend")
+class SafeStaticFiles(StaticFiles):
+    """Static file wrapper that blocks sensitive project paths."""
+
+    _DENY_PREFIXES = {
+        "backend/",
+        ".git/",
+        "profile_uploads/",
+        "vault_files/",
+    }
+    _DENY_EXACT = {"agents.md"}
+
+    async def get_response(self, path: str, scope):
+        normalized = _os.path.normpath(path).replace("\\", "/").lstrip("/")
+        if normalized in {".", ""}:
+            return await super().get_response(path, scope)
+        if normalized == ".." or normalized.startswith("../"):
+            raise HTTPException(status_code=404, detail="Not found")
+        lowered = normalized.lower()
+        if lowered in self._DENY_EXACT:
+            raise HTTPException(status_code=404, detail="Not found")
+        if any(lowered == prefix[:-1] or lowered.startswith(prefix) for prefix in self._DENY_PREFIXES):
+            raise HTTPException(status_code=404, detail="Not found")
+        if any(part.startswith(".") for part in lowered.split("/")):
+            raise HTTPException(status_code=404, detail="Not found")
+        return await super().get_response(path, scope)
+
+
+app.mount(
+    "/",
+    SafeStaticFiles(
+        directory=_os.path.abspath(_os.path.join(_os.path.dirname(__file__), "..")),
+        html=True,
+    ),
+    name="frontend",
+)

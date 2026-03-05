@@ -106,7 +106,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 .bio-save-btn:hover{background:rgba(0,255,136,0.06);}
 
 /* STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);}
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);}
 .stat-box{background:var(--bg2);padding:18px 14px;text-align:center;position:relative;overflow:hidden;}
 .stat-box::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--scolor,var(--border2));transform:scaleX(0);transform-origin:left;transition:transform 0.4s;}
 .stat-box:hover::before{transform:scaleX(1);}
@@ -243,6 +243,16 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
           <span class="status-text" id="statusText">Offline</span>
           <span class="status-time" id="statusTime"></span>
         </div>
+        <div id="statusEditWrap" style="display:none;padding:0 18px 14px;">
+          <label class="edit-label" for="profileStatusSelect">Profile Status</label>
+          <select class="edit-input" id="profileStatusSelect" style="margin-bottom:8px;">
+            <option value="available">Available</option>
+            <option value="busy">Busy</option>
+            <option value="ctf">Available for CTF</option>
+            <option value="pwnbox">Available for Pwnbox</option>
+          </select>
+          <button class="save-btn" onclick="saveProfileStatus()">Save Status</button>
+        </div>
       </div>
 
       <!-- STATS -->
@@ -262,6 +272,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
         <div class="stat-box" style="--scolor:var(--green);">
           <div class="stat-num" style="color:var(--green);" id="statAchs">0</div>
           <div class="stat-lbl">Achievements</div>
+        </div>
+        <div class="stat-box" style="--scolor:var(--purple);">
+          <div class="stat-num" style="color:var(--purple);" id="statCtfPts">0</div>
+          <div class="stat-lbl">CTF Points</div>
         </div>
       </div>
 
@@ -312,6 +326,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
           <div class="meta-row"><span class="meta-key">Member Since</span><span class="meta-val" id="metaSince">—</span></div>
           <div class="meta-row"><span class="meta-key">Last Active</span><span class="meta-val" id="metaLast">—</span></div>
           <div class="meta-row"><span class="meta-key">Rank</span><span class="meta-val" id="metaRank">—</span></div>
+          <div class="meta-row"><span class="meta-key">CTF Leaderboard</span><span class="meta-val" id="metaCtfRank">—</span></div>
         </div>
       </div>
 
@@ -338,30 +353,108 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 </div>
 
 <script>
-const token = localStorage.getItem('dc_token');
-const me    = JSON.parse(localStorage.getItem('dc_user') || 'null');
-if (!token || !me) window.location.href = '../login.html';
+function readCachedUser() {
+  try {
+    const raw = localStorage.getItem('dc_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    localStorage.removeItem('dc_user');
+    return null;
+  }
+}
+
+let me = readCachedUser();
 
 function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 const params  = new URLSearchParams(window.location.search);
-const handle  = params.get('user') || me.handle;
-const isOwn   = me.handle === handle;
-const isAdmin = me.is_admin;
+let handle    = params.get('user') || (me ? me.handle : null);
+let isOwn     = false;
+let isAdmin   = false;
 
 let profileData = null;
 let editMode    = false;
+const _dbg = [];
+let _redirecting = false;
+
+function statusLabel(v) {
+  const map = {
+    available: 'Available',
+    busy: 'Busy',
+    ctf: 'Available for CTF',
+    pwnbox: 'Available for Pwnbox',
+  };
+  return map[v] || 'Available';
+}
+
+function dbg(msg) {
+  const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  _dbg.push(line);
+  if (_dbg.length > 40) _dbg.shift();
+  if (window && window.console && window.console.debug) {
+    window.console.debug('[profile-debug]', line);
+  }
+}
+
+function redirectToLogin(reason) {
+  dbg(`redirect -> login (${reason})`);
+  if (_redirecting) return;
+  _redirecting = true;
+  localStorage.removeItem('dc_user');
+  window.location.replace('../login.html');
+}
+
+async function fetchMeWithRetry() {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch('/api/auth/me', { credentials: 'include', cache: 'no-store' });
+      dbg(`/api/auth/me attempt=${attempt} status=${res.status}`);
+      if (res.ok) return await res.json();
+    } catch (_) {
+      dbg(`/api/auth/me attempt=${attempt} network error`);
+    }
+    await new Promise((r) => setTimeout(r, 120));
+  }
+  return null;
+}
 
 async function authFetch(url, opts={}) {
-  const res = await fetch(url, {...opts, headers:{'Authorization':'Bearer '+token,...(opts.headers||{})}});
-  if (res.status === 401) {
-    localStorage.removeItem('dc_token');
-    localStorage.removeItem('dc_user');
-    window.location.href = '../login.html';
+  let res = await fetch(url, {...opts, credentials:'include', headers:{...(opts.headers||{})}, cache:'no-store'});
+  if (res.status !== 401) return res;
+  dbg(`401 from ${url}, verifying session before redirect`);
+  const freshMe = await fetchMeWithRetry();
+  if (freshMe) {
+    me = freshMe;
+    localStorage.setItem('dc_user', JSON.stringify(me));
+    res = await fetch(url, {...opts, credentials:'include', headers:{...(opts.headers||{})}, cache:'no-store'});
+    dbg(`retry ${url} status=${res.status}`);
+    if (res.status !== 401) return res;
+  }
+  if (!me) {
+    redirectToLogin(`401 ${url}`);
+  } else {
+    dbg(`keeping page open despite 401 on ${url} (cached session present)`);
   }
   return res;
+}
+
+async function initSession() {
+  dbg('initSession start');
+  const freshMe = await fetchMeWithRetry();
+  if (freshMe) {
+    me = freshMe;
+    localStorage.setItem('dc_user', JSON.stringify(me));
+  } else if (!me) {
+    redirectToLogin('no live or cached session');
+    return false;
+  }
+  if (!handle) handle = me.handle;
+  isOwn = me.handle === handle;
+  isAdmin = !!me.is_admin;
+  dbg(`session user=${me.handle} target=${handle} isOwn=${isOwn} isAdmin=${isAdmin}`);
+  return true;
 }
 
 function timeAgo(d) {
@@ -441,14 +534,21 @@ function render(u) {
   const online = u.last_seen && (Date.now()-new Date(u.last_seen))/1000 < 300;
   const dot    = document.getElementById('statusDot');
   dot.className= 'status-dot '+(online?'online':'offline');
-  document.getElementById('statusText').textContent = online?'Online Now':'Offline';
+  const allowedStatuses = new Set(['available', 'busy', 'ctf', 'pwnbox']);
+  const currentStatusRaw = String(u.profile_status || 'available').toLowerCase();
+  const currentStatus = allowedStatuses.has(currentStatusRaw) ? currentStatusRaw : 'available';
+  document.getElementById('statusText').textContent = (online ? 'Online' : 'Offline') + ' • ' + statusLabel(currentStatus);
   document.getElementById('statusTime').textContent = u.last_seen?timeAgo(u.last_seen):'';
+  const statusSel = document.getElementById('profileStatusSelect');
+  if (statusSel) statusSel.value = currentStatus;
 
   // Stats
   document.getElementById('statNotes').textContent = u.notes_count  || 0;
   document.getElementById('statIOCs').textContent  = u.iocs_count   || 0;
   document.getElementById('statFiles').textContent = u.files_count  || 0;
   document.getElementById('statAchs').textContent  = u.achievements.length;
+  const ctfPoints = Number(u.ctf_stats?.points || 0);
+  document.getElementById('statCtfPts').textContent = ctfPoints % 1 === 0 ? String(ctfPoints) : ctfPoints.toFixed(2);
 
   // Bio
   const bioD = document.getElementById('bioDisplay');
@@ -481,6 +581,7 @@ function render(u) {
   document.getElementById('metaSince').textContent = formatDate(u.created_at);
   document.getElementById('metaLast').textContent  = timeAgo(u.last_seen);
   document.getElementById('metaRank').textContent  = u.rank;
+  document.getElementById('metaCtfRank').textContent = u.ctf_stats?.rank ? '#'+u.ctf_stats.rank : '—';
 
   // Social links
   renderSocials(u);
@@ -529,6 +630,7 @@ function toggleEdit() {
   document.getElementById('editToggleBtn').textContent = editMode ? '✕ Done Editing' : '⚙ Edit Profile';
   document.getElementById('bioEditBtn').style.display  = editMode ? 'block' : 'block';
   document.getElementById('socialEditForm').style.display = editMode ? 'block' : 'none';
+  document.getElementById('statusEditWrap').style.display = (editMode && isOwn) ? 'block' : 'none';
   if (editMode && profileData) {
     document.getElementById('bioEdit').value = profileData.bio || '';
   }
@@ -566,6 +668,19 @@ async function saveSocials() {
   if (res.ok) { await loadProfile(); }
 }
 
+async function saveProfileStatus() {
+  if (!isOwn) return;
+  const sel = document.getElementById('profileStatusSelect');
+  const profile_status = sel ? sel.value : 'available';
+  const res = await authFetch('/api/users/'+handle, {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({profile_status})
+  });
+  if (res.ok) {
+    await loadProfile();
+  }
+}
+
 async function uploadAvatar(file) {
   if (!file) return;
   const fd = new FormData(); fd.append('file', file);
@@ -581,21 +696,41 @@ async function uploadBanner(file) {
 }
 
 async function loadProfile() {
-  const res = await authFetch('/api/users/'+handle);
-  if (!res.ok) { document.body.innerHTML='<div style="padding:100px;text-align:center;font-family:var(--mono);color:var(--red2);">Member not found.</div>'; return; }
-  const u = await res.json();
+  dbg(`loadProfile start handle=${handle}`);
+  try {
+    const res = await authFetch('/api/users/'+encodeURIComponent(handle));
+    dbg(`/api/users/${handle} status=${res.status}`);
+    if (!res.ok) {
+      document.body.innerHTML='<div style="padding:100px;text-align:center;font-family:var(--mono);color:var(--red2);">Member not found or unavailable.</div>';
+      return;
+    }
+    const u = await res.json();
+    if (!u || !u.id) {
+      dbg('invalid profile payload');
+      document.body.innerHTML='<div style="padding:100px;text-align:center;font-family:var(--mono);color:var(--red2);">Invalid profile payload.</div>';
+      return;
+    }
 
-  const [achRes, specRes] = await Promise.all([
-    authFetch('/api/achievements/user/'+u.id),
-    authFetch('/api/achievements/user/'+u.id+'/specs'),
-  ]);
-  u.achievements    = achRes.ok  ? await achRes.json()  : [];
-  u.specializations = specRes.ok ? await specRes.json() : [];
+    const [achRes, specRes] = await Promise.all([
+      authFetch('/api/achievements/user/'+u.id),
+      authFetch('/api/achievements/user/'+u.id+'/specs'),
+    ]);
+    dbg(`ach status=${achRes.status} spec status=${specRes.status}`);
+    u.achievements    = achRes.ok  ? await achRes.json()  : [];
+    u.specializations = specRes.ok ? await specRes.json() : [];
 
-  render(u);
+    render(u);
+  } catch (err) {
+    dbg(`loadProfile error: ${err && err.message ? err.message : 'unknown'}`);
+  }
 }
 
-loadProfile();
+(async () => {
+  const ok = await initSession();
+  if (!ok) return;
+  await loadProfile();
+  dbg('profile render complete');
+})();
 </script>
 </body>
 </html>

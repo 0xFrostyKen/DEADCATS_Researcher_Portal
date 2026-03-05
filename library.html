@@ -223,6 +223,8 @@ body::before {
   transition: color 0.15s; line-height: 1;
 }
 .ni-bm-btn:hover { color: var(--gold); }
+.ni-bm-btn.starred { color: var(--gold); text-shadow: 0 0 8px rgba(240,165,0,.35); }
+.ni-bm-btn:disabled { opacity: .65; cursor: wait; }
 
 /* ── CONTENT PANE ── */
 .content-pane {
@@ -487,10 +489,7 @@ print('hello')
 
 <script>
 const API     = '';
-const token   = localStorage.getItem('dc_token');
-const user    = JSON.parse(localStorage.getItem('dc_user') || 'null');
-
-if (!token || !user) window.location.href = 'login.html';
+let user      = JSON.parse(localStorage.getItem('dc_user') || 'null');
 
 // Show admin controls
 if (user && user.is_admin) {
@@ -508,6 +507,15 @@ let isNew          = false;
 let bookmarkedNotes = new Set(); // item_id values the user has bookmarked
 let bookmarkIdMap   = {};        // item_id → bookmark.id (for DELETE)
 
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── Marked config ─────────────────────────────────────────────────
 marked.setOptions({ breaks: true, gfm: true });
 
@@ -515,12 +523,36 @@ marked.setOptions({ breaks: true, gfm: true });
 function authFetch(url, opts = {}) {
   return fetch(API + url, {
     ...opts,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
       ...(opts.headers || {}),
     },
+  }).then((res) => {
+    if (res.status === 401) {
+      localStorage.removeItem('dc_user');
+      window.location.href = 'login.html';
+    }
+    return res;
   });
+}
+
+async function ensureSession() {
+  try {
+    const res = await fetch(`${API}/api/auth/me`, { credentials: 'include' });
+    if (!res.ok) {
+      localStorage.removeItem('dc_user');
+      window.location.replace('login.html');
+      return false;
+    }
+    user = await res.json();
+    localStorage.setItem('dc_user', JSON.stringify(user));
+    return true;
+  } catch (_) {
+    if (user) return true;
+    window.location.replace('login.html');
+    return false;
+  }
 }
 
 function timeAgo(d) {
@@ -556,7 +588,7 @@ function renderFolderTree() {
       : '';
     html += `
       <div class="folder-item ${currentFolder === f.id ? 'active' : ''}" data-id="${f.id}" onclick="selectFolder(${f.id}, this)">
-        <span class="folder-ico">📁</span> ${f.name}
+        <span class="folder-ico">📁</span> ${esc(f.name)}
         <span class="folder-count">${count}</span>
         ${delBtn}
       </div>`;
@@ -591,17 +623,17 @@ function renderNoteList() {
 
   el.innerHTML = notes.map(n => {
     const tags = n.tags.length ? n.tags.filter(Boolean).map(t =>
-      `<span class="ni-tag">${t.trim()}</span>`).join('') : '';
+      `<span class="ni-tag">${esc(t.trim())}</span>`).join('') : '';
     const starred = bookmarkedNotes.has(n.id);
     return `
       <div class="note-item ${currentNote?.id === n.id ? 'active' : ''}"
            onclick="openNote(${n.id})">
-        <button class="ni-bm-btn" data-noteid="${n.id}" title="${starred ? 'Remove bookmark' : 'Bookmark this note'}"
+        <button class="ni-bm-btn ${starred ? 'starred' : ''}" data-noteid="${n.id}" title="${starred ? 'Remove bookmark' : 'Bookmark this note'}"
                 onclick="event.stopPropagation(); toggleBookmark(this, ${n.id})">${starred ? '★' : '☆'}</button>
-        <div class="ni-title">${n.title}</div>
-        <div class="ni-preview">${n.content || 'No content'}</div>
+        <div class="ni-title">${esc(n.title)}</div>
+        <div class="ni-preview">${esc(n.content || 'No content')}</div>
         <div class="ni-meta">
-          <span>${n.author_handle}</span>
+          <span>${esc(n.author_handle)}</span>
           <span>${timeAgo(n.updated_at || n.created_at)}</span>
           ${tags}
         </div>
@@ -677,7 +709,8 @@ function setMode(m) {
     const content = currentNote
       ? currentNote.content
       : document.getElementById('editorContent').value;
-    document.getElementById('mdBody').innerHTML = marked.parse(content || '*No content yet.*');
+    const safe = String(content || '*No content yet.*').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    document.getElementById('mdBody').innerHTML = marked.parse(safe);
     document.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
     viewer.classList.remove('hidden');
     editor.classList.add('hidden');
@@ -819,49 +852,49 @@ function _freshNoteBtn(noteId) {
 }
 
 async function toggleBookmark(btn, noteId) {
-  if (bookmarkedNotes.has(noteId)) {
-    const bmId = bookmarkIdMap[noteId];
-    // Optimistic update — do this before the fetch so any re-render sees the right state
-    bookmarkedNotes.delete(noteId);
-    delete bookmarkIdMap[noteId];
-    btn.textContent = '☆';
-    btn.title = 'Bookmark this note';
-
-    const res = await authFetch(`/api/bookmarks/${bmId}`, { method: 'DELETE' });
-    if (!res.ok && res.status !== 204) {
-      // Rollback
-      bookmarkedNotes.add(noteId);
-      bookmarkIdMap[noteId] = bmId;
-      const b = _freshNoteBtn(noteId);
-      if (b) { b.textContent = '★'; b.title = 'Remove bookmark'; }
-    }
-  } else {
-    // Optimistic update
-    bookmarkedNotes.add(noteId);
-    btn.textContent = '★';
-    btn.title = 'Remove bookmark';
-
-    const res = await authFetch('/api/bookmarks/', {
-      method: 'POST',
-      body: JSON.stringify({ item_type: 'note', item_id: noteId }),
-    });
-    if (res.ok) {
-      const bm = await res.json();
-      bookmarkIdMap[noteId] = bm.id;
-      // Refresh button in case DOM was re-rendered during the fetch
-      const b = _freshNoteBtn(noteId);
-      if (b) { b.textContent = '★'; b.title = 'Remove bookmark'; }
-    } else {
-      // Rollback
+  btn.disabled = true;
+  try {
+    if (bookmarkedNotes.has(noteId)) {
+      let bmId = bookmarkIdMap[noteId];
+      if (!bmId) {
+        await loadBookmarks();
+        bmId = bookmarkIdMap[noteId];
+      }
+      if (bmId) {
+        const res = await authFetch(`/api/bookmarks/${bmId}`, { method: 'DELETE' });
+        if (!res.ok && res.status !== 204) throw new Error('Failed to remove bookmark');
+      }
       bookmarkedNotes.delete(noteId);
-      const b = _freshNoteBtn(noteId);
-      if (b) { b.textContent = '☆'; b.title = 'Bookmark this note'; }
+      delete bookmarkIdMap[noteId];
+    } else {
+      const res = await authFetch('/api/bookmarks/', {
+        method: 'POST',
+        body: JSON.stringify({ item_type: 'note', item_id: noteId }),
+      });
+      if (res.ok) {
+        const bm = await res.json();
+        bookmarkedNotes.add(noteId);
+        bookmarkIdMap[noteId] = bm.id;
+      } else if (res.status === 409) {
+        // Already bookmarked server-side; sync local state.
+        await loadBookmarks();
+      } else {
+        throw new Error('Failed to add bookmark');
+      }
     }
+  } catch (e) {
+    await loadBookmarks();
+  } finally {
+    renderNoteList();
+    const b = _freshNoteBtn(noteId);
+    if (b) b.disabled = false;
   }
 }
 
 // ── Init ──────────────────────────────────────────────────────────
 (async () => {
+  const ok = await ensureSession();
+  if (!ok) return;
   await loadBookmarks();
   await loadFolders();
   await loadNotes(null);

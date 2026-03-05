@@ -4,9 +4,9 @@ const API = '';
 
 // If already logged in, skip login page
 (function checkSession() {
-  const token = localStorage.getItem('dc_token');
-  const user  = localStorage.getItem('dc_user');
-  if (token && user) window.location.replace('dashboard.html');
+  fetch(`${API}/api/auth/me`, { credentials: 'include' })
+    .then((res) => { if (res.ok) window.location.replace('dashboard.html'); })
+    .catch(() => {});
 })();
 
 async function handleLogin() {
@@ -28,6 +28,7 @@ async function handleLogin() {
   try {
     const res = await fetch(`${API}/api/auth/login`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ handle, password: pass }),
     });
@@ -42,8 +43,9 @@ async function handleLogin() {
       return;
     }
 
-    // Store JWT and user in localStorage
-    localStorage.setItem('dc_token', data.access_token);
+    localStorage.removeItem('dc_token');
+    // Keep user profile for UI convenience; auth is cookie-based.
+    localStorage.removeItem('dc_token');
     localStorage.setItem('dc_user', JSON.stringify(data.user));
 
     // Redirect to dashboard
@@ -74,8 +76,8 @@ async function handleRegister() {
     err.textContent = '⚠ Passwords do not match.';
     err.classList.add('show'); return;
   }
-  if (pass.length < 6) {
-    err.textContent = '⚠ Password must be at least 6 characters.';
+  if (pass.length < 8) {
+    err.textContent = '⚠ Password must be at least 8 characters.';
     err.classList.add('show'); return;
   }
 
@@ -85,6 +87,7 @@ async function handleRegister() {
   try {
     const res = await fetch(`${API}/api/auth/register`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ handle, password: pass, access_token: token }),
     });
@@ -96,7 +99,6 @@ async function handleRegister() {
       btn.disabled = false;
       return;
     }
-    localStorage.setItem('dc_token', data.access_token);
     localStorage.setItem('dc_user', JSON.stringify(data.user));
     window.location.href = 'dashboard.html';
   } catch (e) {
@@ -126,4 +128,3 @@ document.addEventListener('keydown', (e) => {
   const regHidden = document.getElementById('form-register').classList.contains('hidden');
   if (regHidden) handleLogin(); else handleRegister();
 });
-

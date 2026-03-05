@@ -71,6 +71,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 .ctf-name{font-family:var(--body);font-size:13px;font-weight:600;color:var(--text-bright);}
 .ctf-name a{color:inherit;text-decoration:none;border-bottom:1px solid transparent;transition:border-color 0.2s;}
 .ctf-name a:hover{border-color:var(--cyan-dim);}
+.ctf-sub{margin-top:4px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.45;white-space:pre-wrap;word-break:break-word;}
 .format-badge{font-family:var(--mono);font-size:8px;letter-spacing:0.1em;padding:2px 7px;border:1px solid var(--border2);color:var(--text-mid);text-transform:uppercase;}
 .weight-val{color:var(--gold);font-weight:600;}
 .table-empty{padding:36px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;}
@@ -185,6 +186,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
         <input class="modal-input" type="text" id="manualStart" placeholder="Start (ISO or blank)">
         <input class="modal-input" type="text" id="manualEnd" placeholder="End (ISO or blank)">
       </div>
+      <textarea class="modal-input" id="manualDesc" placeholder="Description / credentials (optional)" rows="4" style="margin-top:8px;resize:vertical;"></textarea>
     </div>
     <div class="modal-actions">
       <button class="modal-btn" onclick="closeAddCtf()">Cancel</button>
@@ -299,19 +301,47 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 
 <script>
 const API   = '';
-const token = localStorage.getItem('dc_token');
-const me    = JSON.parse(localStorage.getItem('dc_user') || 'null');
-if (!token || !me) window.location.href = 'login.html';
+let me      = JSON.parse(localStorage.getItem('dc_user') || 'null');
 
-if (me && me.is_admin) {
-  document.getElementById('addCtfBtn').classList.remove('hidden');
+function applyAdminControls() {
+  if (me && me.is_admin) {
+    document.getElementById('addCtfBtn').classList.remove('hidden');
+  }
 }
 
 function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function authFetch(url, opts = {}) {
-  return fetch(API + url, { ...opts, headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token, ...(opts.headers||{}) } });
+  return fetch(API + url, { ...opts, credentials: 'include', headers: { 'Content-Type':'application/json', ...(opts.headers||{}) } }).then((res) => {
+    if (res.status === 401) {
+      localStorage.removeItem('dc_user');
+      window.location.href = 'login.html';
+    }
+    return res;
+  });
+}
+
+async function ensureSession() {
+  try {
+    const res = await fetch(`${API}/api/auth/me`, { credentials: 'include' });
+    if (!res.ok) {
+      localStorage.removeItem('dc_user');
+      window.location.replace('login.html');
+      return false;
+    }
+    me = await res.json();
+    localStorage.setItem('dc_user', JSON.stringify(me));
+    applyAdminControls();
+    return true;
+  } catch (_) {
+    if (me) {
+      applyAdminControls();
+      return true;
+    }
+    window.location.replace('login.html');
+    return false;
+  }
 }
 function fmtDate(s) {
   if (!s) return '—';
@@ -337,6 +367,8 @@ let _participantsEventId = null;
 let _pendingParticipants = [];
 let _selectedCtf         = null;
 let _memberHandles       = [];
+let _ctfYears            = [];
+let _resultDefaults      = null;
 
 // ── Team stats ─────────────────────────────────────────────────
 async function loadTeamStats() {
@@ -350,6 +382,7 @@ async function loadTeamStats() {
     }
     // Rating stats — find most recent year with actual data
     const years = t.rating ? Object.keys(t.rating).sort().reverse() : [];
+    _ctfYears = years.map(y => Number(y)).filter(y => Number.isInteger(y) && y > 2000);
     const bestYear = years.find(y => t.rating[y].rating_points != null) || years[0];
     if (bestYear) {
       const r = t.rating[bestYear];
@@ -360,8 +393,47 @@ async function loadTeamStats() {
     // Count years where team had a ranking
     const activeYears = t.rating ? Object.values(t.rating).filter(r => r.rating_place || r.country_place).length : 0;
     document.getElementById('statEvents').textContent = activeYears || '—';
+    await loadCtftimeHistory();
     renderPast();
   } catch(e) { console.error('Team stats error:', e); }
+}
+
+function normalizeTask(row) {
+  const taskId = row.task_id ?? row.event_id ?? row.id;
+  const taskName = row.task_name ?? row.event_title ?? row.title ?? 'Unknown Event';
+  return {
+    task_id: Number(taskId) || 0,
+    task_name: String(taskName),
+    place: Number(row.place) || null,
+    ctf_points: row.ctf_points != null ? Number(row.ctf_points) : null,
+    rating_points: row.rating_points != null ? Number(row.rating_points) : null,
+  };
+}
+
+async function loadCtftimeHistory() {
+  const thisYear = new Date().getUTCFullYear();
+  const years = (_ctfYears.length ? _ctfYears : [thisYear, thisYear - 1, thisYear - 2])
+    .filter(y => Number.isInteger(y) && y >= 2010 && y <= thisYear + 1)
+    .sort((a, b) => b - a);
+  if (!years.length) return;
+
+  const fetched = [];
+  for (const year of years) {
+    try {
+      const res = await authFetch(`/api/ctf/proxy/results/${year}`);
+      if (!res.ok) { fetched.push([String(year), []]); continue; }
+      const rows = await res.json();
+      const tasks = (Array.isArray(rows) ? rows : []).map(normalizeTask).filter(t => t.task_id && t.task_name);
+      fetched.push([String(year), tasks]);
+    } catch (_) {
+      fetched.push([String(year), []]);
+    }
+  }
+
+  ctftimeTasks = {};
+  fetched.forEach(([year, tasks]) => {
+    if (tasks.length) ctftimeTasks[year] = tasks;
+  });
 }
 
 // ── Events ─────────────────────────────────────────────────────
@@ -386,7 +458,10 @@ function renderUpcoming() {
   }
   tbody.innerHTML = upcoming.map(ev => `
     <tr>
-      <td class="ctf-name">${ev.url ? `<a href="${esc(ev.url)}" target="_blank" rel="noopener">${esc(ev.title)}</a>` : esc(ev.title)}</td>
+      <td class="ctf-name">
+        ${ev.url ? `<a href="${esc(ev.url)}" target="_blank" rel="noopener">${esc(ev.title)}</a>` : esc(ev.title)}
+        ${ev.description ? `<div class="ctf-sub">${esc(ev.description)}</div>` : ''}
+      </td>
       <td>${fmtDate(ev.start_time)}</td>
       <td>${ev.format ? `<span class="format-badge">${esc(ev.format)}</span>` : '—'}</td>
       <td>${ev.weight != null ? `<span class="weight-val">${ev.weight.toFixed(2)}</span>` : '—'}</td>
@@ -461,7 +536,10 @@ function renderPastTable(year) {
         <td class="rating">${fmtPts(task.rating_points)}</td>
         <td style="text-align:right;" onclick="event.stopPropagation()">
           <div class="result-actions">
-            ${me.is_admin ? `<button class="act-btn" onclick="openAddParticipantsForTask(${task.task_id})">+ Players</button>` : ''}
+            ${me.is_admin ? `
+              <button class="act-btn cyan" onclick="openAddResultForTask(${task.task_id})">✎ Result</button>
+              <button class="act-btn" onclick="openAddParticipantsForTask(${task.task_id})">+ Players</button>
+            ` : ''}
             <span class="expand-arrow" id="arrow-${pid}">▶</span>
           </div>
         </td>
@@ -481,7 +559,10 @@ function renderPastTable(year) {
     return `
       <tr class="result-row" onclick="toggleParticipants(${ev.id})">
         <td>${r ? placeBadge(r.place) : '<span class="place-badge pn">—</span>'}</td>
-        <td class="ctf-name">${ev.url ? `<a href="${esc(ev.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(ev.title)}</a>` : esc(ev.title)}</td>
+        <td class="ctf-name">
+          ${ev.url ? `<a href="${esc(ev.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(ev.title)}</a>` : esc(ev.title)}
+          ${ev.description ? `<div class="ctf-sub">${esc(ev.description)}</div>` : ''}
+        </td>
         <td class="pts">${r ? fmtPts(r.ctf_points) : '—'}</td>
         <td class="rating">${r ? fmtPts(r.rating_points) : '—'}</td>
         <td style="text-align:right;" onclick="event.stopPropagation()">
@@ -548,6 +629,7 @@ async function deleteParticipant(pid, eid) {
 
 // ── Add CTF modal ──────────────────────────────────────────────
 let _searchTimer = null;
+let _searchResults = [];
 
 function openAddCtf() {
   _selectedCtf = null;
@@ -558,6 +640,7 @@ function openAddCtf() {
   document.getElementById('manualUrl').value = '';
   document.getElementById('manualStart').value = '';
   document.getElementById('manualEnd').value = '';
+  document.getElementById('manualDesc').value = '';
   document.getElementById('addCtfModal').classList.remove('hidden');
   setTimeout(() => document.getElementById('ctfSearchInput').focus(), 50);
 }
@@ -580,12 +663,13 @@ async function searchCTFtime(q) {
     const res = await authFetch(`/api/ctf/proxy/upcoming?q=${encodeURIComponent(q)}`);
     if (!res.ok) { dropdown.innerHTML = '<div class="sd-empty">Search failed.</div>'; return; }
     const events = await res.json();
+    _searchResults = Array.isArray(events) ? events : [];
     if (!events.length) { dropdown.innerHTML = '<div class="sd-empty">No events found.</div>'; return; }
-    dropdown.innerHTML = events.map(e => {
+    dropdown.innerHTML = events.map((e, idx) => {
       const start = e.start ? fmtDate(e.start) : '—';
       const fmt   = e.format || '';
       const weight = e.weight != null ? ` · ${Number(e.weight).toFixed(2)}w` : '';
-      return `<div class="sd-item" onclick="selectCtf(${JSON.stringify(JSON.stringify(e))})">
+      return `<div class="sd-item" data-idx="${idx}">
         <div class="sd-title">${esc(e.title)}</div>
         <div class="sd-meta">${start} · ${fmt}${weight}</div>
       </div>`;
@@ -593,8 +677,8 @@ async function searchCTFtime(q) {
   } catch(e) { dropdown.innerHTML = '<div class="sd-empty">Error.</div>'; }
 }
 
-function selectCtf(jsonStr) {
-  _selectedCtf = JSON.parse(jsonStr);
+function selectCtf(eventData) {
+  _selectedCtf = eventData;
   document.getElementById('searchDropdown').classList.add('hidden');
   document.getElementById('ctfSearchInput').value = _selectedCtf.title;
   document.getElementById('selectedCtfPreview').style.display = 'block';
@@ -607,6 +691,14 @@ function selectCtf(jsonStr) {
   document.getElementById('manualUrl').value = '';
 }
 
+document.getElementById('searchDropdown').addEventListener('click', (e) => {
+  const item = e.target.closest('.sd-item');
+  if (!item) return;
+  const idx = Number(item.getAttribute('data-idx'));
+  if (!Number.isInteger(idx) || idx < 0 || idx >= _searchResults.length) return;
+  selectCtf(_searchResults[idx]);
+});
+
 async function submitAddCtf() {
   let body;
   if (_selectedCtf) {
@@ -618,6 +710,7 @@ async function submitAddCtf() {
       end_time:         _selectedCtf.finish || null,
       format:           _selectedCtf.format || null,
       weight:           _selectedCtf.weight != null ? Number(_selectedCtf.weight) : null,
+      description:      document.getElementById('manualDesc').value.trim() || null,
     };
   } else {
     const title = document.getElementById('manualTitle').value.trim();
@@ -627,6 +720,7 @@ async function submitAddCtf() {
       url:        document.getElementById('manualUrl').value.trim() || null,
       start_time: document.getElementById('manualStart').value.trim() || null,
       end_time:   document.getElementById('manualEnd').value.trim() || null,
+      description:document.getElementById('manualDesc').value.trim() || null,
     };
   }
   const res = await authFetch('/api/ctf/events', { method:'POST', body: JSON.stringify(body) });
@@ -641,7 +735,8 @@ document.addEventListener('click', e => {
 });
 
 // ── Add Result modal ───────────────────────────────────────────
-function openAddResult(eventId) {
+function openAddResult(eventId, defaults = null) {
+  _resultDefaults = defaults;
   _resultEventId = eventId;
   const ev = allEvents.find(e => e.id === eventId);
   document.getElementById('addResultEventName').textContent = ev ? ev.title : '';
@@ -649,6 +744,10 @@ function openAddResult(eventId) {
     document.getElementById('resultPlace').value     = ev.result.place;
     document.getElementById('resultCtfPts').value    = ev.result.ctf_points;
     document.getElementById('resultRatingPts').value = ev.result.rating_points;
+  } else if (_resultDefaults) {
+    document.getElementById('resultPlace').value     = _resultDefaults.place ?? '';
+    document.getElementById('resultCtfPts').value    = _resultDefaults.ctf_points ?? '';
+    document.getElementById('resultRatingPts').value = _resultDefaults.rating_points ?? '';
   } else {
     document.getElementById('resultPlace').value     = '';
     document.getElementById('resultCtfPts').value    = '';
@@ -657,6 +756,55 @@ function openAddResult(eventId) {
   document.getElementById('addResultModal').classList.remove('hidden');
 }
 function closeAddResult() { document.getElementById('addResultModal').classList.add('hidden'); }
+
+function _findTaskById(taskId) {
+  for (const tasks of Object.values(ctftimeTasks)) {
+    const task = tasks.find(t => t.task_id === taskId);
+    if (task) return task;
+  }
+  return null;
+}
+
+async function ensureLocalEventForTask(taskId) {
+  const task = _findTaskById(taskId);
+  if (!task) return null;
+  let localEv = allEvents.find(e => e.ctftime_event_id === taskId);
+  if (localEv) return { task, localEv };
+
+  const createRes = await authFetch('/api/ctf/events', {
+    method: 'POST',
+    body: JSON.stringify({
+      title:            task.task_name,
+      url:              `https://ctftime.org/event/${taskId}`,
+      ctftime_event_id: taskId,
+      status:           'completed',
+    })
+  });
+  if (!createRes.ok) return null;
+  const created = await createRes.json();
+  await authFetch(`/api/ctf/events/${created.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'completed' })
+  });
+  await loadEvents();
+  localEv = allEvents.find(e => e.ctftime_event_id === taskId) || created;
+  return { task, localEv };
+}
+
+async function openAddResultForTask(taskId) {
+  const data = await ensureLocalEventForTask(taskId);
+  if (!data || !data.localEv) {
+    alert('Failed to prepare local event for editing.');
+    return;
+  }
+  const { task, localEv } = data;
+  const defaults = {
+    place: task.place ?? '',
+    ctf_points: task.ctf_points ?? '',
+    rating_points: task.rating_points ?? '',
+  };
+  openAddResult(localEv.id, defaults);
+}
 
 async function submitResult() {
   const place  = parseInt(document.getElementById('resultPlace').value);
@@ -691,43 +839,12 @@ function closeAddParticipants() {
 
 // For CTFtime tasks: auto-create local event record if needed, then open participants modal
 async function openAddParticipantsForTask(taskId) {
-  // Find the task in ctftimeTasks
-  let task = null;
-  for (const tasks of Object.values(ctftimeTasks)) {
-    task = tasks.find(t => t.task_id === taskId);
-    if (task) break;
+  const data = await ensureLocalEventForTask(taskId);
+  if (!data || !data.localEv) {
+    alert('Failed to create event record.');
+    return;
   }
-  if (!task) return;
-
-  // Check if a local event already exists for this CTFtime task
-  let localEv = allEvents.find(e => e.ctftime_event_id === taskId);
-
-  if (!localEv) {
-    // Create local event record so we can attach participants
-    const res = await authFetch('/api/ctf/events', {
-      method: 'POST',
-      body: JSON.stringify({
-        title:            task.task_name,
-        url:              `https://ctftime.org/event/${taskId}`,
-        ctftime_event_id: taskId,
-      })
-    });
-    if (!res.ok) { alert('Failed to create event record.'); return; }
-    const ev = await res.json();
-    // Mark completed and store the result from CTFtime
-    await authFetch(`/api/ctf/events/${ev.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status: 'completed' })
-    });
-    await authFetch(`/api/ctf/events/${ev.id}/result`, {
-      method: 'POST',
-      body: JSON.stringify({ place: task.place, ctf_points: task.ctf_points, rating_points: task.rating_points })
-    });
-    await loadEvents();
-    localEv = allEvents.find(e => e.ctftime_event_id === taskId);
-  }
-
-  if (localEv) openAddParticipants(localEv.id);
+  openAddParticipants(data.localEv.id);
 }
 
 async function addParticipantRow() {
@@ -768,15 +885,19 @@ async function loadMemberHandles() {
 }
 
 // ── Init ──────────────────────────────────────────────────────
-loadTeamStats();
-loadEvents();
-if (me.is_admin) loadMemberHandles();
+(async () => {
+  const ok = await ensureSession();
+  if (!ok) return;
+  loadTeamStats();
+  loadEvents();
+  if (me.is_admin) loadMemberHandles();
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closeAddCtf(); closeAddResult(); closeAddParticipants();
-  }
-});
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeAddCtf(); closeAddResult(); closeAddParticipants();
+    }
+  });
+})();
 </script>
 </body>
 </html>

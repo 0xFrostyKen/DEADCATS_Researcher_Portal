@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from core.database import get_db
 from core.security import get_current_user, require_admin
+from core.validation import clean_text, reject_html
 from models.note import Note, Folder
 from models.user import User
 
@@ -12,20 +13,20 @@ router = APIRouter(prefix="/api/notes", tags=["notes"])
 # ── Schemas ───────────────────────────────────────────────────────
 
 class CreateFolderRequest(BaseModel):
-    name:      str
+    name:      str = Field(min_length=1, max_length=100)
     parent_id: Optional[int] = None
 
 class CreateNoteRequest(BaseModel):
-    title:     str
-    content:   Optional[str] = ""
+    title:     str = Field(min_length=1, max_length=200)
+    content:   Optional[str] = Field(default="", max_length=50000)
     folder_id: Optional[int] = None
-    tags:      Optional[str] = ""
+    tags:      Optional[str] = Field(default="", max_length=500)
 
 class UpdateNoteRequest(BaseModel):
-    title:     Optional[str] = None
-    content:   Optional[str] = None
+    title:     Optional[str] = Field(default=None, min_length=1, max_length=200)
+    content:   Optional[str] = Field(default=None, max_length=50000)
     folder_id: Optional[int] = None
-    tags:      Optional[str] = None
+    tags:      Optional[str] = Field(default=None, max_length=500)
 
 # ── Folder routes ─────────────────────────────────────────────────
 
@@ -40,8 +41,13 @@ def create_folder(
     db:      Session = Depends(get_db),
     admin:   User    = Depends(require_admin)
 ):
+    name = reject_html(clean_text(payload.name, field="Folder name", max_len=100), field="Folder name")
+    if payload.parent_id is not None:
+        parent = db.query(Folder).filter(Folder.id == payload.parent_id).first()
+        if not parent:
+            raise HTTPException(status_code=404, detail="Parent folder not found")
     folder = Folder(
-        name       = payload.name,
+        name       = name,
         parent_id  = payload.parent_id,
         created_by = admin.id,
     )
@@ -81,7 +87,8 @@ def list_notes(
     result = []
     for n in notes:
         d = n.to_dict()
-        d["content"] = d["content"][:200] + "..." if len(d["content"]) > 200 else d["content"]
+        content = d.get("content") or ""
+        d["content"] = content[:200] + "..." if len(content) > 200 else content
         result.append(d)
     return result
 
@@ -91,13 +98,17 @@ def create_note(
     db:      Session = Depends(get_db),
     current: User    = Depends(get_current_user)
 ):
+    if payload.folder_id is not None:
+        folder = db.query(Folder).filter(Folder.id == payload.folder_id).first()
+        if not folder:
+            raise HTTPException(status_code=404, detail="Folder not found")
     note = Note(
-        title         = payload.title,
-        content       = payload.content,
+        title         = reject_html(clean_text(payload.title, field="Title", max_len=200), field="Title"),
+        content       = clean_text(payload.content, field="Content", max_len=50000, strip=False),
         folder_id     = payload.folder_id,
         author_id     = current.id,
         author_handle = current.handle,
-        tags          = payload.tags,
+        tags          = clean_text(payload.tags, field="Tags", max_len=500),
     )
     db.add(note)
     db.commit()
@@ -127,7 +138,17 @@ def update_note(
         raise HTTPException(status_code=404, detail="Note not found")
     if note.author_id != current.id and not current.is_admin:
         raise HTTPException(status_code=403, detail="You can only edit your own notes")
+    if payload.folder_id is not None:
+        folder = db.query(Folder).filter(Folder.id == payload.folder_id).first()
+        if not folder:
+            raise HTTPException(status_code=404, detail="Folder not found")
     for field, value in payload.model_dump(exclude_none=True).items():
+        if field == "title":
+            value = reject_html(clean_text(value, field="Title", max_len=200), field="Title")
+        if field == "content":
+            value = clean_text(value, field="Content", max_len=50000, strip=False)
+        if field == "tags":
+            value = clean_text(value, field="Tags", max_len=500)
         setattr(note, field, value)
     db.commit()
     db.refresh(note)

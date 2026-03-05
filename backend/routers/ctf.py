@@ -1,15 +1,17 @@
 import time
 import httpx
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import datetime, timezone, timedelta
+from typing import Optional, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from core.database import get_db
 from core.security import get_current_user, require_admin
 from core.config import CTFTIME_TEAM_ID
+from core.validation import clean_text, reject_html
 from models.user import User
 from models.ctf import CTFEvent, CTFResult, CTFParticipant
+from models.announcement import Announcement
 
 router = APIRouter(prefix="/api/ctf", tags=["ctf"])
 
@@ -79,25 +81,117 @@ async def proxy_upcoming(q: str = "", _: User = Depends(get_current_user)):
     return events[:20]
 
 
+@router.get("/proxy/results/{year}")
+async def proxy_results(year: int, _: User = Depends(get_current_user)):
+    """Proxy team results for a given year from CTFtime (cached 30 min)."""
+    now_year = datetime.now(timezone.utc).year
+    if year < 2010 or year > now_year + 1:
+        raise HTTPException(400, "Invalid year")
+    key = f"results:{year}"
+    cached = _cached(key)
+    if cached is not None:
+        return cached
+
+    def _iter_events(payload: Any):
+        if isinstance(payload, list):
+            for ev in payload:
+                if isinstance(ev, dict):
+                    yield ev
+            return
+        if isinstance(payload, dict):
+            for k, ev in payload.items():
+                if isinstance(ev, dict):
+                    if "id" not in ev:
+                        try:
+                            ev = {**ev, "id": int(k)}
+                        except Exception:
+                            pass
+                    yield ev
+
+    def _extract_team_rows(ev: dict, team_id: int):
+        candidates = []
+        for key in ("scores", "results", "standings", "teams", "scoreboard"):
+            v = ev.get(key)
+            if isinstance(v, list):
+                candidates.extend(v)
+        # Some payloads put a flat team row at event level.
+        if any(k in ev for k in ("team_id", "team", "place", "points", "score")):
+            candidates.append(ev)
+
+        for row in candidates:
+            if not isinstance(row, dict):
+                continue
+            rid = row.get("team_id")
+            if rid is None and isinstance(row.get("team"), dict):
+                rid = row["team"].get("id")
+            if rid is None:
+                rid = row.get("id")
+            try:
+                if int(rid) != team_id:
+                    continue
+            except Exception:
+                continue
+            place = row.get("place", row.get("pos", row.get("rank")))
+            ctf_points = row.get("ctf_points", row.get("points", row.get("score")))
+            rating_points = row.get("rating_points", row.get("rating", row.get("rating_score")))
+            yield {
+                "task_id": ev.get("id", ev.get("event_id", ev.get("task_id"))),
+                "task_name": ev.get("title", ev.get("event", ev.get("name", "Unknown Event"))),
+                "place": place,
+                "ctf_points": ctf_points,
+                "rating_points": rating_points,
+            }
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            r = await client.get(
+                f"https://ctftime.org/api/v1/results/{year}/",
+                headers=CTFTIME_HEADERS
+            )
+        r.raise_for_status()
+        data = r.json()
+        team_id = int(CTFTIME_TEAM_ID)
+        tasks: list[dict] = []
+        seen: set[int] = set()
+        for ev in _iter_events(data):
+            for task in _extract_team_rows(ev, team_id):
+                tid = task.get("task_id")
+                try:
+                    tid_int = int(tid)
+                except Exception:
+                    continue
+                if tid_int in seen:
+                    continue
+                seen.add(tid_int)
+                task["task_id"] = tid_int
+                tasks.append(task)
+        _set_cache(key, tasks, ttl=1800)
+        return tasks
+    except httpx.HTTPError as e:
+        raise HTTPException(502, f"CTFtime API error: {type(e).__name__}: {e}")
+
+
 # ── Schemas ───────────────────────────────────────────────────────
 
 class EventCreate(BaseModel):
-    title:            str
-    url:              Optional[str] = None
+    title:            str = Field(min_length=1, max_length=200)
+    url:              Optional[str] = Field(default=None, max_length=500)
     ctftime_event_id: Optional[int] = None
-    start_time:       Optional[str] = None
-    end_time:         Optional[str] = None
-    format:           Optional[str] = None
+    start_time:       Optional[str] = Field(default=None, max_length=40)
+    end_time:         Optional[str] = Field(default=None, max_length=40)
+    format:           Optional[str] = Field(default=None, max_length=100)
     weight:           Optional[float] = None
+    description:      Optional[str] = Field(default=None, max_length=4000)
 
 class EventUpdate(BaseModel):
-    title:            Optional[str]   = None
-    url:              Optional[str]   = None
-    start_time:       Optional[str]   = None
-    end_time:         Optional[str]   = None
-    format:           Optional[str]   = None
+    title:            Optional[str]   = Field(default=None, min_length=1, max_length=200)
+    url:              Optional[str]   = Field(default=None, max_length=500)
+    start_time:       Optional[str]   = Field(default=None, max_length=40)
+    end_time:         Optional[str]   = Field(default=None, max_length=40)
+    format:           Optional[str]   = Field(default=None, max_length=100)
     weight:           Optional[float] = None
-    status:           Optional[str]   = None
+    description:      Optional[str]   = Field(default=None, max_length=4000)
+    status:           Optional[str]   = Field(default=None, max_length=20)
 
 class ResultUpsert(BaseModel):
     place:         int
@@ -105,9 +199,9 @@ class ResultUpsert(BaseModel):
     rating_points: float
 
 class ParticipantCreate(BaseModel):
-    member_handle: str
+    member_handle: str = Field(min_length=1, max_length=50)
     points:        float
-    notes:         Optional[str] = None
+    notes:         Optional[str] = Field(default=None, max_length=1000)
 
 
 # ── Helper ────────────────────────────────────────────────────────
@@ -118,7 +212,7 @@ def _parse_dt(s: Optional[str]) -> Optional[datetime]:
     try:
         return datetime.fromisoformat(s.replace("Z", "+00:00"))
     except ValueError:
-        return None
+        raise HTTPException(400, "Invalid datetime format. Use ISO-8601.")
 
 def _event_full(ev: CTFEvent, db: Session) -> dict:
     """Return event dict enriched with result + participants."""
@@ -145,21 +239,41 @@ def create_event(
     db:      Session = Depends(get_db),
     admin:   User    = Depends(require_admin),
 ):
-    title = payload.title.strip()
+    title = reject_html(clean_text(payload.title, field="title", max_len=200), field="title")
     if not title:
         raise HTTPException(400, "Title required.")
+    start_dt = _parse_dt(payload.start_time)
+    end_dt = _parse_dt(payload.end_time)
+    if start_dt and end_dt and end_dt < start_dt:
+        raise HTTPException(400, "end_time cannot be earlier than start_time.")
     ev = CTFEvent(
         title            = title,
-        url              = payload.url,
+        url              = clean_text(payload.url, field="url", max_len=500),
         ctftime_event_id = payload.ctftime_event_id,
-        start_time       = _parse_dt(payload.start_time),
-        end_time         = _parse_dt(payload.end_time),
-        format           = payload.format,
+        start_time       = start_dt,
+        end_time         = end_dt,
+        format           = clean_text(payload.format, field="format", max_len=100),
         weight           = payload.weight,
+        description      = clean_text(payload.description, field="description", max_len=4000),
         status           = "upcoming",
         added_by         = admin.handle,
     )
     db.add(ev); db.commit(); db.refresh(ev)
+    now = datetime.now(timezone.utc)
+    expires_at = start_dt if (start_dt and start_dt > now) else (now + timedelta(days=14))
+    schedule_line = start_dt.strftime("%Y-%m-%d %H:%M UTC") if start_dt else "TBA"
+    summary = f"{title} | {schedule_line}"
+    if ev.url:
+        summary += f"\n{ev.url}"
+    a = Announcement(
+        title=f"Upcoming CTF: {title}",
+        content=summary,
+        type="notice",
+        author=admin.handle,
+        expires_at=expires_at,
+        pinned=False,
+    )
+    db.add(a); db.commit()
     return _event_full(ev, db)
 
 
@@ -173,16 +287,21 @@ def update_event(
     ev = db.query(CTFEvent).filter(CTFEvent.id == event_id).first()
     if not ev:
         raise HTTPException(404, "Event not found.")
-    if payload.title  is not None: ev.title      = payload.title.strip()
-    if payload.url    is not None: ev.url         = payload.url
-    if payload.format is not None: ev.format      = payload.format
+    if payload.title  is not None: ev.title      = reject_html(clean_text(payload.title, field="title", max_len=200), field="title")
+    if payload.url    is not None: ev.url         = clean_text(payload.url, field="url", max_len=500)
+    if payload.format is not None: ev.format      = clean_text(payload.format, field="format", max_len=100)
     if payload.weight is not None: ev.weight      = payload.weight
+    if payload.description is not None: ev.description = clean_text(payload.description, field="description", max_len=4000)
     if payload.status is not None:
         if payload.status not in ("upcoming", "completed"):
             raise HTTPException(400, "status must be 'upcoming' or 'completed'.")
         ev.status = payload.status
-    if payload.start_time is not None: ev.start_time = _parse_dt(payload.start_time)
-    if payload.end_time   is not None: ev.end_time   = _parse_dt(payload.end_time)
+    if payload.start_time is not None:
+        ev.start_time = _parse_dt(payload.start_time)
+    if payload.end_time is not None:
+        ev.end_time = _parse_dt(payload.end_time)
+    if ev.start_time and ev.end_time and ev.end_time < ev.start_time:
+        raise HTTPException(400, "end_time cannot be earlier than start_time.")
     db.commit(); db.refresh(ev)
     return _event_full(ev, db)
 
@@ -248,14 +367,14 @@ def add_participant(
     ev = db.query(CTFEvent).filter(CTFEvent.id == event_id).first()
     if not ev:
         raise HTTPException(404, "Event not found.")
-    handle = payload.member_handle.strip()
+    handle = reject_html(clean_text(payload.member_handle, field="member_handle", max_len=50), field="member_handle")
     if not handle:
         raise HTTPException(400, "member_handle required.")
     p = CTFParticipant(
         event_id      = event_id,
         member_handle = handle,
         points        = payload.points,
-        notes         = payload.notes,
+        notes         = clean_text(payload.notes, field="notes", max_len=1000),
         added_by      = admin.handle,
     )
     db.add(p); db.commit(); db.refresh(p)

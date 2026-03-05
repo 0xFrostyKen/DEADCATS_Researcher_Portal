@@ -44,7 +44,11 @@ cp .env.example .env
 #   DATABASE_URL
 #   JWT_SECRET  (generate with: python -c "import secrets; print(secrets.token_hex(32))")
 #   ADMIN_HANDLE + ADMIN_PASSWORD
-#   FRONTEND_ORIGIN (your Tailscale IP + port)
+#   FRONTEND_ORIGIN (your frontend origin, no trailing slash)
+#   ALLOW_SELF_REGISTER (true/false)
+#   REGISTER_TOKEN (required and should be long/random if self-register is enabled)
+#   COOKIE_SECURE (true in HTTPS, false for local HTTP)
+#   COOKIE_SAMESITE (strict|lax|none)
 nano .env
 ```
 

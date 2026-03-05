@@ -112,11 +112,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 </div>
 <script>
 const API=''
-const token=localStorage.getItem('dc_token')
-const me=JSON.parse(localStorage.getItem('dc_user')||'null')
-if(!token||!me)window.location.href='login.html'
+let me=JSON.parse(localStorage.getItem('dc_user')||'null')
 let allFiles=[],selectedFile=null
-function authFetch(url,opts={}){return fetch(API+url,{...opts,headers:{'Authorization':'Bearer '+token,...(opts.headers||{})}})}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function authFetch(url,opts={}){return fetch(API+url,{...opts,credentials:'include',headers:{...(opts.headers||{})}}).then(function(res){if(res.status===401){localStorage.removeItem('dc_user');window.location.href='login.html';}return res;})}
+async function ensureSession(){try{const res=await fetch(API+'/api/auth/me',{credentials:'include'});if(!res.ok){localStorage.removeItem('dc_user');window.location.replace('login.html');return false;}me=await res.json();localStorage.setItem('dc_user',JSON.stringify(me));return true;}catch(_){if(me)return true;window.location.replace('login.html');return false;}}
 function formatSize(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(1)+' KB';if(b<1073741824)return (b/1048576).toFixed(1)+' MB';return (b/1073741824).toFixed(2)+' GB';}
 function timeAgo(d){if(!d)return '';const s=(Date.now()-new Date(d))/1000;if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
 function getIcon(name){const ext=name.split('.').pop().toLowerCase();if(['zip','7z','rar','tar','gz'].includes(ext))return '🗜️';if(['exe','dll','sys','bin'].includes(ext))return '⚙️';if(ext==='pdf')return '📄';if(['py','js','c','cpp','rs','go','sh'].includes(ext))return '📝';if(['png','jpg','jpeg','gif','svg'].includes(ext))return '🖼️';if(['pcap','pcapng'].includes(ext))return '📡';if(['csv','xlsx','json'].includes(ext))return '📊';return '📦';}
@@ -125,19 +125,19 @@ function renderFiles(files){
   const c=document.getElementById('filesContainer');
   if(!files.length){c.innerHTML='<div class="files-empty">Vault is empty — upload your first file.</div>';return;}
   c.innerHTML='<div class="files-grid">'+files.map(function(f){
-    const icon=getIcon(f.original_name);
-    const tags=f.tags.filter(Boolean).map(function(t){return '<span class="fc-tag">'+t.trim()+'</span>';}).join('');
+    const icon=getIcon(String(f.original_name||''));
+    const tags=(Array.isArray(f.tags)?f.tags:[]).filter(Boolean).map(function(t){return '<span class="fc-tag">'+esc(String(t).trim())+'</span>';}).join('');
     const canDel=me.is_admin||me.id===f.author_id;
-    const dlBtn='<a class="fc-dl" href="#" data-id="'+f.id+'" data-name="'+encodeURIComponent(f.original_name)+'" onclick="handleDownload(this);return false;">↓ Download</a>';
+    const dlBtn='<a class="fc-dl" href="#" data-id="'+f.id+'" data-name="'+encodeURIComponent(String(f.original_name||''))+'" onclick="handleDownload(this);return false;">↓ Download</a>';
     const delBtn=canDel?'<button class="fc-del" onclick="deleteFile('+f.id+')">✕</button>':'';
     return '<div class="file-card">'
       +'<div class="fc-top"><div class="fc-icon">'+icon+'</div>'
-      +'<div class="fc-info"><div class="fc-name" title="'+f.original_name+'">'+f.original_name+'</div>'
-      +'<div class="fc-size">'+formatSize(f.size)+' · '+f.mimetype+'</div>'
-      +'<div class="fc-hash">SHA256: '+f.sha256.substring(0,16)+'...</div></div></div>'
-      +(f.description?'<div class="fc-desc">'+f.description+'</div>':'')
+      +'<div class="fc-info"><div class="fc-name" title="'+esc(f.original_name)+'">'+esc(f.original_name)+'</div>'
+      +'<div class="fc-size">'+formatSize(f.size)+' · '+esc(f.mimetype)+'</div>'
+      +'<div class="fc-hash">SHA256: '+esc(String(f.sha256||'').substring(0,16))+'...</div></div></div>'
+      +(f.description?'<div class="fc-desc">'+esc(f.description)+'</div>':'')
       +(tags?'<div class="fc-tags">'+tags+'</div>':'')
-      +'<div class="fc-meta"><span>'+f.author+' · '+timeAgo(f.created_at)+'</span>'
+      +'<div class="fc-meta"><span>'+esc(f.author)+' · '+timeAgo(f.created_at)+'</span>'
       +'<div class="fc-actions">'+dlBtn+delBtn+'</div></div></div>';
   }).join('')+'</div>';
 }
@@ -146,17 +146,17 @@ function handleDownload(el){
   const name=decodeURIComponent(el.getAttribute('data-name'));
   downloadFile(id,name);
 }
-function filterFiles(){const q=document.getElementById('searchInput').value.toLowerCase();if(!q){renderFiles(allFiles);return;}renderFiles(allFiles.filter(function(f){return f.original_name.toLowerCase().includes(q)||f.tags.join(' ').toLowerCase().includes(q)||(f.description||'').toLowerCase().includes(q);}));}
+function filterFiles(){const q=document.getElementById('searchInput').value.toLowerCase();if(!q){renderFiles(allFiles);return;}renderFiles(allFiles.filter(function(f){const tags=Array.isArray(f.tags)?f.tags:[];return String(f.original_name||'').toLowerCase().includes(q)||tags.join(' ').toLowerCase().includes(q)||String(f.description||'').toLowerCase().includes(q);}));}
 function handleFileSelect(file){if(!file)return;selectedFile=file;document.getElementById('selectedFileName').textContent=file.name+' ('+formatSize(file.size)+')';document.getElementById('uploadForm').classList.add('visible');}
 function cancelUpload(){selectedFile=null;document.getElementById('uploadForm').classList.remove('visible');document.getElementById('fileInput').value='';document.getElementById('uploadTags').value='';document.getElementById('uploadDesc').value='';}
-async function uploadFile(){if(!selectedFile)return;const tags=document.getElementById('uploadTags').value;const desc=document.getElementById('uploadDesc').value;const fd=new FormData();fd.append('file',selectedFile);fd.append('tags',tags);fd.append('description',desc);const prog=document.getElementById('uploadProgress');const fill=document.getElementById('progressFill');const txt=document.getElementById('progressText');prog.classList.add('visible');txt.textContent='Uploading '+selectedFile.name+'...';let p=0;const iv=setInterval(function(){p=Math.min(p+Math.random()*15,85);fill.style.width=p+'%';},200);try{const res=await fetch('/api/vault/upload',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});clearInterval(iv);if(res.ok){fill.style.width='100%';txt.textContent='Upload complete!';setTimeout(function(){prog.classList.remove('visible');fill.style.width='0%';cancelUpload();loadFiles();},800);}else{const e=await res.json();txt.textContent=e.detail||'Upload failed.';setTimeout(function(){prog.classList.remove('visible');},2000);}}catch(e){clearInterval(iv);txt.textContent='Upload failed.';setTimeout(function(){prog.classList.remove('visible');},2000);}}
+async function uploadFile(){if(!selectedFile)return;const tags=document.getElementById('uploadTags').value;const desc=document.getElementById('uploadDesc').value;const fd=new FormData();fd.append('file',selectedFile);fd.append('tags',tags);fd.append('description',desc);const prog=document.getElementById('uploadProgress');const fill=document.getElementById('progressFill');const txt=document.getElementById('progressText');prog.classList.add('visible');txt.textContent='Uploading '+selectedFile.name+'...';let p=0;const iv=setInterval(function(){p=Math.min(p+Math.random()*15,85);fill.style.width=p+'%';},200);try{const res=await fetch(API+'/api/vault/upload',{method:'POST',credentials:'include',body:fd});clearInterval(iv);if(res.ok){fill.style.width='100%';txt.textContent='Upload complete!';setTimeout(function(){prog.classList.remove('visible');fill.style.width='0%';cancelUpload();loadFiles();},800);}else{const e=await res.json();txt.textContent=e.detail||'Upload failed.';setTimeout(function(){prog.classList.remove('visible');},2000);}}catch(e){clearInterval(iv);txt.textContent='Upload failed.';setTimeout(function(){prog.classList.remove('visible');},2000);}}
 async function downloadFile(id,name){const res=await authFetch('/api/vault/download/'+id);const blob=await res.blob();const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href);}
 async function deleteFile(id){if(!confirm('Delete this file? This cannot be undone.'))return;await authFetch('/api/vault/'+id,{method:'DELETE'});loadFiles();}
 const zone=document.getElementById('uploadZone');
 zone.addEventListener('dragover',function(e){e.preventDefault();zone.classList.add('drag');});
 zone.addEventListener('dragleave',function(){zone.classList.remove('drag');});
 zone.addEventListener('drop',function(e){e.preventDefault();zone.classList.remove('drag');if(e.dataTransfer.files[0])handleFileSelect(e.dataTransfer.files[0]);});
-loadFiles()
+(async()=>{const ok=await ensureSession();if(!ok)return;await loadFiles()})()
 </script>
 </body>
 </html>

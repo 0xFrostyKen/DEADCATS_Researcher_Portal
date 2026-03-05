@@ -1,21 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from core.database import get_db
 from core.security import get_current_user, require_admin
+from core.validation import clean_text, reject_html
 from models.achievement import Achievement, UserAchievement, UserSpecialization
-from models.user import User
+from models.user import User, RANKS
 
 router = APIRouter(prefix="/api/achievements", tags=["achievements"])
 
 # ── Schemas ───────────────────────────────────────────────────────
 
 class CreateAchievementRequest(BaseModel):
-    icon:   str
-    name:   str
-    desc:   Optional[str] = ""
-    rarity: Optional[str] = "common"
+    icon:   str = Field(min_length=1, max_length=10)
+    name:   str = Field(min_length=1, max_length=100)
+    desc:   Optional[str] = Field(default="", max_length=500)
+    rarity: Optional[str] = Field(default="common", max_length=20)
 
 class AssignAchievementRequest(BaseModel):
     achievement_id: int
@@ -25,18 +26,18 @@ class EquipAchievementRequest(BaseModel):
     achievement_id: int
 
 class CreateSpecRequest(BaseModel):
-    icon:  Optional[str] = "🔧"
-    name:  str
-    level: Optional[str] = "NOVICE"
+    icon:  Optional[str] = Field(default="🔧", max_length=10)
+    name:  str = Field(min_length=1, max_length=100)
+    level: Optional[str] = Field(default="NOVICE", max_length=30)
 
 class UpdateUserRequest(BaseModel):
-    bio:     Optional[str] = None
-    emoji:   Optional[str] = None
-    rank:    Optional[str] = None
-    github:  Optional[str] = None
-    twitter: Optional[str] = None
-    htb:     Optional[str] = None
-    ctftime: Optional[str] = None
+    bio:     Optional[str] = Field(default=None, max_length=2000)
+    emoji:   Optional[str] = Field(default=None, max_length=10)
+    rank:    Optional[str] = Field(default=None, max_length=20)
+    github:  Optional[str] = Field(default=None, max_length=100)
+    twitter: Optional[str] = Field(default=None, max_length=100)
+    htb:     Optional[str] = Field(default=None, max_length=100)
+    ctftime: Optional[str] = Field(default=None, max_length=100)
 
 # ── Global achievements (admin manages) ──────────────────────────
 
@@ -53,7 +54,12 @@ def create_achievement(
     db:      Session = Depends(get_db),
     _:       User    = Depends(require_admin)
 ):
-    a = Achievement(**payload.model_dump())
+    a = Achievement(
+        icon=clean_text(payload.icon, field="icon", max_len=10),
+        name=reject_html(clean_text(payload.name, field="name", max_len=100), field="name"),
+        desc=clean_text(payload.desc, field="desc", max_len=500),
+        rarity=clean_text(payload.rarity, field="rarity", max_len=20),
+    )
     db.add(a); db.commit(); db.refresh(a)
     return a.to_dict()
 
@@ -97,6 +103,12 @@ def assign_achievement(
     db:      Session = Depends(get_db),
     _:       User    = Depends(require_admin)
 ):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(404, "User not found")
+    achievement = db.query(Achievement).filter(Achievement.id == payload.achievement_id).first()
+    if not achievement:
+        raise HTTPException(404, "Achievement not found")
     # Check not already assigned
     exists = db.query(UserAchievement).filter(
         UserAchievement.user_id == user_id,
@@ -138,18 +150,18 @@ def equip_achievement(
     # Only self or admin
     if current.id != user_id and not current.is_admin:
         raise HTTPException(403, "Forbidden")
+    exists = db.query(UserAchievement).filter(
+        UserAchievement.user_id == user_id,
+        UserAchievement.achievement_id == payload.achievement_id
+    ).first()
+    if not exists:
+        raise HTTPException(404, "Achievement not assigned to user")
     # Unequip all first
     db.query(UserAchievement).filter(
         UserAchievement.user_id == user_id
     ).update({"equipped": False})
     # Equip selected
-    ua = db.query(UserAchievement).filter(
-        UserAchievement.user_id == user_id,
-        UserAchievement.achievement_id == payload.achievement_id
-    ).first()
-    if not ua:
-        raise HTTPException(404, "Achievement not assigned to user")
-    ua.equipped = True
+    exists.equipped = True
     db.commit()
     return {"message": "Equipped"}
 
@@ -172,7 +184,15 @@ def add_spec(
     db:      Session = Depends(get_db),
     _:       User    = Depends(require_admin)
 ):
-    s = UserSpecialization(user_id=user_id, **payload.model_dump())
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(404, "User not found")
+    s = UserSpecialization(
+        user_id=user_id,
+        icon=clean_text(payload.icon, field="icon", max_len=10),
+        name=reject_html(clean_text(payload.name, field="name", max_len=100), field="name"),
+        level=clean_text(payload.level, field="level", max_len=30),
+    )
     db.add(s); db.commit(); db.refresh(s)
     return s.to_dict()
 
@@ -210,8 +230,13 @@ def update_profile(
     data = payload.model_dump(exclude_none=True)
     if "rank" in data and not current.is_admin:
         del data["rank"]
+    if data.get("rank") and data["rank"] not in RANKS:
+        raise HTTPException(400, f"Invalid rank. Choose from: {RANKS}")
     for field, value in data.items():
+        if field in {"github", "twitter", "htb", "ctftime", "emoji", "rank"}:
+            value = reject_html(clean_text(value, field=field, max_len=100 if field != "emoji" else 10), field=field)
+        if field == "bio":
+            value = clean_text(value, field=field, max_len=2000)
         setattr(user, field, value)
     db.commit(); db.refresh(user)
     return user.to_dict()
-

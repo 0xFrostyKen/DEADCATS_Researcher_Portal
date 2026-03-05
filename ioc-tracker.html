@@ -132,12 +132,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 </div>
 <script>
 const API=''
-const token=localStorage.getItem('dc_token')
-const me=JSON.parse(localStorage.getItem('dc_user')||'null')
-if(!token||!me)window.location.href='login.html'
+let me=JSON.parse(localStorage.getItem('dc_user')||'null')
 let allIOCs=[],activeType=null
 let bookmarkedIOCs=new Set(),bmIdMapIOC={}
-function authFetch(url,opts={}){return fetch(API+url,{...opts,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(opts.headers||{})}})}
+function authFetch(url,opts={}){return fetch(API+url,{...opts,credentials:'include',headers:{'Content-Type':'application/json',...(opts.headers||{})}}).then(res=>{if(res.status===401){localStorage.removeItem('dc_user');window.location.href='login.html';}return res;})}
+async function ensureSession(){try{const res=await fetch(API+'/api/auth/me',{credentials:'include'});if(!res.ok){localStorage.removeItem('dc_user');window.location.replace('login.html');return false;}me=await res.json();localStorage.setItem('dc_user',JSON.stringify(me));return true;}catch(_){if(me)return true;window.location.replace('login.html');return false;}}
 async function loadBookmarks(){try{const res=await authFetch('/api/bookmarks/');if(!res.ok)return;const bms=await res.json();bookmarkedIOCs=new Set();bmIdMapIOC={};bms.forEach(bm=>{if(bm.item_type==='ioc'){bookmarkedIOCs.add(bm.item_id);bmIdMapIOC[bm.item_id]=bm.id;}});}catch(e){console.error('Bookmark load error:',e);}}
 async function toggleBmIOC(btn,iocId){if(bookmarkedIOCs.has(iocId)){const res=await authFetch('/api/bookmarks/'+bmIdMapIOC[iocId],{method:'DELETE'});if(res.ok||res.status===204){bookmarkedIOCs.delete(iocId);delete bmIdMapIOC[iocId];btn.textContent='☆';btn.title='Bookmark this IOC';btn.style.color='';}}else{const res=await authFetch('/api/bookmarks/',{method:'POST',body:JSON.stringify({item_type:'ioc',item_id:iocId})});if(res.ok){const bm=await res.json();bookmarkedIOCs.add(iocId);bmIdMapIOC[iocId]=bm.id;btn.textContent='★';btn.title='Remove bookmark';btn.style.color='var(--gold)';}}}
 
@@ -165,7 +164,7 @@ async function deleteIOC(id){if(!confirm('Delete this IOC?'))return;await authFe
 function copyVal(val){navigator.clipboard.writeText(val).then(()=>{const btn=event.target;btn.textContent='✓';btn.style.color='var(--green)';setTimeout(()=>{btn.textContent='⎘';btn.style.color='';},1500);});}
 function exportCSV(){authFetch('/api/iocs/export').then(r=>r.blob()).then(blob=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deadcats_iocs.csv';a.click();});}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
-initPage()
+(async()=>{const ok=await ensureSession();if(!ok)return;await initPage()})()
 </script>
 </body>
 </html>

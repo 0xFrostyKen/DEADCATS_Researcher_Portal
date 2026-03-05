@@ -26,6 +26,7 @@ class User(Base):
     twitter    = Column(String(100), default="")
     htb        = Column(String(100), default="")
     ctftime    = Column(String(100), default="")
+    profile_status = Column(String(40), default="available")
 
     # Stats — updated by other modules later
     notes_count    = Column(Integer, default=0)
@@ -48,6 +49,7 @@ class User(Base):
             "twitter":       self.twitter,
             "htb":           self.htb,
             "ctftime":       self.ctftime,
+            "profile_status": self.profile_status or "available",
             "stats": {
                 "notes":    self.notes_count,
                 "iocs":     self.iocs_count,

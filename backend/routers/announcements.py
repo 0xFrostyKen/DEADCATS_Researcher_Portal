@@ -1,20 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime, timedelta, timezone
 from core.database import get_db
 from core.security import get_current_user, require_admin
+from core.validation import clean_text, reject_html
 from models.announcement import Announcement
 from models.user import User
 
 router = APIRouter(prefix="/api/announcements", tags=["announcements"])
 
 class CreateAnnouncementRequest(BaseModel):
-    title:      str
-    content:    Optional[str] = ""
-    type:       Optional[str] = "notice"  # notice | creds
-    expires_in: Optional[int] = 1         # days: 1 | 2 | 3
+    title:      str = Field(min_length=1, max_length=200)
+    content:    Optional[str] = Field(default="", max_length=4000)
+    type:       Optional[str] = Field(default="notice", max_length=20)  # notice | creds
+    expires_in: Optional[int] = 1  # days: 1 | 2 | 3
     pinned:     Optional[bool] = False
 
 @router.get("/")
@@ -34,11 +35,16 @@ def create_announcement(
     db:      Session = Depends(get_db),
     admin:   User    = Depends(require_admin)
 ):
+    ann_type = clean_text(payload.type, field="type", max_len=20)
+    if ann_type not in {"notice", "creds"}:
+        raise HTTPException(400, "Invalid announcement type")
+    if payload.expires_in is None or payload.expires_in not in {1, 2, 3}:
+        raise HTTPException(400, "expires_in must be one of: 1, 2, 3")
     expires_at = datetime.now(timezone.utc) + timedelta(days=payload.expires_in)
     a = Announcement(
-        title      = payload.title,
-        content    = payload.content,
-        type       = payload.type,
+        title      = reject_html(clean_text(payload.title, field="title", max_len=200), field="title"),
+        content    = clean_text(payload.content, field="content", max_len=4000),
+        type       = ann_type,
         author     = admin.handle,
         expires_at = expires_at,
         pinned     = payload.pinned,

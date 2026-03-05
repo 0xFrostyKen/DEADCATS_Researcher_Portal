@@ -4,13 +4,15 @@ from sqlalchemy.orm import Session
 from typing import Optional
 import hashlib, uuid, os
 from core.database import get_db
-from core.security import get_current_user, require_admin
+from core.security import get_current_user
+from core.validation import clean_text, safe_download_name
 from models.vault import VaultFile
 from models.user import User
 
 router  = APIRouter(prefix="/api/vault", tags=["vault"])
 UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "vault_files"))
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+MAX_UPLOAD_SIZE = 25 * 1024 * 1024
 
 @router.get("/")
 def list_files(
@@ -28,23 +30,35 @@ async def upload_file(
     db:          Session = Depends(get_db),
     current:     User    = Depends(get_current_user)
 ):
-    content  = await file.read()
-    sha256   = hashlib.sha256(content).hexdigest()
-    ext      = os.path.splitext(file.filename)[1]
+    if not file.filename:
+        raise HTTPException(400, "Missing filename")
+    ext      = os.path.splitext(file.filename)[1][:20]
     stored   = f"{uuid.uuid4().hex}{ext}"
     path     = os.path.join(UPLOAD_DIR, stored)
-
+    hasher = hashlib.sha256()
+    size = 0
     with open(path, "wb") as f:
-        f.write(content)
+        while True:
+            chunk = await file.read(1024 * 1024)
+            if not chunk:
+                break
+            size += len(chunk)
+            if size > MAX_UPLOAD_SIZE:
+                f.close()
+                os.remove(path)
+                raise HTTPException(413, "File too large (max 25MB)")
+            hasher.update(chunk)
+            f.write(chunk)
+    sha256 = hasher.hexdigest()
 
     vf = VaultFile(
         filename      = stored,
-        original_name = file.filename,
+        original_name = safe_download_name(file.filename, fallback=f"file{ext or '.bin'}"),
         mimetype      = file.content_type or "application/octet-stream",
-        size          = len(content),
+        size          = size,
         sha256        = sha256,
-        tags          = tags,
-        description   = description,
+        tags          = clean_text(tags, field="tags", max_len=500),
+        description   = clean_text(description, field="description", max_len=4000),
         author        = current.handle,
         author_id     = current.id,
     )
@@ -65,7 +79,7 @@ def download_file(
         raise HTTPException(404, "File missing from disk")
     return FileResponse(
         path,
-        filename=vf.original_name,
+        filename=safe_download_name(vf.original_name),
         media_type=vf.mimetype
     )
 
@@ -85,4 +99,3 @@ def delete_file(
         os.remove(path)
     db.delete(vf); db.commit()
     return {"message": "Deleted"}
-

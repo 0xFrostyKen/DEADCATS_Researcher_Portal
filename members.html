@@ -242,12 +242,34 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 
 <script>
 const API   = '';
-const token = localStorage.getItem('dc_token');
-const me    = JSON.parse(localStorage.getItem('dc_user') || 'null');
-if (!token || !me) window.location.href = 'login.html';
+let me      = JSON.parse(localStorage.getItem('dc_user') || 'null');
 
 function authFetch(url) {
-  return fetch(API + url, { headers: { Authorization: 'Bearer ' + token } });
+  return fetch(API + url, { credentials: 'include' }).then((res) => {
+    if (res.status === 401) {
+      localStorage.removeItem('dc_user');
+      window.location.href = 'login.html';
+    }
+    return res;
+  });
+}
+
+async function ensureSession() {
+  try {
+    const res = await fetch(`${API}/api/auth/me`, { credentials: 'include' });
+    if (!res.ok) {
+      localStorage.removeItem('dc_user');
+      window.location.replace('login.html');
+      return false;
+    }
+    me = await res.json();
+    localStorage.setItem('dc_user', JSON.stringify(me));
+    return true;
+  } catch (_) {
+    if (me) return true;
+    window.location.replace('login.html');
+    return false;
+  }
 }
 
 function timeAgo(d) {
@@ -382,8 +404,11 @@ async function load() {
   renderAll(allMembers);
 }
 
-load();
+(async () => {
+  const ok = await ensureSession();
+  if (!ok) return;
+  await load();
+})();
 </script>
 </body>
 </html>
-
