@@ -63,6 +63,7 @@ async def upload_file(
         author_id     = current.id,
     )
     db.add(vf); db.commit(); db.refresh(vf)
+    from core.logger import log_upload; log_upload(current.handle, file.filename, size, file.content_type or "unknown")
     return vf.to_dict()
 
 @router.get("/download/{file_id}")
@@ -98,4 +99,5 @@ def delete_file(
     if os.path.exists(path):
         os.remove(path)
     db.delete(vf); db.commit()
+    from core.logger import log_admin; log_admin(current.handle, "delete_file", vf.original_name)
     return {"message": "Deleted"}

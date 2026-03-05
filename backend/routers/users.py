@@ -142,9 +142,14 @@ def create_user(
         is_admin = payload.is_admin,
     )
     db.add(user)
+    if current.is_admin:
+        from core.logger import log_admin
+        changed = payload.model_dump(exclude_none=True)
+        for field in {"rank","is_admin","title"} & changed.keys():
+            log_admin(current.handle, f"set_{field}", user.handle, str(changed[field]))
     db.commit()
     db.refresh(user)
-    return user.to_dict(include_private=True)
+    return user.to_dict(include_private=current.is_admin)
 
 
 @router.get("/{handle}")

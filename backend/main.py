@@ -11,10 +11,10 @@ from core.database import engine, Base
 from core.security import hash_password
 from models.user import User
 from routers import auth, users, notes, achievements, announcements, iocs, vault, bookmarks, whiteboard, ctf
-import models.bookmark          # ensure table is created on startup
-import models.goal               # ensure table is created on startup
-import models.whiteboard_config  # ensure table is created on startup
-import models.ctf                # ensure tables are created on startup
+import models.bookmark
+import models.goal
+import models.whiteboard_config
+import models.ctf
 from core.database import get_db
 from fastapi import Depends
 from core.security import get_current_user
@@ -24,7 +24,6 @@ from core.security import get_current_user
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
-    # Minimal startup migration for existing deployments.
     with engine.begin() as conn:
         conn.execute(text("ALTER TABLE ctf_events ADD COLUMN IF NOT EXISTS description TEXT"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_status VARCHAR(40) DEFAULT 'available'"))
@@ -49,6 +48,10 @@ async def lifespan(app: FastAPI):
             print(f"[DEADCATS] Admin account '{ADMIN_HANDLE}' already exists.")
     finally:
         db.close()
+
+    from core.logger import purge_old_logs
+    purge_old_logs()
+    print("[DEADCATS] Old logs purged.")
 
     yield
 
@@ -117,20 +120,73 @@ def get_stats(db = Depends(get_db), _: User = Depends(get_current_user)):
 def health():
     return {"status": "operational", "platform": "DEADCATS v1.0.0"}
 
+# ── Monitor endpoint ──────────────────────────────────────────────
+
+@app.get("/api/monitor")
+def monitor(db = Depends(get_db), current: User = Depends(get_current_user)):
+    if not current.is_admin:
+        raise HTTPException(status_code=403, detail="Admin only")
+    import psutil, platform
+    from core.logger import read_log
+    from models.user import User as UserModel
+    from sqlalchemy import func
+
+    cpu    = psutil.cpu_percent(interval=0.5)
+    ram    = psutil.virtual_memory()
+    disk   = psutil.disk_usage('/')
+    uptime = int(psutil.boot_time())
+
+    total_users = db.query(func.count(UserModel.id)).scalar()
+
+    auth_logs   = read_log("auth.log",    100)
+    admin_logs  = read_log("admin.log",   50)
+    upload_logs = read_log("uploads.log", 50)
+    ioc_logs    = read_log("iocs.log",    50)
+    alerts      = read_log("alerts.log",  50)
+
+    success_logins = sum(1 for e in auth_logs if e.get("success"))
+    failed_logins  = sum(1 for e in auth_logs if not e.get("success"))
+
+    return {
+        "system": {
+            "cpu_percent": cpu,
+            "ram_total":   ram.total,
+            "ram_used":    ram.used,
+            "ram_percent": ram.percent,
+            "disk_total":  disk.total,
+            "disk_used":   disk.used,
+            "disk_percent":disk.percent,
+            "boot_time":   uptime,
+            "platform":    platform.system(),
+        },
+        "stats": {
+            "total_users":    total_users,
+            "success_logins": success_logins,
+            "failed_logins":  failed_logins,
+            "total_uploads":  len(upload_logs),
+            "total_iocs":     len(ioc_logs),
+        },
+        "logs": {
+            "auth":    auth_logs[:20],
+            "admin":   admin_logs[:20],
+            "uploads": upload_logs[:20],
+            "iocs":    ioc_logs[:20],
+            "alerts":  alerts[:20],
+        }
+    }
+
 # ── Profile uploads (path traversal protected) ────────────────────
 
-_UPLOAD_DIR  = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), "..", "profile_uploads"))
+_UPLOAD_DIR      = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), "..", "uploads"))
 _ALLOWED_FOLDERS = {"avatars", "banners"}
 
-@app.get("/profile_uploads/{folder}/{filename}")
+@app.get("/uploads/{folder}/{filename}")
 async def serve_upload(folder: str, filename: str):
-    # Prevent path traversal and restrict to known sub-folders
     if folder not in _ALLOWED_FOLDERS:
         raise HTTPException(404, "Not found")
     if ".." in filename or "/" in filename or "\\" in filename:
         raise HTTPException(400, "Invalid filename")
     path = _os.path.join(_UPLOAD_DIR, folder, filename)
-    # Ensure resolved path stays inside UPLOAD_DIR
     if not _os.path.abspath(path).startswith(_UPLOAD_DIR):
         raise HTTPException(400, "Invalid path")
     if not _os.path.exists(path):
@@ -140,13 +196,12 @@ async def serve_upload(folder: str, filename: str):
 # ── Frontend static files ─────────────────────────────────────────
 
 class SafeStaticFiles(StaticFiles):
-    """Static file wrapper that blocks sensitive project paths."""
-
     _DENY_PREFIXES = {
         "backend/",
         ".git/",
         "profile_uploads/",
         "vault_files/",
+        "logs/",
     }
     _DENY_EXACT = {"agents.md"}
 
@@ -166,6 +221,7 @@ class SafeStaticFiles(StaticFiles):
         return await super().get_response(path, scope)
 
 
+# ── THIS MUST BE LAST ─────────────────────────────────────────────
 app.mount(
     "/",
     SafeStaticFiles(

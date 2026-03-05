@@ -63,6 +63,7 @@ def create_ioc(
         author_id = current.id,
     )
     db.add(ioc); db.commit(); db.refresh(ioc)
+    from core.logger import log_ioc; log_ioc(current.handle, "submit", ioc_type, ioc_value)
     return ioc.to_dict()
 
 @router.delete("/{ioc_id}")
@@ -77,6 +78,7 @@ def delete_ioc(
     if ioc.author_id != current.id and not current.is_admin:
         raise HTTPException(403, "Only the author or admin can delete this IOC")
     db.delete(ioc); db.commit()
+    from core.logger import log_ioc; log_ioc(current.handle, "delete", ioc.type, ioc.value)
     return {"message": "Deleted"}
 
 @router.get("/export")
