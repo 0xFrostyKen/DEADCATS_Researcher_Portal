@@ -137,6 +137,7 @@ Pages:
 - `bookmarks.html` - user bookmarks
 - `whiteboard.html` - team goals/config
 - `monitor.html` - runtime monitor
+- `pwnbox.html` - browser terminal workspace
 
 Shared frontend assets:
 - `assets/js/include.js` - partial loader
@@ -230,6 +231,14 @@ Shared frontend assets:
 - `POST /events/{event_id}/result` (admin)
 - `POST /events/{event_id}/participants` (admin)
 - `DELETE /participants/{participant_id}` (admin)
+
+
+### PwnBox (`/api/pwnbox`)
+- `GET /health`
+- `GET /status`
+- `POST /start`
+- `DELETE /stop`
+- `WS /ws/{session_id}`
 
 System endpoints:
 - `GET /api/health`
@@ -352,3 +361,82 @@ Confirm files exist in `profile_uploads/avatars` or `profile_uploads/banners` an
 - [x] Notifications + CTF reminders
 - [x] Optional lofi playback
 
+
+## 14. PwnBox Setup (Integrated)
+PwnBox is integrated into the main backend and UI (`/pwnbox.html`).
+
+Prerequisites:
+- Docker daemon running on same host as backend
+- Backend dependency `docker==7.1.0` installed
+
+Install/update backend deps:
+```bash
+cd backend
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Recommended env vars (optional, defaults shown):
+```env
+PWNBOX_IMAGE=pwnbox-base:latest
+PWNBOX_WORKDIR=/home/hacker
+PWNBOX_SESSION_TTL_MINUTES=90
+PWNBOX_AUTO_BUILD=true
+# Optional custom state path
+# PWNBOX_STATE_FILE=/absolute/path/pwnbox_session_state.json
+```
+
+How it works:
+- First `POST /api/pwnbox/start` checks if image exists.
+- If missing and `PWNBOX_AUTO_BUILD=true`, backend auto-builds `pwnbox-base:latest`.
+- Session is persisted to `backend/pwnbox_session_state.json` and reconciled on restart.
+- Single global session only.
+
+Run backend:
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Use in portal:
+- Login to portal
+- Open `/pwnbox.html` (or Dashboard sidebar -> PwnBox)
+- Click `Start`, then terminal attaches automatically
+
+Troubleshooting:
+- If start fails with Docker error: ensure `docker info` works for backend user
+- If websocket fails: ensure backend runs with `uvicorn[standard]`
+- If shell doesn’t attach: check backend logs for `/api/pwnbox/ws/*`
+
+### 14.1 Collaborator Onboarding (Fresh Machine)
+If someone clones your codebase on a new machine, use this sequence.
+
+1. Clone and enter project:
+```bash
+git clone <repo-url>
+cd DEADCATS_Researcher_Portal
+```
+
+2. Install Docker and verify daemon access:
+```bash
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+newgrp docker
+docker info
+```
+
+3. Start backend:
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+4. Open portal:
+- Login: `http://127.0.0.1:8000/login.html`
+- PwnBox: `http://127.0.0.1:8000/pwnbox.html`
+
+Notes:
+- First PwnBox start may take longer because image auto-build runs once.
+- If Docker is not configured, the rest of the portal still works; only PwnBox will fail.

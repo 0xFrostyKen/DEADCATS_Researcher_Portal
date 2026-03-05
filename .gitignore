@@ -3,3 +3,6 @@ profile_uploads/
 vault_files/
 logs/
 *.log
+backend/pwnbox_session_state.json
+backend/pwnbox_session.lock
+backend/pwnbox_image.lock

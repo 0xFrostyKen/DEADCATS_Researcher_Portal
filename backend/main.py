@@ -10,7 +10,7 @@ from core.config import FRONTEND_ORIGIN, ADMIN_HANDLE, ADMIN_PASSWORD
 from core.database import engine, Base
 from core.security import hash_password
 from models.user import User
-from routers import auth, users, notes, achievements, announcements, iocs, vault, bookmarks, whiteboard, ctf
+from routers import auth, users, notes, achievements, announcements, iocs, vault, bookmarks, whiteboard, ctf, pwnbox
 import models.bookmark
 import models.goal
 import models.whiteboard_config
@@ -98,6 +98,7 @@ app.include_router(vault.router)
 app.include_router(bookmarks.router)
 app.include_router(whiteboard.router)
 app.include_router(ctf.router)
+app.include_router(pwnbox.router)
 
 # ── Health / Stats ────────────────────────────────────────────────
 

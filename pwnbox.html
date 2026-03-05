@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+<title>DEADCATS // PwnBox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+<style>
+:root{
+  --bg:#05060a;
+  --bg2:#090b12;
+  --bg3:#0d1018;
+  --surface:#111520;
+  --surface2:#161b28;
+  --border:#1a2030;
+  --border2:#242e45;
+  --red2:#ff2040;
+  --red-dim:#3a000a;
+  --cyan:#00d4ff;
+  --cyan-dim:#003a4d;
+  --gold:#f0a500;
+  --green:#00ff88;
+  --text:#c8d8f0;
+  --text-dim:#556070;
+  --text-mid:#8a9ab5;
+  --text-bright:#ddeeff;
+  --mono:'Share Tech Mono',monospace;
+  --display:'Syncopate',sans-serif;
+  --body:'Rajdhani',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--body);
+  font-size:18px;
+  overflow-x:hidden;
+  cursor:crosshair;
+}
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.05) 3px,rgba(0,0,0,0.05) 4px);
+  pointer-events:none;
+  z-index:9999;
+}
+.bg-grid{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:56px 56px;
+  opacity:.12;
+}
+
+.shell{
+  position:relative;
+  z-index:1;
+  max-width:1280px;
+  margin:0 auto;
+  padding:22px 18px 24px;
+}
+.frame{
+  position:relative;
+  border:1px solid var(--border2);
+  background:rgba(9,11,18,.35);
+  padding:12px;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.35),0 20px 50px rgba(0,0,0,.25),0 0 0 1px rgba(0,58,77,.25);
+}
+.frame::before,
+.frame::after{
+  content:'';
+  position:absolute;
+  width:22px;
+  height:22px;
+  border:1px solid var(--cyan-dim);
+  pointer-events:none;
+}
+.frame::before{
+  top:8px;
+  left:8px;
+  border-right:none;
+  border-bottom:none;
+}
+.frame::after{
+  right:8px;
+  bottom:8px;
+  border-left:none;
+  border-top:none;
+}
+
+.topnav{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:14px;
+  background:rgba(9,11,18,.88);
+  border:1px solid var(--border);
+  padding:10px 14px;
+}
+.top-left{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{font-family:var(--display);font-size:12px;letter-spacing:.28em;color:var(--text-bright);text-decoration:none}
+.logo span{color:var(--red2)}
+.sep{width:1px;height:18px;background:var(--border2)}
+.page{font-family:var(--mono);font-size:12px;letter-spacing:.18em;color:var(--text-mid);text-transform:uppercase}
+.page b{color:var(--cyan);font-weight:600}
+.top-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.back-link{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--text-mid);
+  text-decoration:none;
+  border:1px solid var(--border2);
+  background:var(--bg2);
+  padding:8px 10px;
+}
+.back-link:hover{color:var(--text-bright);border-color:var(--cyan-dim)}
+
+.btn{
+  font-family:var(--mono);
+  font-size:12px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  padding:8px 12px;
+  border:1px solid var(--border2);
+  background:var(--bg2);
+  color:var(--text-mid);
+  cursor:crosshair;
+}
+.btn.start{color:var(--green);border-color:rgba(0,255,136,.35)}
+.btn.stop{color:var(--red2);border-color:var(--red-dim)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.status-chip,
+.sid-chip,
+.hint-chip{
+  font-family:var(--mono);
+  font-size:12px;
+  letter-spacing:.12em;
+  border:1px solid var(--border2);
+  background:var(--bg2);
+  color:var(--text-dim);
+  padding:8px 10px;
+  text-transform:uppercase;
+  max-width:100%;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.status-chip[data-state="connected"]{color:var(--green);border-color:rgba(0,255,136,.35)}
+.status-chip[data-state="starting"],
+.status-chip[data-state="active"]{color:var(--cyan);border-color:var(--cyan-dim)}
+.status-chip[data-state="error"],
+.status-chip[data-state="start failed"]{color:var(--red2);border-color:var(--red-dim)}
+
+.panel{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  padding:14px;
+}
+.panel + .panel{margin-top:12px}
+.panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.panel-title{font-family:var(--mono);font-size:13px;letter-spacing:.24em;color:var(--text-mid);text-transform:uppercase}
+.panel-note{font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--text-dim)}
+.terminal-wrap{
+  border:1px solid var(--border2);
+  background:#000;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.25);
+}
+#terminal{height:70vh;min-height:500px;width:100%}
+.utils-grid{display:grid;grid-template-columns:1fr 320px;gap:12px}
+.note-box,.flag-box{
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  padding:10px;
+}
+.u-label{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.16em;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+.note-input,.flag-input{
+  width:100%;
+  background:#070b12;
+  border:1px solid var(--border2);
+  color:var(--text-bright);
+  font-family:var(--mono);
+  font-size:13px;
+  padding:8px 10px;
+  outline:none;
+}
+.note-input:focus,.flag-input:focus{border-color:var(--cyan-dim)}
+.note-input{
+  min-height:120px;
+  resize:vertical;
+  line-height:1.45;
+}
+.flag-row{display:flex;gap:8px}
+.flag-submit{
+  border:1px solid var(--border2);
+  background:var(--bg2);
+  color:var(--cyan);
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  padding:8px 10px;
+  cursor:crosshair;
+  white-space:nowrap;
+}
+.flag-submit:hover{border-color:var(--cyan-dim)}
+.muted{
+  margin-top:8px;
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.08em;
+  color:var(--text-dim);
+}
+
+@media (max-width:900px){
+  .topnav{flex-direction:column;align-items:stretch}
+  .top-right{justify-content:flex-start}
+  #terminal{height:68vh;min-height:380px}
+  .utils-grid{grid-template-columns:1fr}
+}
+
+button,
+.btn{transition:transform 160ms cubic-bezier(0.22,1,0.36,1),box-shadow 220ms ease,border-color 220ms ease,background-color 220ms ease,color 220ms ease}
+button:hover:not(:disabled),
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.22)}
+button:active:not(:disabled),
+.btn:active{transform:translateY(0) scale(.99);box-shadow:0 4px 10px rgba(0,0,0,.18)}
+button:focus-visible,
+.btn:focus-visible{outline:1px solid rgba(0,212,255,.7);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<div class="shell">
+  <div class="frame">
+    <div class="topnav">
+      <div class="top-left">
+        <a href="/dashboard.html" class="logo">DEAD<span>CATS</span></a>
+        <span class="sep"></span>
+        <span class="page">// <b>PwnBox</b> Session</span>
+      </div>
+      <div class="top-right">
+        <a href="dashboard.html" class="back-link">← Dashboard</a>
+        <button class="btn start" id="startBtn">Start</button>
+        <button class="btn stop" id="stopBtn">Stop</button>
+        <span class="status-chip" id="status" data-state="idle">Status: idle</span>
+        <span class="sid-chip" id="sid"></span>
+        <span class="hint-chip">Copy: select text | Paste: Ctrl+Shift+V</span>
+      </div>
+    </div>
+
+  <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Interactive Shell</span>
+        <span class="panel-note">One global PwnBox session active at a time</span>
+      </div>
+      <div class="terminal-wrap" id="terminalWrap">
+        <div id="terminal"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-title">Session Utility</span>
+      <span class="panel-note">Local notes and draft field for active challenge</span>
+    </div>
+    <div class="utils-grid">
+      <div class="note-box">
+        <div class="u-label">Todo / Notes</div>
+        <textarea id="todoNotes" class="note-input" placeholder="- recon targets&#10;- exploit ideas&#10;- commands to re-run"></textarea>
+      </div>
+      <div class="flag-box">
+        <div class="u-label">Flag Draft</div>
+        <div class="flag-row">
+          <input id="flagDraft" class="flag-input" type="text" placeholder="flag{...}">
+          <button id="flagSubmitBtn" class="flag-submit" type="button">Submit Flag</button>
+        </div>
+        <div class="muted" id="flagMsg">Stored only in your browser (localStorage).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+<script>
+const API = "";
+let ws = null;
+let sessionId = null;
+let dataDisposable = null;
+let lastCopiedSelection = '';
+
+const statusEl = document.getElementById('status');
+const sidEl = document.getElementById('sid');
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const todoEl = document.getElementById('todoNotes');
+const flagEl = document.getElementById('flagDraft');
+const flagSubmitBtn = document.getElementById('flagSubmitBtn');
+const flagMsg = document.getElementById('flagMsg');
+
+const term = new Terminal({
+  cursorBlink:true,
+  convertEol:true,
+  fontSize:15,
+  fontFamily:'"Share Tech Mono", monospace',
+  theme:{background:'#000000', foreground:'#d7e6ff', cursor:'#00d4ff'}
+});
+const fitAddon = new FitAddon.FitAddon();
+term.loadAddon(fitAddon);
+term.open(document.getElementById('terminal'));
+fitAddon.fit();
+term.focus();
+term.writeln('PwnBox terminal ready. Click Start.');
+
+const NOTES_KEY = 'pwnbox_todo_notes_v1';
+const FLAG_KEY = 'pwnbox_flag_draft_v1';
+
+try{
+  const savedNotes = localStorage.getItem(NOTES_KEY);
+  const savedFlag = localStorage.getItem(FLAG_KEY);
+  if(savedNotes && todoEl) todoEl.value = savedNotes;
+  if(savedFlag && flagEl) flagEl.value = savedFlag;
+}catch(_){}
+
+if (todoEl) {
+  todoEl.addEventListener('input', () => {
+    try { localStorage.setItem(NOTES_KEY, todoEl.value); } catch(_){}
+  });
+}
+if (flagEl) {
+  flagEl.addEventListener('input', () => {
+    try { localStorage.setItem(FLAG_KEY, flagEl.value); } catch(_){}
+  });
+}
+if (flagSubmitBtn) {
+  flagSubmitBtn.addEventListener('click', () => {
+    if (flagMsg) flagMsg.textContent = 'No challenge has been implemented yet.';
+  });
+}
+
+function setStatus(s){
+  statusEl.textContent = 'Status: ' + s;
+  statusEl.dataset.state = s;
+  startBtn.disabled = s === 'starting' || s === 'connected';
+}
+
+function setSid(s){ sidEl.textContent = s ? ('Session: ' + s) : ''; }
+
+async function getStatus(){
+  const r = await fetch(API + '/api/pwnbox/status', {credentials:'include'});
+  if(!r.ok) return null;
+  return r.json();
+}
+
+async function connect(id){
+  if(ws){try{ws.close();}catch(_){}}
+  if(dataDisposable){ try{dataDisposable.dispose();}catch(_){} dataDisposable=null; }
+
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${window.location.host}/api/pwnbox/ws/${id}`);
+
+  ws.onopen = ()=>{
+    fitAddon.fit();
+    setStatus('connected');
+    term.writeln('\r\n[connected]\r\n');
+    try {
+      ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+    } catch (_) {}
+    term.focus();
+  };
+  ws.onmessage = (ev)=> term.write(ev.data);
+  ws.onclose = ()=> setStatus('disconnected');
+  ws.onerror = ()=> setStatus('error');
+
+  dataDisposable = term.onData((d)=>{ if(ws && ws.readyState===1) ws.send(d); });
+}
+
+document.getElementById('terminalWrap').addEventListener('click', ()=> term.focus());
+window.addEventListener('resize', () => {
+  try {
+    fitAddon.fit();
+    if (ws && ws.readyState === 1) {
+      ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+    }
+  } catch (_) {}
+});
+
+startBtn.onclick = async ()=>{
+  setStatus('starting');
+  const meRes = await fetch('/api/auth/me', {credentials:'include'});
+  if(!meRes.ok){ window.location.href='login.html'; return; }
+  const r = await fetch(API + '/api/pwnbox/start', {
+    method:'POST',
+    credentials:'include'
+  });
+
+  if(r.status === 409){
+    const st = await getStatus();
+    if(st && st.active){
+      sessionId = st.session.session_id;
+      setSid(sessionId);
+      await connect(sessionId);
+      return;
+    }
+  }
+
+  if(!r.ok){
+    setStatus('start failed');
+    let msg = 'start failed';
+    try {
+      const err = await r.json();
+      if (err && err.detail) msg = String(err.detail);
+    } catch (_) {}
+    term.writeln(`\r\n[start failed] ${msg}\r\n`);
+    return;
+  }
+
+  const d = await r.json();
+  sessionId = d.session_id;
+  setSid(sessionId);
+  await connect(sessionId);
+};
+
+stopBtn.onclick = async ()=>{
+  const r = await fetch(API + '/api/pwnbox/stop', {method:'DELETE', credentials:'include'});
+  if(!r.ok){
+    let msg = 'stop failed';
+    try {
+      const err = await r.json();
+      if (err && err.detail) msg = String(err.detail);
+    } catch (_) {}
+    setStatus('error');
+    term.writeln(`\r\n[stop failed] ${msg}\r\n`);
+    return;
+  }
+  if(ws){try{ws.close();}catch(_){}}
+  setStatus('idle');
+  setSid('');
+};
+
+document.addEventListener('paste', (ev)=>{
+  if(!ws || ws.readyState !== 1) return;
+  const text = ev.clipboardData?.getData('text');
+  if(!text) return;
+  ws.send(text);
+  ev.preventDefault();
+});
+
+document.addEventListener('keydown', (ev)=>{
+  if(ev.ctrlKey && ev.shiftKey && ev.key.toLowerCase() === 'v'){
+    navigator.clipboard?.readText().then((t)=>{
+      if(t && ws && ws.readyState === 1) ws.send(t);
+    }).catch(()=>{});
+    ev.preventDefault();
+  }
+});
+
+term.onSelectionChange(() => {
+  const sel = term.getSelection();
+  if (!sel || sel === lastCopiedSelection) return;
+  navigator.clipboard?.writeText(sel).then(() => {
+    lastCopiedSelection = sel;
+  }).catch(() => {});
+});
+
+(async ()=>{
+  const st = await getStatus();
+  if(st && st.active){
+    sessionId = st.session.session_id;
+    setSid(sessionId);
+    setStatus('active');
+    term.writeln('[active session found, connecting...]');
+    await connect(sessionId);
+  }
+})();
+</script>
+<script src="/assets/js/lofi-player.js"></script>
+</body>
+</html>
