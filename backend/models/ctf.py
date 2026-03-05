@@ -79,3 +79,27 @@ class CTFParticipant(Base):
             "notes":         self.notes,
             "added_by":      self.added_by,
         }
+
+
+class CTFParticipationMarker(Base):
+    __tablename__  = "ctf_participation_markers"
+    __table_args__ = (UniqueConstraint("event_id", "user_id", name="uq_ctf_participation_event_user"),)
+
+    id         = Column(Integer, primary_key=True, index=True)
+    event_id   = Column(Integer, ForeignKey("ctf_events.id"), nullable=False)
+    user_id    = Column(Integer, ForeignKey("users.id"), nullable=False)
+    handle     = Column(String(50), nullable=False)
+    will_play  = Column(Integer, nullable=False, default=1)  # 1=yes, 0=no
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
+
+    def to_dict(self):
+        return {
+            "id":         self.id,
+            "event_id":   self.event_id,
+            "user_id":    self.user_id,
+            "handle":     self.handle,
+            "will_play":  bool(self.will_play),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }

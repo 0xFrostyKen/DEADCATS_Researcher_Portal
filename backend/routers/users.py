@@ -7,7 +7,12 @@ from core.database import get_db
 from core.security import hash_password, get_current_user, require_admin
 from core.validation import clean_text, reject_html
 from models.user import User, RANKS
-from models.ctf import CTFParticipant
+from models.ioc import IOC
+from models.vault import VaultFile
+from models.note import Folder, Note
+from models.bookmark import Bookmark
+from models.achievement import UserAchievement, UserSpecialization
+from models.ctf import CTFParticipant, CTFParticipationMarker
 from fastapi import UploadFile, File
 import uuid, os, re
 from core.config import MASTER_HANDLE
@@ -142,14 +147,11 @@ def create_user(
         is_admin = payload.is_admin,
     )
     db.add(user)
-    if current.is_admin:
-        from core.logger import log_admin
-        changed = payload.model_dump(exclude_none=True)
-        for field in {"rank","is_admin","title"} & changed.keys():
-            log_admin(current.handle, f"set_{field}", user.handle, str(changed[field]))
     db.commit()
     db.refresh(user)
-    return user.to_dict(include_private=current.is_admin)
+    from core.logger import log_admin
+    log_admin(admin.handle, "create_user", user.handle, f"rank={user.rank}, admin={user.is_admin}")
+    return user.to_dict(include_private=admin.is_admin)
 
 
 @router.get("/{handle}")
@@ -306,17 +308,31 @@ def delete_user(
     db:     Session = Depends(get_db),
     admin:  User    = Depends(require_admin)
 ):
-    """Admin disables a member account (soft delete)."""
+    """Admin permanently deletes a member account."""
     user = db.query(User).filter(User.handle == handle).first()
     if not user:
         raise HTTPException(status_code=404, detail="Member not found")
     if user.handle == admin.handle:
-        raise HTTPException(status_code=400, detail="Cannot disable your own account")
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
     
-    # Only master can deactivate other admins
+    # Only master can delete other admins
     if user.is_admin and admin.handle != MASTER_HANDLE:
-        raise HTTPException(status_code=403, detail="Only the master account can deactivate admin accounts")
+        raise HTTPException(status_code=403, detail="Only the master account can delete admin accounts")
 
-    user.is_active = False
+    # Keep authored content but remove FK ties to deleted user.
+    db.query(IOC).filter(IOC.author_id == user.id).update({"author_id": None}, synchronize_session=False)
+    db.query(VaultFile).filter(VaultFile.author_id == user.id).update({"author_id": None}, synchronize_session=False)
+    db.query(Note).filter(Note.author_id == user.id).update({"author_id": None}, synchronize_session=False)
+    db.query(Folder).filter(Folder.created_by == user.id).update({"created_by": None}, synchronize_session=False)
+
+    # Remove user-owned relational records.
+    db.query(Bookmark).filter(Bookmark.user_id == user.id).delete(synchronize_session=False)
+    db.query(UserAchievement).filter(UserAchievement.user_id == user.id).delete(synchronize_session=False)
+    db.query(UserSpecialization).filter(UserSpecialization.user_id == user.id).delete(synchronize_session=False)
+    db.query(CTFParticipationMarker).filter(CTFParticipationMarker.user_id == user.id).delete(synchronize_session=False)
+
+    db.delete(user)
     db.commit()
-    return {"message": f"{handle} has been disabled"}
+    from core.logger import log_admin
+    log_admin(admin.handle, "delete_user", handle, "permanent")
+    return {"message": f"{handle} has been deleted"}

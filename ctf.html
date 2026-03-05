@@ -18,7 +18,7 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{min-height:100vh;}
-body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;cursor:crosshair;overflow-x:hidden;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;cursor:crosshair;overflow-x:hidden;}
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.05) 3px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999;}
 .bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:0.12;}
 
@@ -27,11 +27,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 .nav-logo span{color:var(--red2);}
 .nav-left,.nav-right{display:flex;align-items:center;gap:20px;}
 .nav-sep{width:1px;height:20px;background:var(--border2);}
-.nav-page{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;}
+.nav-page{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.15em;}
 .nav-page span{color:var(--red2);}
-.nav-link{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-decoration:none;letter-spacing:0.1em;transition:color 0.2s;}
+.nav-link{font-family:var(--mono);font-size:11px;color:var(--text-dim);text-decoration:none;letter-spacing:0.1em;transition:color 0.2s;}
 .nav-link:hover{color:var(--text);}
-.nav-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:6px 14px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;}
+.nav-btn{font-family:var(--mono);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:6px 14px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;}
 .nav-btn:hover{color:var(--text);border-color:var(--text-mid);}
 .nav-btn.green{color:var(--green);border-color:rgba(0,255,136,0.3);}
 .nav-btn.green:hover{background:rgba(0,255,136,0.08);}
@@ -43,47 +43,54 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 .team-logo{font-size:48px;flex-shrink:0;}
 .team-info{flex:1;min-width:200px;}
 .team-name{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:0.1em;color:var(--text-bright);margin-bottom:4px;}
-.team-aka{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:10px;}
+.team-aka{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:10px;}
 .team-stats{display:flex;gap:24px;flex-wrap:wrap;}
 .stat-item{text-align:center;}
 .stat-num{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text-bright);}
 .stat-num.gold{color:var(--gold);}
 .stat-num.cyan{color:var(--cyan);}
 .stat-num.red{color:var(--red2);}
-.stat-lbl{font-family:var(--mono);font-size:8px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-top:2px;}
-.team-ctftime-link{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--cyan);text-decoration:none;border:1px solid var(--cyan-dim);padding:5px 12px;transition:all 0.2s;white-space:nowrap;align-self:flex-start;}
+.stat-lbl{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-top:2px;}
+.team-ctftime-link{font-family:var(--mono);font-size:10px;letter-spacing:0.15em;color:var(--cyan);text-decoration:none;border:1px solid var(--cyan-dim);padding:5px 12px;transition:all 0.2s;white-space:nowrap;align-self:flex-start;}
 .team-ctftime-link:hover{background:rgba(0,212,255,0.06);}
 
 /* ── SECTION HEADERS ── */
 .section{margin-bottom:40px;}
 .section-head{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
-.section-title{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.35em;color:var(--text-dim);text-transform:uppercase;white-space:nowrap;}
+.section-title{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.35em;color:var(--text-dim);text-transform:uppercase;white-space:nowrap;}
 .section-line{flex:1;height:1px;background:var(--border);}
 .section-actions{display:flex;gap:8px;}
 
 /* ── UPCOMING TABLE ── */
-.upcoming-wrap{background:var(--bg2);border:1px solid var(--border);overflow:hidden;}
-.ctf-table{width:100%;border-collapse:collapse;}
-.ctf-table th{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;padding:10px 14px;border-bottom:1px solid var(--border2);background:var(--bg3);text-align:left;}
-.ctf-table td{padding:11px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text);vertical-align:middle;}
+.upcoming-wrap{background:var(--bg2);border:1px solid var(--border);overflow-x:auto;overflow-y:hidden;}
+.ctf-table{width:100%;min-width:760px;border-collapse:collapse;}
+.ctf-table th{font-family:var(--mono);font-size:11px;letter-spacing:0.13em;color:var(--text-dim);text-transform:uppercase;padding:10px 14px;border-bottom:1px solid var(--border2);background:var(--bg3);text-align:left;}
+.ctf-table td{padding:11px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--text);vertical-align:middle;}
 .ctf-table tr:last-child td{border-bottom:none;}
 .ctf-table tr:hover td{background:var(--surface);}
-.ctf-name{font-family:var(--body);font-size:13px;font-weight:600;color:var(--text-bright);}
+.ctf-name{font-family:var(--body);font-size:14px;font-weight:600;color:var(--text-bright);overflow-wrap:anywhere;word-break:break-word;}
 .ctf-name a{color:inherit;text-decoration:none;border-bottom:1px solid transparent;transition:border-color 0.2s;}
 .ctf-name a:hover{border-color:var(--cyan-dim);}
-.ctf-sub{margin-top:4px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.45;white-space:pre-wrap;word-break:break-word;}
-.format-badge{font-family:var(--mono);font-size:8px;letter-spacing:0.1em;padding:2px 7px;border:1px solid var(--border2);color:var(--text-mid);text-transform:uppercase;}
+.ctf-sub{margin-top:4px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+.ctf-marker-wrap{margin-top:8px;display:flex;flex-direction:column;gap:6px;}
+.ctf-marker-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.ctf-marker-btn{font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;}
+.ctf-marker-btn:hover{color:var(--text);border-color:var(--text-mid);}
+.ctf-marker-btn.active-yes{color:var(--green);border-color:rgba(0,255,136,0.35);background:rgba(0,255,136,0.08);}
+.ctf-marker-btn.active-no{color:var(--red2);border-color:var(--red-dim);background:rgba(232,0,30,0.08);}
+.ctf-marker-summary{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.06em;overflow-wrap:anywhere;word-break:break-word;}
+.format-badge{font-family:var(--mono);font-size:10px;letter-spacing:0.08em;padding:2px 7px;border:1px solid var(--border2);color:var(--text-mid);text-transform:uppercase;max-width:100%;overflow-wrap:anywhere;word-break:break-word;white-space:normal;}
 .weight-val{color:var(--gold);font-weight:600;}
-.table-empty{padding:36px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;}
+.table-empty{padding:36px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.12em;}
 .del-btn{background:transparent;border:none;color:var(--text-dim);cursor:crosshair;font-size:12px;padding:2px 6px;transition:color 0.2s;}
 .del-btn:hover{color:var(--red2);}
 
 /* ── PAST RESULTS ── */
 .year-tabs{display:flex;gap:0;margin-bottom:0;border-bottom:1px solid var(--border);}
-.year-tab{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;padding:8px 18px;cursor:crosshair;color:var(--text-dim);border:1px solid transparent;border-bottom:none;background:transparent;transition:all 0.2s;position:relative;top:1px;}
+.year-tab{font-family:var(--mono);font-size:11px;letter-spacing:0.2em;padding:8px 18px;cursor:crosshair;color:var(--text-dim);border:1px solid transparent;border-bottom:none;background:transparent;transition:all 0.2s;position:relative;top:1px;}
 .year-tab:hover{color:var(--text);}
 .year-tab.active{color:var(--text-bright);border-color:var(--border);border-bottom:1px solid var(--bg2);background:var(--bg2);}
-.past-wrap{background:var(--bg2);border:1px solid var(--border);border-top:none;overflow:hidden;}
+.past-wrap{background:var(--bg2);border:1px solid var(--border);border-top:none;overflow-x:auto;overflow-y:hidden;}
 
 .result-row{cursor:pointer;}
 .result-row td{transition:background 0.15s;}
@@ -95,25 +102,26 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 .place-badge.pn{color:var(--text-mid);}
 .pts{color:var(--cyan);font-weight:600;}
 .rating{color:var(--green);}
-.expand-arrow{font-size:10px;color:var(--text-dim);transition:transform 0.2s;display:inline-block;}
+.expand-arrow{font-size:11px;color:var(--text-dim);transition:transform 0.2s;display:inline-block;}
 .expand-arrow.open{transform:rotate(90deg);}
 
 .participants-row td{padding:0 !important;background:var(--bg3) !important;}
 .participants-row.hidden{display:none;}
 .participants-inner{padding:10px 14px 12px 44px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
-.participant-chip{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border2);padding:4px 10px;font-family:var(--mono);font-size:10px;}
+.participant-chip{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border2);padding:4px 10px;font-family:var(--mono);font-size:11px;max-width:100%;overflow-wrap:anywhere;word-break:break-word;white-space:normal;}
 .p-handle{color:var(--text-bright);}
 .p-pts{color:var(--gold);}
-.p-del{background:none;border:none;color:var(--text-dim);cursor:crosshair;font-size:10px;padding:0 2px;transition:color 0.15s;}
+.p-del{background:none;border:none;color:var(--text-dim);cursor:crosshair;font-size:11px;padding:0 2px;transition:color 0.15s;}
 .p-del:hover{color:var(--red2);}
-.participants-add{background:none;border:1px dashed var(--border2);color:var(--text-dim);font-family:var(--mono);font-size:9px;letter-spacing:0.1em;padding:4px 10px;cursor:crosshair;transition:all 0.2s;}
+.participants-add{background:none;border:1px dashed var(--border2);color:var(--text-dim);font-family:var(--mono);font-size:10px;letter-spacing:0.1em;padding:4px 10px;cursor:crosshair;transition:all 0.2s;}
 .participants-add:hover{color:var(--cyan);border-color:var(--cyan-dim);}
 
 .result-actions{display:flex;gap:6px;align-items:center;}
-.act-btn{font-family:var(--mono);font-size:8px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;}
+.act-btn{font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;}
 .act-btn:hover{color:var(--text);border-color:var(--text-mid);}
 .act-btn.cyan{color:var(--cyan);border-color:var(--cyan-dim);}
 .act-btn.cyan:hover{background:rgba(0,212,255,0.06);}
+.act-badge{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--border2);color:var(--text-dim);opacity:0.85;max-width:100%;overflow-wrap:anywhere;word-break:break-word;white-space:normal;}
 
 /* ── SEARCH DROPDOWN ── */
 .search-wrap{position:relative;}
@@ -124,22 +132,22 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 .sd-item{padding:10px 14px;cursor:crosshair;transition:background 0.1s;border-bottom:1px solid var(--border);}
 .sd-item:last-child{border-bottom:none;}
 .sd-item:hover{background:var(--surface);}
-.sd-title{font-family:var(--body);font-size:13px;color:var(--text-bright);}
-.sd-meta{font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px;letter-spacing:0.08em;}
-.sd-empty{padding:14px;font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:center;letter-spacing:0.15em;}
+.sd-title{font-family:var(--body);font-size:13px;color:var(--text-bright);overflow-wrap:anywhere;word-break:break-word;}
+.sd-meta{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px;letter-spacing:0.08em;}
+.sd-empty{padding:14px;font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:center;letter-spacing:0.15em;}
 
 /* ── MODALS ── */
 .modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
 .modal-overlay.hidden{display:none;}
-.modal{background:var(--bg2);border:1px solid var(--border2);padding:28px;width:460px;box-shadow:0 40px 80px rgba(0,0,0,0.6);}
+.modal{background:var(--bg2);border:1px solid var(--border2);padding:28px;width:460px;max-width:calc(100vw - 24px);box-shadow:0 40px 80px rgba(0,0,0,0.6);}
 .modal-title{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.2em;color:var(--text-bright);margin-bottom:20px;text-transform:uppercase;}
 .modal-row{margin-bottom:14px;}
-.modal-label{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px;display:block;}
+.modal-label{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px;display:block;}
 .modal-input,.modal-select{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border2);color:var(--text-bright);font-family:var(--mono);font-size:11px;outline:none;transition:border-color 0.2s;cursor:text;}
 .modal-input:focus,.modal-select:focus{border-color:var(--cyan-dim);}
 .modal-select{cursor:crosshair;}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
-.modal-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:8px 16px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;}
+.modal-btn{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;padding:8px 16px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all 0.2s;}
 .modal-btn:hover{color:var(--text);border-color:var(--text-mid);}
 .modal-btn.confirm{color:var(--green);border-color:rgba(0,255,136,0.3);}
 .modal-btn.confirm:hover{background:rgba(0,255,136,0.08);}
@@ -148,14 +156,96 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 .p-add-row{display:flex;gap:8px;margin-bottom:8px;}
 .p-add-row .modal-input{flex:1;}
 .p-add-row .modal-input.pts{width:90px;flex:none;}
-.p-add-row-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;padding:9px 12px;border:1px solid rgba(0,255,136,0.3);background:transparent;color:var(--green);cursor:crosshair;}
+.p-add-row-btn{font-family:var(--mono);font-size:10px;letter-spacing:0.1em;padding:9px 12px;border:1px solid rgba(0,255,136,0.3);background:transparent;color:var(--green);cursor:crosshair;}
 .p-add-row-btn:hover{background:rgba(0,255,136,0.08);}
 .p-list{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;margin-top:6px;}
-.p-list-item{display:flex;align-items:center;gap:8px;background:var(--surface);padding:6px 10px;font-family:var(--mono);font-size:10px;}
+.p-list-item{display:flex;align-items:center;gap:8px;background:var(--surface);padding:6px 10px;font-family:var(--mono);font-size:11px;}
 .p-list-item .handle{flex:1;color:var(--text-bright);}
 .p-list-item .ppts{color:var(--gold);}
 .p-list-item .rem{background:none;border:none;color:var(--text-dim);cursor:crosshair;font-size:11px;}
 .p-list-item .rem:hover{color:var(--red2);}
+
+/* Smooth interactions */
+button,
+.btn,
+.act-btn,
+.ct-btn,
+.modal-btn,
+.panel-action,
+.form-submit,
+a[class*="btn"]{
+  transition: transform 160ms cubic-bezier(0.22,1,0.36,1), box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease, color 220ms ease, filter 220ms ease;
+  will-change: transform;
+}
+
+button:hover:not(:disabled),
+.btn:hover,
+.act-btn:hover,
+.ct-btn:hover,
+.modal-btn:hover,
+.panel-action:hover,
+.form-submit:hover,
+a[class*="btn"]:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.22);
+}
+
+button:active:not(:disabled),
+.btn:active,
+.act-btn:active,
+.ct-btn:active,
+.modal-btn:active,
+.panel-action:active,
+.form-submit:active,
+a[class*="btn"]:active{
+  transform: translateY(0) scale(0.99);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+}
+
+button:focus-visible,
+.btn:focus-visible,
+.act-btn:focus-visible,
+.ct-btn:focus-visible,
+.modal-btn:focus-visible,
+.panel-action:focus-visible,
+.form-submit:focus-visible,
+a[class*="btn"]:focus-visible{
+  outline: 1px solid rgba(0,212,255,0.7);
+  outline-offset: 2px;
+}
+
+ (prefers-reduced-motion: reduce){
+  button,
+  .btn,
+  .act-btn,
+  .ct-btn,
+  .modal-btn,
+  .panel-action,
+  .form-submit,
+  a[class*="btn"]{
+    transition: none !important;
+  }
+  button:hover:not(:disabled),
+  .btn:hover,
+  .act-btn:hover,
+  .ct-btn:hover,
+  .modal-btn:hover,
+  .panel-action:hover,
+  .form-submit:hover,
+  a[class*="btn"]:hover,
+  button:active:not(:disabled),
+  .btn:active,
+  .act-btn:active,
+  .ct-btn:active,
+  .modal-btn:active,
+  .panel-action:active,
+  .form-submit:active,
+  a[class*="btn"]:active{
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -176,7 +266,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
     </div>
     <div id="selectedCtfPreview" style="display:none;background:var(--surface);border:1px solid var(--border2);padding:10px 12px;margin-bottom:14px;">
       <div style="font-family:var(--body);font-size:13px;color:var(--text-bright);" id="previewTitle"></div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:4px;" id="previewMeta"></div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:4px;" id="previewMeta"></div>
     </div>
     <div class="modal-row" id="manualFields">
       <label class="modal-label">Or enter manually</label>
@@ -369,6 +459,7 @@ let _selectedCtf         = null;
 let _memberHandles       = [];
 let _ctfYears            = [];
 let _resultDefaults      = null;
+const CTF_RESULTS_MIN_YEAR = 2025;
 
 // ── Team stats ─────────────────────────────────────────────────
 async function loadTeamStats() {
@@ -411,9 +502,9 @@ function normalizeTask(row) {
 }
 
 async function loadCtftimeHistory() {
-  const thisYear = new Date().getUTCFullYear();
-  const years = (_ctfYears.length ? _ctfYears : [thisYear, thisYear - 1, thisYear - 2])
-    .filter(y => Number.isInteger(y) && y >= 2010 && y <= thisYear + 1)
+  const currentYear = new Date().getUTCFullYear();
+  const years = (_ctfYears.length ? _ctfYears : [currentYear, currentYear - 1, currentYear - 2])
+    .filter(y => Number.isInteger(y) && y >= CTF_RESULTS_MIN_YEAR && y <= currentYear)
     .sort((a, b) => b - a);
   if (!years.length) return;
 
@@ -461,26 +552,107 @@ function renderUpcoming() {
       <td class="ctf-name">
         ${ev.url ? `<a href="${esc(ev.url)}" target="_blank" rel="noopener">${esc(ev.title)}</a>` : esc(ev.title)}
         ${ev.description ? `<div class="ctf-sub">${esc(ev.description)}</div>` : ''}
+        ${renderParticipationBlock(ev)}
       </td>
       <td>${fmtDate(ev.start_time)}</td>
       <td>${ev.format ? `<span class="format-badge">${esc(ev.format)}</span>` : '—'}</td>
       <td>${ev.weight != null ? `<span class="weight-val">${ev.weight.toFixed(2)}</span>` : '—'}</td>
       <td style="text-align:right;">
         ${me.is_admin ? `
-          <button class="act-btn cyan" onclick="openAddResult(${ev.id})">+ Result</button>
+          <button class="act-btn" onclick="openAddParticipants(${ev.id})">+ Players</button>
+          <button class="act-btn cyan" onclick="markEnded(${ev.id})">Mark Ended</button>
           <button class="del-btn" onclick="deleteEvent(${ev.id})">✕</button>
         ` : ''}
       </td>
     </tr>`).join('');
 }
 
+async function markEnded(eventId) {
+  const ev = allEvents.find(e => e.id === eventId);
+  if (!ev) return;
+  if (!confirm(`Mark "${ev.title}" as ended and move it to Participated In?`)) return;
+  const res = await authFetch(`/api/ctf/events/${eventId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'completed' }),
+  });
+  if (res.ok) await loadEvents();
+  else {
+    const e = await res.json().catch(() => ({ detail: 'Failed to mark ended.' }));
+    alert(e.detail || 'Failed to mark ended.');
+  }
+}
+
+function _getMyParticipationMarker(ev) {
+  const markers = Array.isArray(ev.participation_markers) ? ev.participation_markers : [];
+  return markers.find(m => String(m.handle || '').toLowerCase() === String(me.handle || '').toLowerCase()) || null;
+}
+
+function _renderParticipationSummary(ev) {
+  const markers = Array.isArray(ev.participation_markers) ? ev.participation_markers : [];
+  const yes = markers.filter(m => m.will_play).map(m => String(m.handle || '').trim()).filter(Boolean);
+  const noCount = markers.filter(m => !m.will_play).length;
+  const yesPreview = yes.slice(0, 4).map(esc).join(', ');
+  const yesTail = yes.length > 4 ? ` +${yes.length - 4} more` : '';
+  const yesPart = yes.length ? `${yes.length} in (${yesPreview}${yesTail})` : '0 in';
+  const noPart = `${noCount} out`;
+  return `${yesPart} · ${noPart}`;
+}
+
+function renderParticipationBlock(ev) {
+  const mine = _getMyParticipationMarker(ev);
+  const mineYes = mine && mine.will_play === true;
+  const mineNo = mine && mine.will_play === false;
+  return `<div class="ctf-marker-wrap">
+    <div class="ctf-marker-actions">
+      <button class="ctf-marker-btn ${mineYes ? 'active-yes' : ''}" onclick="event.stopPropagation();setParticipation(${ev.id},true)">I Will Play</button>
+      <button class="ctf-marker-btn ${mineNo ? 'active-no' : ''}" onclick="event.stopPropagation();setParticipation(${ev.id},false)">I Can't Play</button>
+      ${mine ? `<button class="ctf-marker-btn" onclick="event.stopPropagation();clearParticipation(${ev.id})">Clear</button>` : ''}
+    </div>
+    <div class="ctf-marker-summary">${_renderParticipationSummary(ev)}</div>
+  </div>`;
+}
+
+async function setParticipation(eventId, willPlay) {
+  const ev = allEvents.find(e => e.id === eventId);
+  if (!ev) return;
+  const mine = _getMyParticipationMarker(ev);
+  // Toggle off when clicking the same state.
+  if (mine && mine.will_play === willPlay) {
+    await clearParticipation(eventId);
+    return;
+  }
+  const res = await authFetch(`/api/ctf/events/${eventId}/marker`, {
+    method: 'PUT',
+    body: JSON.stringify({ will_play: !!willPlay }),
+  });
+  if (res.ok) await loadEvents();
+  else {
+    const e = await res.json().catch(() => ({ detail: 'Failed to update marker.' }));
+    alert(e.detail || 'Failed to update marker.');
+  }
+}
+
+async function clearParticipation(eventId) {
+  const res = await authFetch(`/api/ctf/events/${eventId}/marker`, { method: 'DELETE' });
+  if (res.ok || res.status === 204) await loadEvents();
+  else {
+    const e = await res.json().catch(() => ({ detail: 'Failed to clear marker.' }));
+    alert(e.detail || 'Failed to clear marker.');
+  }
+}
+
 function renderPast() {
+  const currentYear = new Date().getUTCFullYear();
   // Combine years from CTFtime tasks + local completed events
   const allYearsSet = new Set();
-  Object.keys(ctftimeTasks).forEach(y => allYearsSet.add(Number(y)));
+  Object.keys(ctftimeTasks).forEach(y => {
+    const yr = Number(y);
+    if (Number.isInteger(yr) && yr >= CTF_RESULTS_MIN_YEAR && yr <= currentYear) allYearsSet.add(yr);
+  });
   allEvents.filter(e => e.status === 'completed').forEach(e => {
     const d = new Date(e.start_time || e.created_at);
-    if (!isNaN(d)) allYearsSet.add(d.getFullYear());
+    const yr = d.getFullYear();
+    if (!isNaN(d) && yr >= CTF_RESULTS_MIN_YEAR && yr <= currentYear) allYearsSet.add(yr);
   });
   const years = [...allYearsSet].filter(Boolean).sort((a,b) => b - a);
 
@@ -547,7 +719,7 @@ function renderPastTable(year) {
       <tr class="participants-row hidden" id="prow-${pid}">
         <td colspan="5">
           <div class="participants-inner" id="pinner-${pid}">
-            ${localEv ? renderParticipantsInner(localEv) : '<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);">No players logged.</span>'}
+            ${localEv ? renderParticipantsInner(localEv) : '<span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">No players logged.</span>'}
           </div>
         </td>
       </tr>`;
@@ -556,19 +728,22 @@ function renderPastTable(year) {
   // Rows from local-only completed events (not on CTFtime or manually tracked)
   const localRows = localExtra.map(ev => {
     const r = ev.result;
+    const canEditResult = !(ev.ctftime_event_id && !taskIds.has(ev.ctftime_event_id));
+    const awaitingOfficial = ev.ctftime_event_id && !taskIds.has(ev.ctftime_event_id);
     return `
       <tr class="result-row" onclick="toggleParticipants(${ev.id})">
         <td>${r ? placeBadge(r.place) : '<span class="place-badge pn">—</span>'}</td>
         <td class="ctf-name">
           ${ev.url ? `<a href="${esc(ev.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(ev.title)}</a>` : esc(ev.title)}
           ${ev.description ? `<div class="ctf-sub">${esc(ev.description)}</div>` : ''}
+          ${awaitingOfficial ? `<div class="ctf-sub">Event ended. Awaiting official CTFtime scoreboard.</div>` : ''}
         </td>
         <td class="pts">${r ? fmtPts(r.ctf_points) : '—'}</td>
         <td class="rating">${r ? fmtPts(r.rating_points) : '—'}</td>
         <td style="text-align:right;" onclick="event.stopPropagation()">
           <div class="result-actions">
             ${me.is_admin ? `
-              <button class="act-btn cyan" onclick="openAddResult(${ev.id})">✎ Result</button>
+              ${canEditResult ? `<button class="act-btn cyan" onclick="openAddResult(${ev.id})">✎ Result</button>` : `<span class="act-badge">Awaiting CTFtime</span>`}
               <button class="act-btn" onclick="openAddParticipants(${ev.id})">+ Players</button>
               <button class="del-btn" onclick="deleteEvent(${ev.id})">✕</button>
             ` : ''}
@@ -590,7 +765,7 @@ function renderPastTable(year) {
 
 function renderParticipantsInner(ev) {
   if (!ev.participants || !ev.participants.length) {
-    return '<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);">No players logged.</span>';
+    return '<span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">No players logged.</span>';
   }
   return ev.participants.map(p => `
     <div class="participant-chip">
@@ -899,5 +1074,6 @@ async function loadMemberHandles() {
   });
 })();
 </script>
+  <script src="assets/js/lofi-player.js"></script>
 </body>
 </html>

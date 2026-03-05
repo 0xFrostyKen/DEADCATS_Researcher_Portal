@@ -251,9 +251,23 @@ async function initDashboard() {
   function updateClock() {
     const now    = new Date();
     const utc    = now.toUTCString().split(' ')[4];
+    let nepal = '';
+    try {
+      nepal = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Kathmandu',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }).format(now);
+    } catch (_) {
+      // Fallback: Nepal is UTC+05:45
+      const np = new Date(now.getTime() + ((5 * 60 + 45) * 60 * 1000));
+      nepal = np.toISOString().slice(11, 19);
+    }
     const clock  = document.getElementById('clock');
     const dateEl = document.getElementById('dateStr');
-    if (clock)  clock.textContent  = `${utc} UTC`;
+    if (clock)  clock.textContent  = `${nepal} NPT · ${utc} UTC`;
     if (dateEl) dateEl.textContent = now.toISOString().split('T')[0];
   }
   updateClock();
@@ -278,6 +292,58 @@ async function initDashboard() {
   // ── Notifications ──────────────────────────────────────────────
   let _notifAll = [];
   let _notifKnownIds = new Set();
+  let _notifSoundArmed = false;
+  let _notifAudioCtx = null;
+
+  function armNotificationSound() {
+    if (_notifSoundArmed) return;
+    _notifSoundArmed = true;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) _notifAudioCtx = new Ctx();
+      if (_notifAudioCtx && _notifAudioCtx.state === 'suspended') {
+        _notifAudioCtx.resume().catch(() => {});
+      }
+    } catch (_) {}
+  }
+
+  function playNotificationSound() {
+    if (!_notifSoundArmed) return;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!_notifAudioCtx) _notifAudioCtx = new Ctx();
+      const ctx = _notifAudioCtx;
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+
+      const now = ctx.currentTime;
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.0001, now);
+      master.gain.exponentialRampToValueAtTime(0.065, now + 0.01);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+      master.connect(ctx.destination);
+
+      const o1 = ctx.createOscillator();
+      o1.type = 'triangle';
+      o1.frequency.setValueAtTime(880, now);
+      o1.frequency.exponentialRampToValueAtTime(1174, now + 0.12);
+      o1.connect(master);
+      o1.start(now);
+      o1.stop(now + 0.14);
+
+      const o2 = ctx.createOscillator();
+      o2.type = 'sine';
+      o2.frequency.setValueAtTime(1318, now + 0.08);
+      o2.connect(master);
+      o2.start(now + 0.09);
+      o2.stop(now + 0.24);
+    } catch (_) {}
+  }
+
+  document.addEventListener('pointerdown', armNotificationSound, { once: true, passive: true });
+  document.addEventListener('keydown', armNotificationSound, { once: true });
 
   function renderNotifDot() {
     const seen = JSON.parse(localStorage.getItem('dc_seen_notifs') || '[]');
@@ -344,6 +410,105 @@ async function initDashboard() {
     } catch (_) {}
   }
 
+  // ── CTF reminders (24h / 1h) for "I Will Play" ────────────────
+  const CTF_REMINDER_STORE_KEY = 'dc_ctf_reminders_sent_v1';
+
+  function readCtfReminderStore() {
+    try {
+      const raw = localStorage.getItem(CTF_REMINDER_STORE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (_) {
+      localStorage.removeItem(CTF_REMINDER_STORE_KEY);
+      return {};
+    }
+  }
+
+  function writeCtfReminderStore(store) {
+    try {
+      localStorage.setItem(CTF_REMINDER_STORE_KEY, JSON.stringify(store));
+    } catch (_) {}
+  }
+
+  function cleanupCtfReminderStore(store) {
+    const cutoff = Date.now() - (14 * 24 * 60 * 60 * 1000);
+    let changed = false;
+    Object.keys(store).forEach((k) => {
+      const ts = Number(store[k] || 0);
+      if (!Number.isFinite(ts) || ts < cutoff) {
+        delete store[k];
+        changed = true;
+      }
+    });
+    return changed;
+  }
+
+  function userWillPlayCtf(ev) {
+    const markers = Array.isArray(ev.participation_markers) ? ev.participation_markers : [];
+    return markers.some((m) => {
+      const handle = String(m.handle || '').toLowerCase();
+      return handle === String(user.handle || '').toLowerCase() && m.will_play === true;
+    });
+  }
+
+  function pushCtfReminderNotification(ev, slotLabel, slotId) {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    const start = new Date(ev.start_time);
+    const when = Number.isFinite(start.getTime())
+      ? start.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : 'soon';
+    try {
+      const n = new Notification(`CTF Reminder: ${ev.title}`, {
+        body: `Starts in ~${slotLabel}. You marked "I Will Play". (${when})`,
+        tag: `dc-ctf-${ev.id}-${slotId}`,
+      });
+      n.onclick = () => {
+        window.focus();
+        window.location.href = 'ctf.html';
+      };
+    } catch (_) {}
+  }
+
+  async function checkCtfReminders() {
+    try {
+      const res = await authFetch('/api/ctf/events');
+      if (!res.ok) return;
+      const events = await res.json();
+      const now = Date.now();
+      const slots = [
+        { id: '24h', ms: 24 * 60 * 60 * 1000, label: '24h' },
+        { id: '1h',  ms: 1 * 60 * 60 * 1000,  label: '1h'  },
+      ];
+
+      const store = readCtfReminderStore();
+      let changed = cleanupCtfReminderStore(store);
+
+      (Array.isArray(events) ? events : []).forEach((ev) => {
+        if (ev.status !== 'upcoming') return;
+        if (!userWillPlayCtf(ev)) return;
+        const startMs = new Date(ev.start_time || '').getTime();
+        if (!Number.isFinite(startMs) || startMs <= now) return;
+
+        const eventKey = `${ev.id}:${ev.start_time || ''}`;
+        slots.forEach((slot) => {
+          const key = `${eventKey}:${slot.id}`;
+          if (store[key]) return;
+          // If user is within the reminder window and has not been notified yet, notify once.
+          if (now >= (startMs - slot.ms)) {
+            pushCtfReminderNotification(ev, slot.label, slot.id);
+            store[key] = Date.now();
+            changed = true;
+          }
+        });
+      });
+
+      if (changed) writeCtfReminderStore(store);
+    } catch (e) {
+      console.error('CTF reminder check failed:', e);
+    }
+  }
+
   async function loadNotifications() {
     try {
       const res = await authFetch('/api/announcements/');
@@ -351,16 +516,19 @@ async function initDashboard() {
       _notifAll = await res.json();
       const dismissed = new Set(JSON.parse(localStorage.getItem('dc_dismissed_notifs') || '[]'));
       const visible = _notifAll.filter((a) => !dismissed.has(a.id));
+      let hasNewNotification = false;
       if (_notifKnownIds.size === 0) {
         visible.forEach((a) => _notifKnownIds.add(a.id));
       } else {
         visible.forEach((a) => {
           if (!_notifKnownIds.has(a.id)) {
+            hasNewNotification = true;
             pushDesktopNotification(a);
             _notifKnownIds.add(a.id);
           }
         });
       }
+      if (hasNewNotification) playNotificationSound();
       renderNotifPanel();
       renderNotifDot();
     } catch (e) { console.error('Notifications error:', e); }
@@ -396,8 +564,10 @@ async function initDashboard() {
   loadAnnouncements();
   loadRecentNotes();
   loadNotifications();
+  checkCtfReminders();
   maybeRequestNotificationPermission();
   setInterval(loadNotifications, 30000);
+  setInterval(checkCtfReminders, 60000);
 }
 
 // ── Global modal functions ────────────────────────────────────────

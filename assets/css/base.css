@@ -34,7 +34,96 @@ body::before{
 
 a{color:inherit}
 
+/* Keep long tags/badges/chips inside containers */
+[class*="tag"],[class*="badge"],[class*="chip"]{
+  max-width:100%;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+  white-space:normal;
+}
+
 /* Hide scrollbars globally */
 *{scrollbar-width:none;}
 *::-webkit-scrollbar{display:none;}
 
+/* Smooth interactions */
+button,
+.btn,
+.act-btn,
+.ct-btn,
+.modal-btn,
+.panel-action,
+.form-submit,
+a[class*="btn"]{
+  transition:transform 160ms cubic-bezier(0.22,1,0.36,1),box-shadow 220ms ease,border-color 220ms ease,background-color 220ms ease,color 220ms ease,filter 220ms ease;
+  will-change:transform;
+}
+
+button:hover:not(:disabled),
+.btn:hover,
+.act-btn:hover,
+.ct-btn:hover,
+.modal-btn:hover,
+.panel-action:hover,
+.form-submit:hover,
+a[class*="btn"]:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 18px rgba(0,0,0,0.22);
+}
+
+button:active:not(:disabled),
+.btn:active,
+.act-btn:active,
+.ct-btn:active,
+.modal-btn:active,
+.panel-action:active,
+.form-submit:active,
+a[class*="btn"]:active{
+  transform:translateY(0) scale(0.99);
+  box-shadow:0 4px 10px rgba(0,0,0,0.18);
+}
+
+button:focus-visible,
+.btn:focus-visible,
+.act-btn:focus-visible,
+.ct-btn:focus-visible,
+.modal-btn:focus-visible,
+.panel-action:focus-visible,
+.form-submit:focus-visible,
+a[class*="btn"]:focus-visible{
+  outline:1px solid rgba(0,212,255,0.7);
+  outline-offset:2px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  button,
+  .btn,
+  .act-btn,
+  .ct-btn,
+  .modal-btn,
+  .panel-action,
+  .form-submit,
+  a[class*="btn"]{
+    transition:none !important;
+  }
+
+  button:hover:not(:disabled),
+  .btn:hover,
+  .act-btn:hover,
+  .ct-btn:hover,
+  .modal-btn:hover,
+  .panel-action:hover,
+  .form-submit:hover,
+  a[class*="btn"]:hover,
+  button:active:not(:disabled),
+  .btn:active,
+  .act-btn:active,
+  .ct-btn:active,
+  .modal-btn:active,
+  .panel-action:active,
+  .form-submit:active,
+  a[class*="btn"]:active{
+    transform:none !important;
+    box-shadow:none !important;
+  }
+}

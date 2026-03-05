@@ -52,7 +52,7 @@ def list_achievements(
 def create_achievement(
     payload: CreateAchievementRequest,
     db:      Session = Depends(get_db),
-    _:       User    = Depends(require_admin)
+    current: User    = Depends(require_admin)
 ):
     a = Achievement(
         icon=clean_text(payload.icon, field="icon", max_len=10),
@@ -61,6 +61,9 @@ def create_achievement(
         rarity=clean_text(payload.rarity, field="rarity", max_len=20),
     )
     db.add(a); db.commit(); db.refresh(a)
+    # Auto-unlock for creator so it appears on their profile immediately.
+    db.add(UserAchievement(user_id=current.id, achievement_id=a.id, equipped=False))
+    db.commit()
     return a.to_dict()
 
 @router.delete("/{achievement_id}")

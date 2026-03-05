@@ -177,21 +177,29 @@ def monitor(db = Depends(get_db), current: User = Depends(get_current_user)):
 
 # ── Profile uploads (path traversal protected) ────────────────────
 
-_UPLOAD_DIR      = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), "..", "uploads"))
-_ALLOWED_FOLDERS = {"avatars", "banners"}
+_PROFILE_UPLOAD_DIR = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), "..", "profile_uploads"))
+_ALLOWED_FOLDERS    = {"avatars", "banners"}
 
-@app.get("/uploads/{folder}/{filename}")
-async def serve_upload(folder: str, filename: str):
+def _serve_profile_upload(folder: str, filename: str):
     if folder not in _ALLOWED_FOLDERS:
         raise HTTPException(404, "Not found")
     if ".." in filename or "/" in filename or "\\" in filename:
         raise HTTPException(400, "Invalid filename")
-    path = _os.path.join(_UPLOAD_DIR, folder, filename)
-    if not _os.path.abspath(path).startswith(_UPLOAD_DIR):
+    path = _os.path.join(_PROFILE_UPLOAD_DIR, folder, filename)
+    if not _os.path.abspath(path).startswith(_PROFILE_UPLOAD_DIR):
         raise HTTPException(400, "Invalid path")
     if not _os.path.exists(path):
         raise HTTPException(404, "File not found")
     return FileResponse(path)
+
+@app.get("/profile_uploads/{folder}/{filename}")
+async def serve_profile_upload(folder: str, filename: str):
+    return _serve_profile_upload(folder, filename)
+
+@app.get("/uploads/{folder}/{filename}")
+async def serve_upload_legacy(folder: str, filename: str):
+    # Backward-compatible alias for older URLs.
+    return _serve_profile_upload(folder, filename)
 
 # ── Frontend static files ─────────────────────────────────────────
 

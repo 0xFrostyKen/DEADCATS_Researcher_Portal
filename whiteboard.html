@@ -63,15 +63,15 @@ body::before {
 }
 .nav-left  { display: flex; align-items: center; gap: 14px; }
 .nav-right { display: flex; align-items: center; gap: 10px; }
-.nav-logo  { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.3em; color: var(--text-bright); text-decoration: none; }
+.nav-logo  { font-family: var(--mono); font-size:11px; font-weight: 700; letter-spacing: 0.3em; color: var(--text-bright); text-decoration: none; }
 .nav-logo span { color: var(--red2); }
 .nav-sep   { width: 1px; height: 20px; background: var(--border2); }
-.nav-page  { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.15em; }
+.nav-page  { font-family: var(--mono); font-size:11px; color: var(--text-dim); letter-spacing: 0.15em; }
 .nav-page span { color: var(--red2); }
-.nav-back  { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-decoration: none; letter-spacing: 0.1em; transition: color 0.2s; }
+.nav-back  { font-family: var(--mono); font-size:11px; color: var(--text-dim); text-decoration: none; letter-spacing: 0.1em; transition: color 0.2s; }
 .nav-back:hover { color: var(--text); }
 .nav-btn {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
+  font-family: var(--mono); font-size:10px; letter-spacing: 0.15em;
   text-transform: uppercase; padding: 5px 12px;
   border: 1px solid var(--border2); background: transparent;
   color: var(--text-dim); cursor: crosshair; transition: all 0.2s;
@@ -98,7 +98,7 @@ body::before {
 .panel-head {
   padding: 12px 14px;
   border-bottom: 1px solid var(--border);
-  font-family: var(--mono); font-size: 9px;
+  font-family: var(--mono); font-size:10px;
   letter-spacing: 0.25em; color: var(--text-dim);
   text-transform: uppercase;
   display: flex; align-items: center; justify-content: space-between;
@@ -106,7 +106,7 @@ body::before {
 .panel-count {
   background: var(--surface);
   border: 1px solid var(--border2);
-  font-size: 8px; padding: 1px 6px;
+  font-size:9px; padding: 1px 6px;
   color: var(--text-dim);
 }
 .members-list {
@@ -139,7 +139,7 @@ body::before {
   color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .m-rank {
-  font-family: var(--mono); font-size: 8px;
+  font-family: var(--mono); font-size:9px;
   letter-spacing: 0.08em; color: var(--text-dim);
   text-transform: uppercase;
 }
@@ -158,7 +158,7 @@ body::before {
 }
 .canvas-loading.hidden { display: none; }
 .loading-icon  { font-size: 36px; opacity: 0.3; }
-.loading-text  { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; }
+.loading-text  { font-family: var(--mono); font-size:11px; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; }
 #excalidraw-frame {
   flex: 1;
   width: 100%; height: 100%;
@@ -185,7 +185,7 @@ body::before {
 }
 .goal-input:focus { border-color: var(--cyan-dim); }
 .goal-add-btn {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
+  font-family: var(--mono); font-size:10px; letter-spacing: 0.15em;
   text-transform: uppercase; padding: 7px 12px;
   border: 1px solid rgba(0,255,136,0.3); background: transparent;
   color: var(--green); cursor: crosshair; transition: all 0.2s;
@@ -222,7 +222,7 @@ body::before {
 }
 .goal-item.done .goal-text { text-decoration: line-through; color: var(--text-dim); }
 .goal-meta {
-  font-family: var(--mono); font-size: 8px;
+  font-family: var(--mono); font-size:9px;
   color: var(--text-dim); margin-top: 4px;
   letter-spacing: 0.08em;
 }
@@ -236,7 +236,7 @@ body::before {
 .goal-del:hover { color: var(--red2); }
 .goals-empty {
   padding: 32px 16px; text-align: center;
-  font-family: var(--mono); font-size: 9px;
+  font-family: var(--mono); font-size:10px;
   color: var(--text-dim); letter-spacing: 0.15em;
 }
 
@@ -263,7 +263,7 @@ body::before {
 }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
 .modal-btn {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+  font-family: var(--mono); font-size:10px; letter-spacing: 0.2em;
   text-transform: uppercase; padding: 8px 16px;
   border: 1px solid var(--border2); background: transparent;
   color: var(--text-dim); cursor: crosshair; transition: all 0.2s;
@@ -276,6 +276,88 @@ body::before {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); }
+
+/* Smooth interactions */
+button,
+.btn,
+.act-btn,
+.ct-btn,
+.modal-btn,
+.panel-action,
+.form-submit,
+a[class*="btn"]{
+  transition: transform 160ms cubic-bezier(0.22,1,0.36,1), box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease, color 220ms ease, filter 220ms ease;
+  will-change: transform;
+}
+
+button:hover:not(:disabled),
+.btn:hover,
+.act-btn:hover,
+.ct-btn:hover,
+.modal-btn:hover,
+.panel-action:hover,
+.form-submit:hover,
+a[class*="btn"]:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.22);
+}
+
+button:active:not(:disabled),
+.btn:active,
+.act-btn:active,
+.ct-btn:active,
+.modal-btn:active,
+.panel-action:active,
+.form-submit:active,
+a[class*="btn"]:active{
+  transform: translateY(0) scale(0.99);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+}
+
+button:focus-visible,
+.btn:focus-visible,
+.act-btn:focus-visible,
+.ct-btn:focus-visible,
+.modal-btn:focus-visible,
+.panel-action:focus-visible,
+.form-submit:focus-visible,
+a[class*="btn"]:focus-visible{
+  outline: 1px solid rgba(0,212,255,0.7);
+  outline-offset: 2px;
+}
+
+ (prefers-reduced-motion: reduce){
+  button,
+  .btn,
+  .act-btn,
+  .ct-btn,
+  .modal-btn,
+  .panel-action,
+  .form-submit,
+  a[class*="btn"]{
+    transition: none !important;
+  }
+  button:hover:not(:disabled),
+  .btn:hover,
+  .act-btn:hover,
+  .ct-btn:hover,
+  .modal-btn:hover,
+  .panel-action:hover,
+  .form-submit:hover,
+  a[class*="btn"]:hover,
+  button:active:not(:disabled),
+  .btn:active,
+  .act-btn:active,
+  .ct-btn:active,
+  .modal-btn:active,
+  .panel-action:active,
+  .form-submit:active,
+  a[class*="btn"]:active{
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -638,5 +720,6 @@ function stopPolling() {
   });
 })();
 </script>
+  <script src="assets/js/lofi-player.js"></script>
 </body>
 </html>

@@ -43,9 +43,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 .nav-logo span{color:var(--red2);}
 .nav-left,.nav-right{display:flex;align-items:center;gap:20px;}
 .nav-sep{width:1px;height:20px;background:var(--border2);}
-.nav-page{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;}
+.nav-page{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.15em;}
 .nav-page span{color:var(--cyan);}
-.nav-link{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-decoration:none;letter-spacing:0.15em;text-transform:uppercase;transition:color 0.2s;}
+.nav-link{font-family:var(--mono);font-size:11px;color:var(--text-dim);text-decoration:none;letter-spacing:0.15em;text-transform:uppercase;transition:color 0.2s;}
 .nav-link:hover{color:var(--text);}
 
 /* LAYOUT */
@@ -53,7 +53,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 
 /* HERO HEADER */
 .hero{text-align:center;padding:60px 0 50px;position:relative;}
-.hero-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:0.5em;color:var(--red2);text-transform:uppercase;margin-bottom:16px;opacity:0.8;}
+.hero-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:0.5em;color:var(--red2);text-transform:uppercase;margin-bottom:16px;opacity:0.8;}
 .hero-title{font-family:var(--mono);font-size:clamp(36px,5vw,64px);font-weight:700;letter-spacing:0.08em;color:var(--text-bright);line-height:1;margin-bottom:12px;position:relative;display:inline-block;}
 .hero-title::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red2),transparent);}
 .hero-sub{font-family:var(--mono);font-size:11px;letter-spacing:0.3em;color:var(--text-dim);margin-top:16px;}
@@ -64,14 +64,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 .rank-legend{display:flex;justify-content:center;gap:32px;margin-bottom:50px;flex-wrap:wrap;}
 .rl-item{display:flex;align-items:center;gap:8px;cursor:default;}
 .rl-dot{width:8px;height:8px;border-radius:50%;}
-.rl-label{font-family:var(--mono);font-size:10px;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;}
+.rl-label{font-family:var(--mono);font-size:11px;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;}
 
 /* TIER SECTION */
 .tier-section{margin-bottom:60px;}
 .tier-header{display:flex;align-items:center;gap:20px;margin-bottom:24px;position:relative;}
 .tier-name{font-family:var(--mono);font-weight:700;letter-spacing:0.3em;text-transform:uppercase;white-space:nowrap;}
 .tier-line{flex:1;height:1px;opacity:0.3;}
-.tier-count{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;color:var(--text-dim);white-space:nowrap;}
+.tier-count{font-family:var(--mono);font-size:11px;letter-spacing:0.2em;color:var(--text-dim);white-space:nowrap;}
 
 /* FOUNDING CIRCLE */
 .tier-fc .tier-name{font-size:11px;color:var(--rank-fc);text-shadow:0 0 20px rgba(240,165,0,0.4);}
@@ -152,7 +152,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 
 .card-info{flex:1;min-width:0;}
 .card-handle{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--text-bright);letter-spacing:0.05em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.card-rank-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:2px 8px;border:1px solid;margin-bottom:6px;}
+.card-rank-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;padding:2px 8px;border:1px solid;margin-bottom:6px;max-width:100%;overflow-wrap:anywhere;word-break:break-word;white-space:normal;}
 .badge-fc{color:var(--rank-fc);border-color:rgba(240,165,0,0.3);background:rgba(240,165,0,0.06);}
 .badge-lr{color:var(--rank-lr);border-color:rgba(0,212,255,0.25);background:rgba(0,212,255,0.05);}
 .badge-scholar{color:var(--rank-scholar);border-color:rgba(155,93,229,0.25);background:rgba(155,93,229,0.05);}
@@ -160,7 +160,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 
 /* TITLE — the prestigious bestowed thing */
 .card-title{
-  font-family:var(--mono);font-size:9px;letter-spacing:0.15em;
+  font-family:var(--mono);font-size:10px;letter-spacing:0.15em;
   color:var(--gold);padding:2px 8px;
   border-left:2px solid var(--gold);
   background:rgba(240,165,0,0.05);
@@ -168,18 +168,18 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
 }
 
-.card-bio{font-family:var(--body);font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card-bio{font-family:var(--body);font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;word-break:break-word;}
 
 .card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);}
 .card-specializations{display:flex;gap:4px;flex-wrap:wrap;flex:1;}
-.card-spec{font-family:var(--mono);font-size:8px;padding:1px 5px;border:1px solid var(--border2);color:var(--text-dim);letter-spacing:0.08em;}
-.card-lastseen{font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:0.08em;white-space:nowrap;margin-left:8px;}
+.card-spec{font-family:var(--mono);font-size:9px;padding:1px 5px;border:1px solid var(--border2);color:var(--text-dim);letter-spacing:0.08em;max-width:100%;overflow-wrap:anywhere;word-break:break-word;white-space:normal;}
+.card-lastseen{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.08em;white-space:nowrap;margin-left:8px;}
 
 /* ADMIN CROWN */
 .admin-crown{position:absolute;top:8px;right:8px;font-size:12px;z-index:2;opacity:0.7;}
 
 /* EMPTY */
-.tier-empty{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;padding:20px;text-align:center;border:1px dashed var(--border);opacity:0.5;}
+.tier-empty{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.15em;padding:20px;text-align:center;border:1px dashed var(--border);opacity:0.5;}
 
 /* SEARCH */
 .search-bar{display:flex;gap:12px;margin-bottom:40px;max-width:500px;margin-left:auto;margin-right:auto;}
@@ -197,7 +197,103 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;ali
 .tier-section:nth-child(4){animation-delay:0.4s;}
 .member-card{opacity:0;animation:fadeup 0.4s forwards;}
 
+@media (max-width: 980px) {
+  .layout{padding:72px 16px 40px;}
+  .members-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));}
+  .tier-fc .members-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));}
+}
+@media (max-width: 640px) {
+  .hero-sub{letter-spacing:0.15em;}
+  .tier-header{flex-wrap:wrap;gap:10px;}
+  .tier-name,.tier-count{white-space:normal;}
+  .members-grid,.tier-fc .members-grid{grid-template-columns:1fr;}
+  .card-footer{flex-direction:column;align-items:flex-start;gap:8px;}
+  .card-lastseen{margin-left:0;white-space:normal;}
+}
+
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);}
+
+/* Smooth interactions */
+button,
+.btn,
+.act-btn,
+.ct-btn,
+.modal-btn,
+.panel-action,
+.form-submit,
+a[class*="btn"]{
+  transition: transform 160ms cubic-bezier(0.22,1,0.36,1), box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease, color 220ms ease, filter 220ms ease;
+  will-change: transform;
+}
+
+button:hover:not(:disabled),
+.btn:hover,
+.act-btn:hover,
+.ct-btn:hover,
+.modal-btn:hover,
+.panel-action:hover,
+.form-submit:hover,
+a[class*="btn"]:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.22);
+}
+
+button:active:not(:disabled),
+.btn:active,
+.act-btn:active,
+.ct-btn:active,
+.modal-btn:active,
+.panel-action:active,
+.form-submit:active,
+a[class*="btn"]:active{
+  transform: translateY(0) scale(0.99);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+}
+
+button:focus-visible,
+.btn:focus-visible,
+.act-btn:focus-visible,
+.ct-btn:focus-visible,
+.modal-btn:focus-visible,
+.panel-action:focus-visible,
+.form-submit:focus-visible,
+a[class*="btn"]:focus-visible{
+  outline: 1px solid rgba(0,212,255,0.7);
+  outline-offset: 2px;
+}
+
+ (prefers-reduced-motion: reduce){
+  button,
+  .btn,
+  .act-btn,
+  .ct-btn,
+  .modal-btn,
+  .panel-action,
+  .form-submit,
+  a[class*="btn"]{
+    transition: none !important;
+  }
+  button:hover:not(:disabled),
+  .btn:hover,
+  .act-btn:hover,
+  .ct-btn:hover,
+  .modal-btn:hover,
+  .panel-action:hover,
+  .form-submit:hover,
+  a[class*="btn"]:hover,
+  button:active:not(:disabled),
+  .btn:active,
+  .act-btn:active,
+  .ct-btn:active,
+  .modal-btn:active,
+  .panel-action:active,
+  .form-submit:active,
+  a[class*="btn"]:active{
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -360,7 +456,7 @@ function renderTier(rank, members) {
         <div class="tier-line"></div>
         <div class="tier-count">${count} operator${count !== 1 ? 's' : ''}</div>
       </div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;margin-bottom:16px;opacity:0.6;">${TIER_DESC[rank] || ''}</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.15em;margin-bottom:16px;opacity:0.6;">${TIER_DESC[rank] || ''}</div>
       <div class="members-grid ${rank === 'Founding Circle' ? 'fc-grid' : ''}">${cards}</div>
     </div>`;
 }
@@ -410,5 +506,6 @@ async function load() {
   await load();
 })();
 </script>
+  <script src="assets/js/lofi-player.js"></script>
 </body>
 </html>

@@ -10,7 +10,7 @@ from core.security import get_current_user, require_admin
 from core.config import CTFTIME_TEAM_ID
 from core.validation import clean_text, reject_html
 from models.user import User
-from models.ctf import CTFEvent, CTFResult, CTFParticipant
+from models.ctf import CTFEvent, CTFResult, CTFParticipant, CTFParticipationMarker
 from models.announcement import Announcement
 
 router = APIRouter(prefix="/api/ctf", tags=["ctf"])
@@ -30,6 +30,89 @@ def _cached(key: str) -> Optional[dict]:
 
 def _set_cache(key: str, data, ttl: int = 300):
     _cache[key] = {"data": data, "expires": time.time() + ttl}
+
+
+def _iter_ctftime_events(payload: Any):
+    if isinstance(payload, list):
+        for ev in payload:
+            if isinstance(ev, dict):
+                yield ev
+        return
+    if isinstance(payload, dict):
+        for k, ev in payload.items():
+            if isinstance(ev, dict):
+                if "id" not in ev:
+                    try:
+                        ev = {**ev, "id": int(k)}
+                    except Exception:
+                        pass
+                yield ev
+
+
+def _extract_team_rows(ev: dict, team_id: int):
+    candidates = []
+    for key in ("scores", "results", "standings", "teams", "scoreboard"):
+        v = ev.get(key)
+        if isinstance(v, list):
+            candidates.extend(v)
+    # Some payloads put a flat team row at event level.
+    if any(k in ev for k in ("team_id", "team", "place", "points", "score")):
+        candidates.append(ev)
+
+    for row in candidates:
+        if not isinstance(row, dict):
+            continue
+        rid = row.get("team_id")
+        if rid is None and isinstance(row.get("team"), dict):
+            rid = row["team"].get("id")
+        if rid is None:
+            rid = row.get("id")
+        try:
+            if int(rid) != team_id:
+                continue
+        except Exception:
+            continue
+        place = row.get("place", row.get("pos", row.get("rank")))
+        ctf_points = row.get("ctf_points", row.get("points", row.get("score")))
+        rating_points = row.get("rating_points", row.get("rating", row.get("rating_score")))
+        yield {
+            "task_id": ev.get("id", ev.get("event_id", ev.get("task_id"))),
+            "task_name": ev.get("title", ev.get("event", ev.get("name", "Unknown Event"))),
+            "place": place,
+            "ctf_points": ctf_points,
+            "rating_points": rating_points,
+        }
+
+
+def _fetch_ctftime_tasks_for_year(year: int) -> list[dict]:
+    now_year = datetime.now(timezone.utc).year
+    if year < 2010 or year > now_year + 1:
+        return []
+    key = f"results:{year}"
+    cached = _cached(key)
+    if cached is not None:
+        return cached
+    with httpx.Client(timeout=15) as client:
+        r = client.get(f"https://ctftime.org/api/v1/results/{year}/", headers=CTFTIME_HEADERS)
+    r.raise_for_status()
+    data = r.json()
+    team_id = int(CTFTIME_TEAM_ID)
+    tasks: list[dict] = []
+    seen: set[int] = set()
+    for ev in _iter_ctftime_events(data):
+        for task in _extract_team_rows(ev, team_id):
+            tid = task.get("task_id")
+            try:
+                tid_int = int(tid)
+            except Exception:
+                continue
+            if tid_int in seen:
+                continue
+            seen.add(tid_int)
+            task["task_id"] = tid_int
+            tasks.append(task)
+    _set_cache(key, tasks, ttl=1800)
+    return tasks
 
 
 # ── CTFtime proxy endpoints ───────────────────────────────────────
@@ -87,86 +170,8 @@ async def proxy_results(year: int, _: User = Depends(get_current_user)):
     now_year = datetime.now(timezone.utc).year
     if year < 2010 or year > now_year + 1:
         raise HTTPException(400, "Invalid year")
-    key = f"results:{year}"
-    cached = _cached(key)
-    if cached is not None:
-        return cached
-
-    def _iter_events(payload: Any):
-        if isinstance(payload, list):
-            for ev in payload:
-                if isinstance(ev, dict):
-                    yield ev
-            return
-        if isinstance(payload, dict):
-            for k, ev in payload.items():
-                if isinstance(ev, dict):
-                    if "id" not in ev:
-                        try:
-                            ev = {**ev, "id": int(k)}
-                        except Exception:
-                            pass
-                    yield ev
-
-    def _extract_team_rows(ev: dict, team_id: int):
-        candidates = []
-        for key in ("scores", "results", "standings", "teams", "scoreboard"):
-            v = ev.get(key)
-            if isinstance(v, list):
-                candidates.extend(v)
-        # Some payloads put a flat team row at event level.
-        if any(k in ev for k in ("team_id", "team", "place", "points", "score")):
-            candidates.append(ev)
-
-        for row in candidates:
-            if not isinstance(row, dict):
-                continue
-            rid = row.get("team_id")
-            if rid is None and isinstance(row.get("team"), dict):
-                rid = row["team"].get("id")
-            if rid is None:
-                rid = row.get("id")
-            try:
-                if int(rid) != team_id:
-                    continue
-            except Exception:
-                continue
-            place = row.get("place", row.get("pos", row.get("rank")))
-            ctf_points = row.get("ctf_points", row.get("points", row.get("score")))
-            rating_points = row.get("rating_points", row.get("rating", row.get("rating_score")))
-            yield {
-                "task_id": ev.get("id", ev.get("event_id", ev.get("task_id"))),
-                "task_name": ev.get("title", ev.get("event", ev.get("name", "Unknown Event"))),
-                "place": place,
-                "ctf_points": ctf_points,
-                "rating_points": rating_points,
-            }
-
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            r = await client.get(
-                f"https://ctftime.org/api/v1/results/{year}/",
-                headers=CTFTIME_HEADERS
-            )
-        r.raise_for_status()
-        data = r.json()
-        team_id = int(CTFTIME_TEAM_ID)
-        tasks: list[dict] = []
-        seen: set[int] = set()
-        for ev in _iter_events(data):
-            for task in _extract_team_rows(ev, team_id):
-                tid = task.get("task_id")
-                try:
-                    tid_int = int(tid)
-                except Exception:
-                    continue
-                if tid_int in seen:
-                    continue
-                seen.add(tid_int)
-                task["task_id"] = tid_int
-                tasks.append(task)
-        _set_cache(key, tasks, ttl=1800)
-        return tasks
+        return _fetch_ctftime_tasks_for_year(year)
     except httpx.HTTPError as e:
         raise HTTPException(502, f"CTFtime API error: {type(e).__name__}: {e}")
 
@@ -203,6 +208,9 @@ class ParticipantCreate(BaseModel):
     points:        float
     notes:         Optional[str] = Field(default=None, max_length=1000)
 
+class ParticipationMarkerUpsert(BaseModel):
+    will_play: bool
+
 
 # ── Helper ────────────────────────────────────────────────────────
 
@@ -221,6 +229,13 @@ def _event_full(ev: CTFEvent, db: Session) -> dict:
     d["result"] = result.to_dict() if result else None
     participants = db.query(CTFParticipant).filter(CTFParticipant.event_id == ev.id).all()
     d["participants"] = [p.to_dict() for p in participants]
+    markers = db.query(CTFParticipationMarker).filter(CTFParticipationMarker.event_id == ev.id).all()
+    marker_dicts = [m.to_dict() for m in markers]
+    d["participation_markers"] = marker_dicts
+    d["participation_counts"] = {
+        "will_play": sum(1 for m in marker_dicts if m["will_play"]),
+        "wont_play": sum(1 for m in marker_dicts if not m["will_play"]),
+    }
     return d
 
 
@@ -229,8 +244,84 @@ def _event_full(ev: CTFEvent, db: Session) -> dict:
 @router.get("/events")
 def list_events(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     """All tracked CTF events with nested result + participants."""
+    now = datetime.now(timezone.utc)
     events = db.query(CTFEvent).order_by(CTFEvent.start_time.asc().nullslast()).all()
+    dirty = False
+    for ev in events:
+        if ev.status == "upcoming" and ev.end_time and ev.end_time < now:
+            ev.status = "completed"
+            dirty = True
+    if dirty:
+        db.commit()
     return [_event_full(ev, db) for ev in events]
+
+
+@router.put("/events/{event_id}/marker")
+def upsert_participation_marker(
+    event_id: int,
+    payload: ParticipationMarkerUpsert,
+    db: Session = Depends(get_db),
+    current: User = Depends(get_current_user),
+):
+    """User marks whether they will participate in an upcoming event."""
+    ev = db.query(CTFEvent).filter(CTFEvent.id == event_id).first()
+    if not ev:
+        raise HTTPException(404, "Event not found.")
+
+    now = datetime.now(timezone.utc)
+    if ev.status == "upcoming" and ev.end_time and ev.end_time < now:
+        ev.status = "completed"
+        db.commit()
+        db.refresh(ev)
+    if ev.status != "upcoming":
+        raise HTTPException(400, "Can only mark participation for upcoming events.")
+
+    marker = db.query(CTFParticipationMarker).filter(
+        CTFParticipationMarker.event_id == event_id,
+        CTFParticipationMarker.user_id == current.id
+    ).first()
+    if marker:
+        marker.will_play = 1 if payload.will_play else 0
+        marker.handle = current.handle
+    else:
+        marker = CTFParticipationMarker(
+            event_id=event_id,
+            user_id=current.id,
+            handle=current.handle,
+            will_play=1 if payload.will_play else 0,
+        )
+        db.add(marker)
+    db.commit()
+    db.refresh(marker)
+    return marker.to_dict()
+
+
+@router.delete("/events/{event_id}/marker", status_code=204)
+def clear_participation_marker(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current: User = Depends(get_current_user),
+):
+    """User clears their participation marker for an upcoming event."""
+    ev = db.query(CTFEvent).filter(CTFEvent.id == event_id).first()
+    if not ev:
+        raise HTTPException(404, "Event not found.")
+
+    now = datetime.now(timezone.utc)
+    if ev.status == "upcoming" and ev.end_time and ev.end_time < now:
+        ev.status = "completed"
+        db.commit()
+        db.refresh(ev)
+    if ev.status != "upcoming":
+        raise HTTPException(400, "Can only clear participation for upcoming events.")
+
+    marker = db.query(CTFParticipationMarker).filter(
+        CTFParticipationMarker.event_id == event_id,
+        CTFParticipationMarker.user_id == current.id
+    ).first()
+    if marker:
+        db.delete(marker)
+        db.commit()
 
 
 @router.post("/events", status_code=201)
@@ -318,6 +409,7 @@ def delete_event(
     # Cascade delete result + participants
     db.query(CTFResult).filter(CTFResult.event_id == event_id).delete()
     db.query(CTFParticipant).filter(CTFParticipant.event_id == event_id).delete()
+    db.query(CTFParticipationMarker).filter(CTFParticipationMarker.event_id == event_id).delete()
     db.delete(ev); db.commit()
 
 
@@ -333,6 +425,31 @@ def upsert_result(
     ev = db.query(CTFEvent).filter(CTFEvent.id == event_id).first()
     if not ev:
         raise HTTPException(404, "Event not found.")
+
+    # For CTFtime-linked events, only allow result/rating updates once official
+    # scoreboard data for this event appears in CTFtime API.
+    if ev.ctftime_event_id:
+        now_year = datetime.now(timezone.utc).year
+        year_candidates = []
+        if ev.start_time:
+            year_candidates.append(ev.start_time.year)
+        year_candidates.extend([now_year, now_year - 1])
+        seen_years = []
+        for y in year_candidates:
+            if y not in seen_years:
+                seen_years.append(y)
+        official_found = False
+        for y in seen_years:
+            try:
+                tasks = _fetch_ctftime_tasks_for_year(y)
+            except httpx.HTTPError as e:
+                raise HTTPException(502, f"CTFtime API error: {type(e).__name__}: {e}")
+            if any(int(t.get("task_id") or 0) == int(ev.ctftime_event_id) for t in tasks):
+                official_found = True
+                break
+        if not official_found:
+            raise HTTPException(400, "Official CTFtime scoreboard for this event is not available yet.")
+
     result = db.query(CTFResult).filter(CTFResult.event_id == event_id).first()
     if result:
         result.place         = payload.place
