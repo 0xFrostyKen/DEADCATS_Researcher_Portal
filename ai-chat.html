@@ -1,269 +1,649 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DEADCATS // CATGPT</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#05060a;--bg2:#090b12;--bg3:#0d1018;--surface:#111520;--surface2:#161b28;--border:#1a2030;--border2:#242e45;--red2:#ff2040;--red-dim:#3a000a;--red-glow:rgba(232,0,30,0.12);--cyan:#00d4ff;--cyan-dim:#003a4d;--gold:#f0a500;--green:#00ff88;--text:#c8d8f0;--text-dim:#556070;--text-mid:#8a9ab5;--text-bright:#ddeeff;--mono:'IBM Plex Mono',monospace;--display:'IBM Plex Mono',monospace;--body:'IBM Plex Sans',sans-serif;}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{min-height:100vh;}
-body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;cursor:crosshair;overflow-x:hidden;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.05) 3px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999;}
-.bg-layer{position:fixed;inset:0;z-index:0;}
-.bg-layer::after{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;opacity:.15;}
-nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(5,6,10,0.97);border-bottom:1px solid var(--border);}
-.nav-logo{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.3em;color:var(--text-bright);text-decoration:none;}
-.nav-logo span{color:var(--red2);}
-.nav-left,.nav-right{display:flex;align-items:center;gap:20px;}
-.nav-sep{width:1px;height:20px;background:var(--border2);}
-.nav-page{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:.15em;}
-.nav-page span{color:var(--cyan);}
-.nav-link{font-family:var(--mono);font-size:11px;color:var(--text-dim);text-decoration:none;letter-spacing:.15em;text-transform:uppercase;transition:color .2s;}
-.nav-link:hover{color:var(--text);}
-.layout{position:relative;z-index:1;max-width:1320px;margin:0 auto;padding:92px 32px 40px;}
-.page-header{margin-bottom:20px;display:flex;align-items:flex-end;justify-content:space-between;gap:18px;}
-.page-title{font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:.15em;color:var(--text-bright);}
-.page-title span{color:var(--cyan);}
-.page-meta{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:.1em;}
-.chat-grid{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;}
-.panel{background:var(--bg2);border:1px solid var(--border);}
-.panel-head{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;}
-.panel-title{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;}
-.panel-body{padding:14px;}
-.quick-list{display:flex;flex-direction:column;gap:8px;}
-.quick-btn{width:100%;text-align:left;background:var(--bg3);border:1px solid var(--border2);padding:10px;font-family:var(--mono);font-size:11px;color:var(--text-mid);cursor:crosshair;transition:all .2s;}
-.quick-btn:hover{color:var(--text);border-color:var(--cyan-dim);background:rgba(0,212,255,.05);}
-.stats-list{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
-.stat-row{display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);padding:9px 10px;}
-.stat-lbl{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.12em;text-transform:uppercase;}
-.stat-val{font-family:var(--mono);font-size:12px;color:var(--text-bright);}
-.chat-shell{display:flex;flex-direction:column;min-height:72vh;}
-.chat-log{flex:1;overflow-y:auto;padding:14px;background:var(--bg);}
-.msg{max-width:85%;margin-bottom:10px;border:1px solid var(--border2);padding:10px 12px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
-.msg.user{margin-left:auto;background:rgba(0,212,255,.06);border-color:var(--cyan-dim);color:var(--text-bright);}
-.msg.assistant{background:var(--surface);color:var(--text);}
-.msg-meta{display:block;margin-top:7px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--text-dim);text-transform:uppercase;}
-.typing{font-family:var(--mono);font-size:10px;color:var(--text-dim);padding:8px 14px;border-top:1px solid var(--border);display:none;}
-.typing.visible{display:block;}
-.composer{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border);background:var(--bg2);}
-.chat-input{flex:1;resize:none;min-height:48px;max-height:150px;padding:10px;background:var(--bg);border:1px solid var(--border2);color:var(--text-bright);font-family:var(--mono);font-size:12px;outline:none;line-height:1.4;}
-.chat-input:focus{border-color:var(--cyan-dim);}
-.btn{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:10px 14px;border:1px solid var(--border2);background:transparent;color:var(--text-dim);cursor:crosshair;transition:all .2s;}
-.btn.send{color:var(--green);border-color:rgba(0,255,136,.28);}
-.btn.send:hover{background:rgba(0,255,136,.08);}
-.btn.clear{color:var(--red2);border-color:var(--red-dim);}
-.btn.clear:hover{background:var(--red-glow);}
-.empty{padding:40px 20px;text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--text-dim);}
-button,.btn{transition:transform 160ms cubic-bezier(.22,1,.36,1),box-shadow 220ms ease,border-color 220ms ease,background-color 220ms ease,color 220ms ease;}
-button:hover:not(:disabled),.btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.22);}
-button:active:not(:disabled),.btn:active{transform:translateY(0) scale(.99);box-shadow:0 4px 10px rgba(0,0,0,.18);}
-button:focus-visible,.btn:focus-visible{outline:1px solid rgba(0,212,255,.7);outline-offset:2px;}
-::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-thumb{background:var(--border2);}
-@media (max-width:980px){
-  .layout{padding:78px 14px 30px;}
-  nav{padding:0 14px;}
-  .chat-grid{grid-template-columns:1fr;}
-  .chat-shell{min-height:66vh;}
-}
-</style>
+  <meta charset="UTF-8">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEADCATS // CATGPT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #05060a;
+      --bg2: #090b12;
+      --bg3: #0d1018;
+      --surface: #111520;
+      --surface2: #161b28;
+      --border: #1a2030;
+      --border2: #242e45;
+      --red2: #ff2040;
+      --red-dim: #3a000a;
+      --red-glow: rgba(232, 0, 30, 0.12);
+      --cyan: #00d4ff;
+      --cyan-dim: #003a4d;
+      --gold: #f0a500;
+      --green: #00ff88;
+      --text: #c8d8f0;
+      --text-dim: #556070;
+      --text-mid: #8a9ab5;
+      --text-bright: #ddeeff;
+      --mono: 'IBM Plex Mono', monospace;
+      --display: 'IBM Plex Mono', monospace;
+      --body: 'IBM Plex Sans', sans-serif;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      min-height: 100vh;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      font-size: 15px;
+      cursor: crosshair;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 0, 0, 0.05) 3px, rgba(0, 0, 0, 0.05) 4px);
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .bg-layer::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: .15;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      background: rgba(5, 6, 10, 0.97);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: var(--display);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .3em;
+      color: var(--text-bright);
+      text-decoration: none;
+    }
+
+    .nav-logo span {
+      color: var(--red2);
+    }
+
+    .nav-left,
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .nav-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border2);
+    }
+
+    .nav-page {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: .15em;
+    }
+
+    .nav-page span {
+      color: var(--cyan);
+    }
+
+    .nav-link {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      text-decoration: none;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      transition: color .2s;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+    }
+
+    .layout {
+      position: relative;
+      z-index: 1;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 92px 32px 40px;
+    }
+
+    .page-header {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .page-title {
+      font-family: var(--display);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: .15em;
+      color: var(--text-bright);
+    }
+
+    .page-title span {
+      color: var(--cyan);
+    }
+
+    .page-meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: .1em;
+    }
+
+    .chat-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+    }
+
+    .panel-head {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .panel-title {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .2em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .panel-body {
+      padding: 14px;
+    }
+
+    .quick-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .quick-btn {
+      width: 100%;
+      text-align: left;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      padding: 10px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-mid);
+      cursor: crosshair;
+      transition: all .2s;
+    }
+
+    .quick-btn:hover {
+      color: var(--text);
+      border-color: var(--cyan-dim);
+      background: rgba(0, 212, 255, .05);
+    }
+
+    .stats-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 9px 10px;
+    }
+
+    .stat-lbl {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .stat-val {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-bright);
+    }
+
+    .chat-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 72vh;
+    }
+
+    .chat-log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      background: var(--bg);
+    }
+
+    .msg {
+      max-width: 85%;
+      margin-bottom: 10px;
+      border: 1px solid var(--border2);
+      padding: 10px 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .msg.user {
+      margin-left: auto;
+      background: rgba(0, 212, 255, .06);
+      border-color: var(--cyan-dim);
+      color: var(--text-bright);
+    }
+
+    .msg.assistant {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .msg-meta {
+      display: block;
+      margin-top: 7px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .1em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .typing {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-dim);
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+      display: none;
+    }
+
+    .typing.visible {
+      display: block;
+    }
+
+    .composer {
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      border-top: 1px solid var(--border);
+      background: var(--bg2);
+    }
+
+    .chat-input {
+      flex: 1;
+      resize: none;
+      min-height: 48px;
+      max-height: 150px;
+      padding: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      color: var(--text-bright);
+      font-family: var(--mono);
+      font-size: 12px;
+      outline: none;
+      line-height: 1.4;
+    }
+
+    .chat-input:focus {
+      border-color: var(--cyan-dim);
+    }
+
+    .btn {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--text-dim);
+      cursor: crosshair;
+      transition: all .2s;
+    }
+
+    .btn.send {
+      color: var(--green);
+      border-color: rgba(0, 255, 136, .28);
+    }
+
+    .btn.send:hover {
+      background: rgba(0, 255, 136, .08);
+    }
+
+    .btn.clear {
+      color: var(--red2);
+      border-color: var(--red-dim);
+    }
+
+    .btn.clear:hover {
+      background: var(--red-glow);
+    }
+
+    .empty {
+      padding: 40px 20px;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .1em;
+      color: var(--text-dim);
+    }
+
+    button,
+    .btn {
+      transition: transform 160ms cubic-bezier(.22, 1, .36, 1), box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease, color 220ms ease;
+    }
+
+    button:hover:not(:disabled),
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, .22);
+    }
+
+    button:active:not(:disabled),
+    .btn:active {
+      transform: translateY(0) scale(.99);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, .18);
+    }
+
+    button:focus-visible,
+    .btn:focus-visible {
+      outline: 1px solid rgba(0, 212, 255, .7);
+      outline-offset: 2px;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+    }
+
+    @media (max-width:980px) {
+      .layout {
+        padding: 78px 14px 30px;
+      }
+
+      nav {
+        padding: 0 14px;
+      }
+
+      .chat-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .chat-shell {
+        min-height: 66vh;
+      }
+    }
+  </style>
 </head>
+
 <body>
-<div class="bg-layer"></div>
-<nav>
-  <div class="nav-left">
-    <a href="index.html" class="nav-logo">DEAD<span>CATS</span></a>
-    <div class="nav-sep"></div>
-    <span class="nav-page">// <span>CATGPT</span></span>
-  </div>
-  <div class="nav-right">
-    <a href="dashboard.html" class="nav-link">← Dashboard</a>
-  </div>
-</nav>
-<div class="layout">
-  <div class="page-header">
-    <div class="page-title">CAT <span>GPT</span></div>
-    <div class="page-meta" id="pageMeta">Session ready</div>
-  </div>
-  <div class="chat-grid">
-    <aside class="panel">
-      <div class="panel-head">
-        <span class="panel-title">Quick Prompts</span>
-      </div>
-      <div class="panel-body">
-        <div class="quick-list">
-          <button class="quick-btn" data-prompt="summary">summary</button>
-          <button class="quick-btn" data-prompt="upcoming ctf">upcoming ctf</button>
-          <button class="quick-btn" data-prompt="notes phishing">notes phishing</button>
-          <button class="quick-btn" data-prompt="ioc c2 domain">ioc c2 domain</button>
-          <button class="quick-btn" data-prompt="vault malware sample">vault malware sample</button>
+  <div class="bg-layer"></div>
+  <nav>
+    <div class="nav-left">
+      <a href="index.html" class="nav-logo">DEAD<span>CATS</span></a>
+      <div class="nav-sep"></div>
+      <span class="nav-page">// <span>CATGPT</span></span>
+    </div>
+    <div class="nav-right">
+      <a href="dashboard.html" class="nav-link">← Dashboard</a>
+    </div>
+  </nav>
+  <div class="layout">
+    <div class="page-header">
+      <div class="page-title">CAT <span>GPT</span></div>
+      <div class="page-meta" id="pageMeta">Session ready</div>
+    </div>
+    <div class="chat-grid">
+      <aside class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Quick Prompts</span>
         </div>
-        <div class="stats-list">
-          <div class="stat-row"><span class="stat-lbl">Total Notes</span><span class="stat-val" id="sNotes">—</span></div>
-          <div class="stat-row"><span class="stat-lbl">Total IOCs</span><span class="stat-val" id="sIocs">—</span></div>
-          <div class="stat-row"><span class="stat-lbl">Portal Users</span><span class="stat-val" id="sMembers">—</span></div>
+        <div class="panel-body">
+          <div class="quick-list">
+            <button class="quick-btn" data-prompt="summary">summary</button>
+            <button class="quick-btn" data-prompt="upcoming ctf">upcoming ctf</button>
+            <button class="quick-btn" data-prompt="notes phishing">notes phishing</button>
+            <button class="quick-btn" data-prompt="ioc c2 domain">ioc c2 domain</button>
+            <button class="quick-btn" data-prompt="vault malware sample">vault malware sample</button>
+          </div>
+          <div class="stats-list">
+            <div class="stat-row"><span class="stat-lbl">Total Notes</span><span class="stat-val" id="sNotes">—</span>
+            </div>
+            <div class="stat-row"><span class="stat-lbl">Total IOCs</span><span class="stat-val" id="sIocs">—</span>
+            </div>
+            <div class="stat-row"><span class="stat-lbl">Portal Users</span><span class="stat-val"
+                id="sMembers">—</span></div>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
 
-    <section class="panel chat-shell">
-      <div class="panel-head">
-        <span class="panel-title">Conversation</span>
-        <button class="btn clear" id="clearBtn">Clear</button>
-      </div>
-      <div class="chat-log" id="chatLog">
-        <div class="empty">No messages yet. Ask for a summary or search the portal.</div>
-      </div>
-      <div class="typing" id="typing">assistant is analyzing…</div>
-      <div class="composer">
-        <textarea id="chatInput" class="chat-input" placeholder="Ask about notes, IOCs, vault files, or upcoming CTF events..."></textarea>
-        <button class="btn send" id="sendBtn">Send</button>
-      </div>
-    </section>
+      <section class="panel chat-shell">
+        <div class="panel-head">
+          <span class="panel-title">Conversation</span>
+          <button class="btn clear" id="clearBtn">Clear</button>
+        </div>
+        <div class="chat-log" id="chatLog">
+          <div class="empty">No messages yet. Ask for a summary or search the portal.</div>
+        </div>
+        <div class="typing" id="typing">assistant is analyzing…</div>
+        <div class="composer">
+          <textarea id="chatInput" class="chat-input"
+            placeholder="Ask about notes, IOCs, vault files, or upcoming CTF events..."></textarea>
+          <button class="btn send" id="sendBtn">Send</button>
+        </div>
+      </section>
+    </div>
   </div>
-</div>
 
-<script>
-const API = '';
-let me = JSON.parse(localStorage.getItem('dc_user') || 'null');
+  <script>
+    const API = '';
+    let me = JSON.parse(localStorage.getItem('dc_user') || 'null');
 
-function esc(s){return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function fmtTime(d){
-  try{
-    const x = new Date(d);
-    if (Number.isNaN(x.getTime())) return '';
-    return x.toISOString().slice(0,19).replace('T',' ');
-  }catch(_){ return ''; }
-}
-
-function authFetch(url, opts = {}){
-  return fetch(API + url, {
-    ...opts,
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) }
-  }).then((res) => {
-    if (res.status === 401) {
-      localStorage.removeItem('dc_user');
-      window.location.href = 'login.html';
+    function esc(s) {return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');}
+    function fmtTime(d) {
+      try {
+        const x = new Date(d);
+        if (Number.isNaN(x.getTime())) return '';
+        return x.toISOString().slice(0, 19).replace('T', ' ');
+      } catch (_) {return '';}
     }
-    return res;
-  });
-}
 
-async function ensureSession(){
-  try{
-    const res = await fetch(API + '/api/auth/me', { credentials: 'include' });
-    if (!res.ok) {
-      localStorage.removeItem('dc_user');
-      window.location.replace('login.html');
-      return false;
+    function authFetch(url, opts = {}) {
+      return fetch(API + url, {
+        ...opts,
+        credentials: 'include',
+        headers: {'Content-Type': 'application/json', ...(opts.headers || {})}
+      }).then((res) => {
+        if (res.status === 401) {
+          localStorage.removeItem('dc_user');
+          window.location.href = 'login.html';
+        }
+        return res;
+      });
     }
-    me = await res.json();
-    localStorage.setItem('dc_user', JSON.stringify(me));
-    return true;
-  }catch(_){
-    if (me) return true;
-    window.location.replace('login.html');
-    return false;
-  }
-}
 
-function setTyping(on){
-  document.getElementById('typing').classList.toggle('visible', !!on);
-}
+    async function ensureSession() {
+      try {
+        const res = await fetch(API + '/api/auth/me', {credentials: 'include'});
+        if (!res.ok) {
+          localStorage.removeItem('dc_user');
+          window.location.replace('login.html');
+          return false;
+        }
+        me = await res.json();
+        localStorage.setItem('dc_user', JSON.stringify(me));
+        return true;
+      } catch (_) {
+        if (me) return true;
+        window.location.replace('login.html');
+        return false;
+      }
+    }
 
-function appendMessage(m){
-  const log = document.getElementById('chatLog');
-  const empty = log.querySelector('.empty');
-  if (empty) empty.remove();
-  const div = document.createElement('div');
-  div.className = `msg ${m.role === 'user' ? 'user' : 'assistant'}`;
-  div.innerHTML = `${esc(m.content)}<span class="msg-meta">${esc(m.role)} · ${esc(fmtTime(m.created_at))}</span>`;
-  log.appendChild(div);
-  log.scrollTop = log.scrollHeight;
-}
+    function setTyping(on) {
+      document.getElementById('typing').classList.toggle('visible', !!on);
+    }
 
-async function loadHistory(){
-  const res = await authFetch('/api/ai-chat/history?limit=120');
-  if (!res.ok) return;
-  const rows = await res.json();
-  const log = document.getElementById('chatLog');
-  log.innerHTML = '';
-  if (!rows.length) {
-    log.innerHTML = '<div class="empty">No messages yet. Ask for a summary or search the portal.</div>';
-    return;
-  }
-  rows.forEach(appendMessage);
-}
+    function appendMessage(m) {
+      const log = document.getElementById('chatLog');
+      const empty = log.querySelector('.empty');
+      if (empty) empty.remove();
+      const div = document.createElement('div');
+      div.className = `msg ${m.role === 'user' ? 'user' : 'assistant'}`;
+      div.innerHTML = `${esc(m.content)}<span class="msg-meta">${esc(m.role)} · ${esc(fmtTime(m.created_at))}</span>`;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
 
-async function sendMessage(raw){
-  const input = document.getElementById('chatInput');
-  const value = (typeof raw === 'string' ? raw : input.value).trim();
-  if (!value) return;
-  input.value = '';
-  setTyping(true);
-  document.getElementById('pageMeta').textContent = `Sending as ${me ? me.handle : 'user'}...`;
-  try{
-    const res = await authFetch('/api/ai-chat/message', {
-      method: 'POST',
-      body: JSON.stringify({ message: value })
+    async function loadHistory() {
+      const res = await authFetch('/api/ai-chat/history?limit=120');
+      if (!res.ok) return;
+      const rows = await res.json();
+      const log = document.getElementById('chatLog');
+      log.innerHTML = '';
+      if (!rows.length) {
+        log.innerHTML = '<div class="empty">No messages yet. Ask for a summary or search the portal.</div>';
+        return;
+      }
+      rows.forEach(appendMessage);
+    }
+
+    async function sendMessage(raw) {
+      const input = document.getElementById('chatInput');
+      const value = (typeof raw === 'string' ? raw : input.value).trim();
+      if (!value) return;
+      input.value = '';
+      setTyping(true);
+      document.getElementById('pageMeta').textContent = `Sending as ${me ? me.handle : 'user'}...`;
+      try {
+        const res = await authFetch('/api/ai-chat/message', {
+          method: 'POST',
+          body: JSON.stringify({message: value})
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || 'Failed to send');
+        }
+        const data = await res.json();
+        appendMessage(data.user_message);
+        appendMessage(data.assistant_message);
+        document.getElementById('pageMeta').textContent = 'Response ready';
+      } catch (e) {
+        document.getElementById('pageMeta').textContent = e.message || 'Error sending message';
+        alert(e.message || 'Failed to send');
+      } finally {
+        setTyping(false);
+      }
+    }
+
+    async function clearHistory() {
+      if (!confirm('Clear your AI chat history?')) return;
+      const res = await authFetch('/api/ai-chat/history', {method: 'DELETE'});
+      if (!res.ok) return;
+      await loadHistory();
+      document.getElementById('pageMeta').textContent = 'Conversation cleared';
+    }
+
+    async function loadStats() {
+      const res = await authFetch('/api/stats');
+      if (!res.ok) return;
+      const data = await res.json();
+      document.getElementById('sNotes').textContent = data.total_notes ?? 0;
+      document.getElementById('sIocs').textContent = data.total_iocs ?? 0;
+      document.getElementById('sMembers').textContent = data.total_members ?? 0;
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', () => sendMessage());
+    document.getElementById('clearBtn').addEventListener('click', clearHistory);
+    document.getElementById('chatInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || 'Failed to send');
-    }
-    const data = await res.json();
-    appendMessage(data.user_message);
-    appendMessage(data.assistant_message);
-    document.getElementById('pageMeta').textContent = 'Response ready';
-  }catch(e){
-    document.getElementById('pageMeta').textContent = e.message || 'Error sending message';
-    alert(e.message || 'Failed to send');
-  }finally{
-    setTyping(false);
-  }
-}
+    document.querySelectorAll('.quick-btn').forEach((btn) => {
+      btn.addEventListener('click', () => sendMessage(btn.dataset.prompt || btn.textContent));
+    });
 
-async function clearHistory(){
-  if (!confirm('Clear your AI chat history?')) return;
-  const res = await authFetch('/api/ai-chat/history', { method: 'DELETE' });
-  if (!res.ok) return;
-  await loadHistory();
-  document.getElementById('pageMeta').textContent = 'Conversation cleared';
-}
-
-async function loadStats(){
-  const res = await authFetch('/api/stats');
-  if (!res.ok) return;
-  const data = await res.json();
-  document.getElementById('sNotes').textContent = data.total_notes ?? 0;
-  document.getElementById('sIocs').textContent = data.total_iocs ?? 0;
-  document.getElementById('sMembers').textContent = data.total_members ?? 0;
-}
-
-document.getElementById('sendBtn').addEventListener('click', () => sendMessage());
-document.getElementById('clearBtn').addEventListener('click', clearHistory);
-document.getElementById('chatInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
-document.querySelectorAll('.quick-btn').forEach((btn) => {
-  btn.addEventListener('click', () => sendMessage(btn.dataset.prompt || btn.textContent));
-});
-
-(async () => {
-  const ok = await ensureSession();
-  if (!ok) return;
-  await Promise.all([loadHistory(), loadStats()]);
-  document.getElementById('pageMeta').textContent = `Logged in as ${me.handle}`;
-})();
-</script>
-<script src="assets/js/lofi-player.js"></script>
+    (async () => {
+      const ok = await ensureSession();
+      if (!ok) return;
+      await Promise.all([loadHistory(), loadStats()]);
+      document.getElementById('pageMeta').textContent = `Logged in as ${me.handle}`;
+    })();
+  </script>
+  <script src="assets/js/lofi-player.js"></script>
 </body>
+
 </html>

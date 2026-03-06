@@ -112,7 +112,7 @@ COOKIE_SAMESITE=lax
 PWNBOX_IMAGE=pwnbox-base:latest
 PWNBOX_AUTO_BUILD=true
 PWNBOX_SESSION_TTL_MINUTES=90
-
+# Used OpenRouter
 # AI Chat
 AI_CHAT_PROVIDER=openai
 AI_CHAT_BASE_URL=https://openrouter.ai/api/v1
