@@ -145,6 +145,28 @@ Run DB shell:
 docker-compose exec db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"
 ```
 
+## Live Dev In Docker
+
+Use the dev override to edit code locally and test live inside Docker.
+
+Start:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+docker-compose logs -f app
+```
+
+Behavior:
+
+- Backend Python changes auto-reload (`uvicorn --reload`)
+- Frontend HTML/CSS/JS changes appear after browser refresh
+
+If you change `backend/requirements.txt`, rebuild app:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build app
+```
+
 ## Local Non-Docker Run (Optional)
 
 Requirements:
