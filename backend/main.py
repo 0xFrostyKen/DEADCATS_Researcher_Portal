@@ -10,11 +10,12 @@ from core.config import FRONTEND_ORIGIN, ADMIN_HANDLE, ADMIN_PASSWORD
 from core.database import engine, Base
 from core.security import hash_password
 from models.user import User
-from routers import auth, users, notes, achievements, announcements, iocs, vault, bookmarks, whiteboard, ctf, pwnbox
+from routers import auth, users, notes, achievements, announcements, iocs, vault, bookmarks, whiteboard, ctf, pwnbox, ai_chat
 import models.bookmark
 import models.goal
 import models.whiteboard_config
 import models.ctf
+import models.chat_message
 from core.database import get_db
 from fastapi import Depends
 from core.security import get_current_user
@@ -99,6 +100,7 @@ app.include_router(bookmarks.router)
 app.include_router(whiteboard.router)
 app.include_router(ctf.router)
 app.include_router(pwnbox.router)
+app.include_router(ai_chat.router)
 
 # ── Health / Stats ────────────────────────────────────────────────
 

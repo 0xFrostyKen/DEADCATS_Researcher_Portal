@@ -112,12 +112,33 @@ COOKIE_SAMESITE=lax
 PWNBOX_IMAGE=pwnbox-base:latest
 PWNBOX_AUTO_BUILD=true
 PWNBOX_SESSION_TTL_MINUTES=90
+
+# AI Chat
+AI_CHAT_PROVIDER=openai
+AI_CHAT_BASE_URL=https://openrouter.ai/api/v1
+AI_CHAT_API_KEY=your_provider_key
+AI_CHAT_MODEL=qwen/qwen2.5-72b-instruct:free
+AI_CHAT_TIMEOUT_SECONDS=60
+AI_CHAT_SITE_URL=http://127.0.0.1:8000
+AI_CHAT_SITE_NAME=DEADCATS Research Portal
+AI_CHAT_GEMINI_API_KEY=
 ```
 
 Notes:
 
 - `COOKIE_SECURE=true` only when using HTTPS.
 - If `PWNBOX_AUTO_BUILD=true`, first PwnBox start builds base image automatically.
+- AI chat is available at `/ai-chat.html`.
+- For OpenRouter/Qwen:
+  - `AI_CHAT_PROVIDER=openai`
+  - `AI_CHAT_BASE_URL=https://openrouter.ai/api/v1`
+  - `AI_CHAT_MODEL=qwen/qwen2.5-72b-instruct:free`
+  - `AI_CHAT_API_KEY=...`
+- For Gemini API:
+  - `AI_CHAT_PROVIDER=gemini`
+  - `AI_CHAT_BASE_URL=https://generativelanguage.googleapis.com/v1beta`
+  - `AI_CHAT_MODEL=gemini-2.0-flash`
+  - `AI_CHAT_GEMINI_API_KEY=...` (or reuse `AI_CHAT_API_KEY`)
 
 ## Common Commands
 

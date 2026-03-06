@@ -33,6 +33,14 @@ if COOKIE_SAMESITE not in {"lax", "strict", "none"}:
     COOKIE_SAMESITE = "lax"
 MASTER_HANDLE     = os.getenv("MASTER_HANDLE", "deadcats_master333")
 CTFTIME_TEAM_ID   = os.getenv("CTFTIME_TEAM_ID", "367609")
+AI_CHAT_BASE_URL  = os.getenv("AI_CHAT_BASE_URL", "https://openrouter.ai/api/v1").strip().rstrip("/")
+AI_CHAT_API_KEY   = os.getenv("AI_CHAT_API_KEY", "").strip()
+AI_CHAT_MODEL     = os.getenv("AI_CHAT_MODEL", "qwen/qwen2.5-72b-instruct:free").strip()
+AI_CHAT_TIMEOUT_SECONDS = float(os.getenv("AI_CHAT_TIMEOUT_SECONDS", "60"))
+AI_CHAT_SITE_URL  = os.getenv("AI_CHAT_SITE_URL", "").strip()
+AI_CHAT_SITE_NAME = os.getenv("AI_CHAT_SITE_NAME", "DEADCATS Research Portal").strip()
+AI_CHAT_PROVIDER  = os.getenv("AI_CHAT_PROVIDER", "openai").strip().lower()
+AI_CHAT_GEMINI_API_KEY = os.getenv("AI_CHAT_GEMINI_API_KEY", "").strip()
 
 if len(JWT_SECRET) < 32:
     raise RuntimeError("JWT_SECRET must be at least 32 characters.")
