@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: deadcats-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-deadcats}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-atomisgay333}
+      POSTGRES_DB: ${POSTGRES_DB:-deadcats_db}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-deadcats} -d ${POSTGRES_DB:-deadcats_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deadcats-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://deadcats:atomisgay333@db:5432/deadcats_db}
+      JWT_SECRET: ${JWT_SECRET:-replace_with_long_random_secret_at_least_32_chars}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-480}
+      ADMIN_HANDLE: ${ADMIN_HANDLE:-deadcats_master333}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change_me_now}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://127.0.0.1:8000}
+      REGISTER_TOKEN: ${REGISTER_TOKEN:-}
+      ALLOW_SELF_REGISTER: ${ALLOW_SELF_REGISTER:-false}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      COOKIE_SAMESITE: ${COOKIE_SAMESITE:-lax}
+      MASTER_HANDLE: ${MASTER_HANDLE:-deadcats_master333}
+      CTFTIME_TEAM_ID: ${CTFTIME_TEAM_ID:-367609}
+      PWNBOX_IMAGE: ${PWNBOX_IMAGE:-pwnbox-base:latest}
+      PWNBOX_AUTO_BUILD: ${PWNBOX_AUTO_BUILD:-true}
+      PWNBOX_SESSION_TTL_MINUTES: ${PWNBOX_SESSION_TTL_MINUTES:-90}
+    volumes:
+      - profile_uploads:/app/profile_uploads
+      - vault_files:/app/vault_files
+      - app_logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  pgdata:
+  profile_uploads:
+  vault_files:
+  app_logs:
